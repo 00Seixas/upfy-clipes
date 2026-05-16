@@ -82,13 +82,19 @@ export default function EnviarVideosClient() {
 
         console.log('[upload] PUT direto no R2...')
 
-        // 2. Upload direto do browser pro R2
-        const putRes = await fetch(json.signedUrl, {
-          method: 'PUT',
-          headers: { 'Content-Type': video.file.type || 'video/mp4' },
-          body: video.file,
+        // 2. Upload direto do browser pro R2 via XHR (mais compatível com Safari)
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest()
+          xhr.open('PUT', json.signedUrl, true)
+          xhr.setRequestHeader('Content-Type', video.file.type || 'video/mp4')
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) resolve()
+            else reject(new Error(`R2 erro ${xhr.status}: ${xhr.responseText}`))
+          }
+          xhr.onerror = () => reject(new Error('Falha na conexão com o R2'))
+          xhr.ontimeout = () => reject(new Error('Timeout no upload'))
+          xhr.send(video.file)
         })
-        if (!putRes.ok) throw new Error(`R2 erro ${putRes.status}`)
 
         const { key } = json
         console.log('[upload] ok:', key)
