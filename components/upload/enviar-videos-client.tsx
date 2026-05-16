@@ -64,22 +64,32 @@ export default function EnviarVideosClient() {
     try {
       const prepared = []
       for (const video of videos) {
-        console.log('[upload] enviando', video.file.name, video.file.size, 'bytes')
-        const arrayBuffer = await video.file.arrayBuffer()
-        const safeFilename = encodeURIComponent(video.file.name)
-        const safeContentType = (video.file.type || 'video/mp4').replace(/[^\w\/\-\.+]/g, '')
+        console.log('[upload] pedindo presigned URL para', video.file.name)
+
+        // 1. Pede presigned URL ao servidor
         const res = await fetch('/api/upload/video', {
           method: 'POST',
-          headers: {
-            'x-filename': safeFilename,
-            'x-content-type': safeContentType,
-          },
-          body: arrayBuffer,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: video.file.name,
+            contentType: video.file.type || 'video/mp4',
+          }),
         })
         const text = await res.text()
-        let json: { key?: string; error?: string }
+        let json: { signedUrl?: string; key?: string; error?: string }
         try { json = JSON.parse(text) } catch { throw new Error('Servidor retornou: ' + text.slice(0, 300)) }
-        if (!res.ok || json.error) throw new Error(json.error ?? String(res.status))
+        if (!res.ok || json.error || !json.signedUrl) throw new Error(json.error ?? 'Sem URL de upload')
+
+        console.log('[upload] PUT direto no R2...')
+
+        // 2. Upload direto do browser pro R2
+        const putRes = await fetch(json.signedUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': video.file.type || 'video/mp4' },
+          body: video.file,
+        })
+        if (!putRes.ok) throw new Error(`R2 erro ${putRes.status}`)
+
         const { key } = json
         console.log('[upload] ok:', key)
 
