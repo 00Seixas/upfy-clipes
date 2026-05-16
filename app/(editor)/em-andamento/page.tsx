@@ -9,6 +9,8 @@ export default async function EmAndamentoPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user && !process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('placeholder')) redirect('/login')
 
+  const userId = user?.id ?? ''
+
   const { data: order } = await supabase
     .from('orders')
     .select(`
@@ -16,7 +18,7 @@ export default async function EmAndamentoPage() {
       profiles!orders_client_id_fkey(name, whatsapp),
       videos(id, r2_key, filename, size_bytes)
     `)
-    .eq('editor_id', user.id)
+    .eq('editor_id', userId)
     .eq('status', 'em_edicao')
     .single()
 
@@ -29,7 +31,7 @@ export default async function EmAndamentoPage() {
           ...order,
           profiles: Array.isArray(order.profiles) ? order.profiles[0] : order.profiles,
         } as any : null}
-        editorId={user.id}
+        editorId={userId}
       />
     </div>
   )

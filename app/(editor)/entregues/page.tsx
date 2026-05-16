@@ -8,13 +8,15 @@ export default async function EntreguesPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user && !process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('placeholder')) redirect('/login')
 
+  const userId = user?.id ?? ''
+
   const { data: deliverables } = await supabase
     .from('deliverables')
     .select(`
       id, clip_number, virality_grade, feedback, delivered_at, approved_at,
       orders!inner(client_id, profiles!orders_client_id_fkey(name))
     `)
-    .eq('editor_id', user.id)
+    .eq('editor_id', userId)
     .order('delivered_at', { ascending: false })
 
   const VIRALITY_CONFIG = {

@@ -10,10 +10,12 @@ export default async function InicioPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user && !process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('placeholder')) redirect('/login')
 
+  const userId = user?.id ?? ''
+
   const [{ data: profile }, { data: contract }, { data: orders }] = await Promise.all([
-    supabase.from('profiles').select('name').eq('id', user.id).single(),
-    supabase.from('client_contracts').select('*').eq('user_id', user.id).eq('status', 'ativo').single(),
-    supabase.from('orders').select('status, deadline').eq('client_id', user.id).in('status', ['aguardando', 'em_edicao', 'aprovacao']),
+    supabase.from('profiles').select('name').eq('id', userId).single(),
+    supabase.from('client_contracts').select('*').eq('user_id', userId).eq('status', 'ativo').single(),
+    supabase.from('orders').select('status, deadline').eq('client_id', userId).in('status', ['aguardando', 'em_edicao', 'aprovacao']),
   ])
 
   const clipsEntregues = contract?.clips_delivered ?? 0

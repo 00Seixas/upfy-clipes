@@ -9,11 +9,12 @@ export default async function MeusClipesPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user && !process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('placeholder')) redirect('/login')
 
-  // Get client's order IDs first, then fetch deliverables
+  const userId = user?.id ?? ''
+
   const { data: clientOrders } = await supabase
     .from('orders')
     .select('id')
-    .eq('client_id', user.id)
+    .eq('client_id', userId)
 
   const orderIds = clientOrders?.map(o => o.id) ?? []
 

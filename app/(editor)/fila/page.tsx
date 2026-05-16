@@ -9,6 +9,8 @@ export default async function FilaPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user && !process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('placeholder')) redirect('/login')
 
+  const userId = user?.id ?? ''
+
   const { data: orders } = await supabase
     .from('orders')
     .select(`
@@ -27,7 +29,7 @@ export default async function FilaPage() {
           ...o,
           profiles: Array.isArray(o.profiles) ? o.profiles[0] : o.profiles,
         })) as any}
-        editorId={user.id}
+        editorId={userId}
       />
     </div>
   )
