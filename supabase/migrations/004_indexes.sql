@@ -1,0 +1,12 @@
+create index idx_profiles_whatsapp on profiles(whatsapp);
+create index idx_profiles_role on profiles(role);
+create index idx_client_contracts_user_id on client_contracts(user_id);
+create index idx_client_contracts_status on client_contracts(status);
+create index idx_orders_client_id on orders(client_id);
+create index idx_orders_editor_id on orders(editor_id);
+create index idx_orders_status on orders(status);
+create index idx_deliverables_order_id on deliverables(order_id);
+create index idx_deliverables_clip_number on deliverables(clip_number);
+create index idx_whatsapp_logs_user_id on whatsapp_logs(user_id);
+create index idx_followup_sequences_user_id on followup_sequences(user_id);
+create index idx_followup_sequences_status on followup_sequences(status);

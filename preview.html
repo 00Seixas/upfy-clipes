@@ -1,0 +1,3067 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UPFY Clipes — Dashboard Cliente</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      /* Acento único — branco */
+      --accent: #FFFFFF; --accent-light: rgba(255,255,255,.06);
+      /* Legado — mantido só pra virality badges (exceção intencional) */
+      --purple: #FFFFFF; --purple-light: rgba(255,255,255,.06);
+      --orange: #FFFFFF; --orange-light: rgba(255,255,255,.06);
+      --dark: #030304; --darker: #000000;
+      --surface: #08080A; --surface2: #0E0E11; --surface3: #141418;
+      --border: #1A1A1F; --border2: #252530;
+      --fg: #F0F0F2; --muted: #4A4A54; --muted2: #7A7A8A;
+      /* Status funcional — neutro */
+      --green: #F0F0F2; --green-light: rgba(240,240,242,.06);
+      --yellow: #F0F0F2; --yellow-light: rgba(240,240,242,.06);
+      --blue: #F0F0F2; --blue-light: rgba(240,240,242,.06);
+      --red: #F0F0F2; --red-light: rgba(240,240,242,.06);
+      /* Virality — únicas cores intencionais na plataforma */
+      --v-frio: #3B82F6; --v-morno: #8B5CF6; --v-quente: #F97316; --v-viral: #EF4444;
+      --radius: 12px;
+    }
+    html, body { font-family: 'Inter', sans-serif; background: var(--darker); color: var(--fg); height: 100%; overflow: hidden; }
+
+    /* ── LAYOUT ── */
+    .app { display: flex; height: 100vh; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 220px; min-width: 220px; background: var(--surface);
+      border-right: 1px solid var(--border); display: flex; flex-direction: column;
+      padding: 0; z-index: 10;
+    }
+    .sidebar-logo {
+      padding: 12px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; overflow: hidden;
+    }
+    .sidebar-logo img {
+      height: 100px; width: auto; max-width: 200px;
+      object-fit: contain; object-position: left center;
+      margin: -28px -10px;
+    }
+    .sidebar-nav { flex: 1; padding: 12px 10px; display: flex; flex-direction: column; gap: 2px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+      border-radius: 8px; font-size: .83rem; font-weight: 500; color: var(--muted2);
+      cursor: pointer; transition: all .15s; border: none; background: none; width: 100%; text-align: left;
+    }
+    .nav-item:hover { background: var(--surface2); color: var(--fg); }
+    .nav-item.active { background: rgba(255,255,255,.07); color: var(--fg); }
+    .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .sidebar-credits {
+      margin: 10px; padding: 14px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: var(--radius);
+    }
+    .credits-label { font-size: .7rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+    .credits-value { font-size: 1.5rem; font-weight: 800; color: var(--fg); margin-bottom: 8px; }
+    .credits-bar-track { height: 4px; background: var(--surface3); border-radius: 99px; overflow: hidden; margin-bottom: 6px; }
+    .credits-bar-fill { height: 100%; border-radius: 99px; background: var(--fg); width: 45%; transition: width .6s; }
+    .credits-sub { font-size: .7rem; color: var(--muted); }
+    .btn-recharge {
+      display: block; width: 100%; margin-top: 10px; padding: 7px;
+      background: rgba(255,255,255,.06); color: var(--muted2); border: 1px solid var(--border2);
+      border-radius: 8px; font-size: .78rem; font-weight: 600; cursor: pointer; transition: all .15s; text-align: center;
+    }
+    .btn-recharge:hover { background: rgba(255,255,255,.10); color: var(--fg); }
+    .sidebar-user {
+      padding: 14px; border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .user-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--surface3); color: var(--muted2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .85rem; font-weight: 700; flex-shrink: 0;
+    }
+    .user-name { font-size: .8rem; font-weight: 600; }
+    .user-role { font-size: .7rem; color: var(--muted); }
+
+    /* ── MAIN ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      height: 56px; border-bottom: 1px solid var(--border); background: var(--surface);
+      display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0;
+    }
+    .topbar-title { font-size: .95rem; font-weight: 600; color: var(--fg); }
+    .topbar-actions { display: flex; align-items: center; gap: 10px; }
+    .icon-btn {
+      width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface2); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; position: relative; color: var(--muted2); transition: all .15s;
+    }
+    .icon-btn:hover { border-color: var(--border2); color: var(--fg); }
+    .notif-dot {
+      position: absolute; top: 6px; right: 6px; width: 7px; height: 7px;
+      border-radius: 50%; background: var(--fg); border: 1px solid var(--surface);
+    }
+
+    /* ── CONTENT ── */
+    .content { flex: 1; overflow-y: auto; padding: 24px; scroll-behavior: smooth; }
+    .content::-webkit-scrollbar { width: 5px; }
+    .content::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+    /* ── SCREENS ── */
+    .screen { display: none; }
+    .screen.active { display: block; animation: fadeIn .25s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ── PAGE HEADER ── */
+    .page-header { margin-bottom: 24px; }
+    .page-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 4px; }
+    .page-sub { font-size: .85rem; color: var(--muted2); }
+
+    /* ── CARDS GRID ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 24px; }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 18px;
+    }
+    .stat-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+    .stat-label { font-size: .72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+    .stat-value { font-size: 1.6rem; font-weight: 800; }
+    .stat-change { font-size: .72rem; color: var(--muted); margin-top: 4px; }
+    .c-purple, .c-green, .c-orange, .c-blue { color: var(--fg); }
+    .bg-purple, .bg-green, .bg-orange, .bg-blue { background: var(--surface3); }
+
+    /* ── ALERT BANNERS ── */
+    .alert {
+      display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+      border-radius: var(--radius); border: 1px solid; margin-bottom: 20px; font-size: .85rem;
+    }
+    .alert-upsell { background: rgba(255,255,255,.03); border-color: var(--border2); color: var(--muted2); }
+    .alert-upsell strong { color: var(--fg); }
+    .alert-warn { background: rgba(255,255,255,.03); border-color: var(--border2); color: var(--muted2); }
+    .alert-warn strong { color: var(--fg); }
+    .alert-cta {
+      margin-left: auto; padding: 5px 12px; border-radius: 6px; font-size: .78rem;
+      font-weight: 600; cursor: pointer; white-space: nowrap; border: none;
+    }
+    .alert-upsell .alert-cta { background: var(--fg); color: #000; }
+    .alert-warn .alert-cta   { background: var(--fg); color: #000; }
+
+    /* ── SECTION CARD ── */
+    .section-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden; margin-bottom: 20px;
+    }
+    .section-head {
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .section-title { font-size: .9rem; font-weight: 600; }
+    .section-body { padding: 18px; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px;
+      border-radius: 8px; font-size: .83rem; font-weight: 600; cursor: pointer;
+      border: none; transition: all .15s; text-decoration: none;
+    }
+    .btn-primary { background: #fff; color: #000; }
+    .btn-primary:hover { background: #E5E5E5; }
+    .btn-gradient { background: #fff; color: #000; }
+    .btn-gradient:hover { background: #E5E5E5; }
+    .btn-outline { background: transparent; border: 1px solid var(--border2); color: var(--muted2); }
+    .btn-outline:hover { border-color: rgba(255,255,255,.3); color: var(--fg); }
+    .btn-ghost { background: transparent; color: var(--muted2); }
+    .btn-ghost:hover { background: var(--surface2); color: var(--fg); }
+    .btn-sm { padding: 5px 12px; font-size: .78rem; border-radius: 7px; }
+    .btn-lg { padding: 12px 24px; font-size: .92rem; border-radius: 10px; }
+    .btn-xl { padding: 16px 32px; font-size: 1rem; border-radius: 12px; width: 100%; justify-content: center; }
+
+    /* ── ORDER LIST ── */
+    .order-row {
+      display: flex; align-items: center; gap: 14px; padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .order-row:last-child { border-bottom: none; }
+    .order-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .order-info { flex: 1; }
+    .order-title { font-size: .85rem; font-weight: 600; margin-bottom: 2px; }
+    .order-meta  { font-size: .75rem; color: var(--muted); }
+    .status-badge {
+      padding: 4px 10px; border-radius: 99px; font-size: .72rem; font-weight: 600; white-space: nowrap;
+    }
+    .status-pending     { background: rgba(255,255,255,.05); color: var(--muted2); border: 1px solid var(--border2); }
+    .status-production  { background: rgba(255,255,255,.05); color: var(--fg); border: 1px solid var(--border2); }
+    .status-delivered   { background: rgba(255,255,255,.08); color: var(--fg); border: 1px solid rgba(255,255,255,.15); }
+    .status-revision    { background: rgba(255,255,255,.05); color: var(--muted2); border: 1px solid var(--border2); }
+
+    /* ── UPLOAD AREA ── */
+    .upload-tabs { display: flex; gap: 4px; background: var(--surface2); padding: 4px; border-radius: 10px; margin-bottom: 24px; }
+    .upload-tab {
+      flex: 1; padding: 9px 16px; border-radius: 8px; font-size: .85rem; font-weight: 600;
+      cursor: pointer; text-align: center; border: none; background: transparent;
+      color: var(--muted2); transition: all .2s;
+    }
+    .upload-tab.active { background: var(--surface); color: var(--fg); box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+
+    .upload-zone {
+      border: 2px dashed var(--border2); border-radius: var(--radius);
+      padding: 48px 24px; text-align: center; cursor: pointer;
+      transition: all .2s; background: var(--surface2); margin-bottom: 20px;
+    }
+    .upload-zone:hover, .upload-zone.drag { border-color: rgba(255,255,255,.25); background: rgba(255,255,255,.03); }
+    .upload-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .upload-title { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+    .upload-sub { font-size: .82rem; color: var(--muted); }
+    .upload-formats { font-size: .75rem; color: var(--muted); margin-top: 8px; }
+
+    .record-zone {
+      border: 2px dashed var(--border2); border-radius: var(--radius);
+      padding: 32px 24px; text-align: center; background: var(--surface2);
+      margin-bottom: 20px;
+    }
+    .record-btn {
+      width: 64px; height: 64px; border-radius: 50%; background: var(--red);
+      border: 4px solid rgba(239,68,68,.25); margin: 0 auto 16px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all .2s; box-shadow: 0 0 0 0 rgba(239,68,68,.4);
+      animation: recordPulse 2s infinite;
+    }
+    @keyframes recordPulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.3); }
+      50% { box-shadow: 0 0 0 12px rgba(239,68,68,0); }
+    }
+
+    /* YouTube panel */
+    .yt-channel-card {
+      display: flex; align-items: center; gap: 14px; padding: 16px;
+      background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 16px;
+    }
+    .yt-thumb { width: 48px; height: 48px; border-radius: 50%; background: #FF0000; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .yt-name { font-size: .9rem; font-weight: 700; }
+    .yt-sub  { font-size: .78rem; color: var(--muted); }
+    .yt-status { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--green); }
+    .yt-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: recordPulse 2s infinite; }
+
+    .video-detect-card {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 16px; display: flex; gap: 14px; align-items: flex-start; margin-bottom: 12px;
+    }
+    .video-thumb {
+      width: 100px; height: 60px; border-radius: 8px; background: var(--surface3);
+      overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+    }
+    .video-title { font-size: .85rem; font-weight: 600; margin-bottom: 4px; }
+    .video-meta { font-size: .75rem; color: var(--muted); margin-bottom: 10px; }
+    .clips-estimate {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--purple-light); border: 1px solid rgba(124,58,237,.3);
+      color: var(--purple); padding: 5px 12px; border-radius: 99px; font-size: .78rem; font-weight: 600;
+    }
+    .video-actions { display: flex; gap: 8px; margin-top: 10px; }
+
+    /* Briefing form */
+    .form-group { margin-bottom: 18px; }
+    .form-label { font-size: .8rem; font-weight: 600; color: var(--muted2); margin-bottom: 6px; display: block; }
+    .form-input, .form-select, .form-textarea {
+      width: 100%; padding: 10px 12px; background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 8px; color: var(--fg); font-size: .85rem; font-family: inherit;
+      transition: border-color .15s; outline: none;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: rgba(255,255,255,.25); }
+    .form-textarea { min-height: 80px; resize: vertical; }
+    .form-select { appearance: none; }
+    .platform-checks { display: flex; gap: 10px; flex-wrap: wrap; }
+    .platform-check {
+      display: flex; align-items: center; gap: 7px; padding: 8px 14px;
+      border: 1px solid var(--border2); border-radius: 8px; cursor: pointer;
+      font-size: .82rem; font-weight: 600; color: var(--muted2); transition: all .15s;
+    }
+    .platform-check.on { border-color: rgba(255,255,255,.25); background: rgba(255,255,255,.07); color: var(--fg); }
+    .credit-cost-box {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius); margin-bottom: 18px;
+    }
+    .cost-label { font-size: .82rem; color: var(--muted); }
+    .cost-value { font-size: 1.1rem; font-weight: 800; color: var(--purple); }
+    .cost-after { font-size: .78rem; color: var(--muted); margin-top: 2px; }
+
+    /* ── CLIPS FEED ── */
+    .clips-filters { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .filter-btn {
+      padding: 6px 14px; border-radius: 99px; font-size: .78rem; font-weight: 600;
+      cursor: pointer; border: 1px solid var(--border2); background: transparent;
+      color: var(--muted2); transition: all .15s;
+    }
+    .filter-btn.on { background: var(--fg); border-color: var(--fg); color: #000; }
+
+    .clip-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      overflow: hidden; margin-bottom: 16px; transition: border-color .2s;
+    }
+    .clip-card:hover { border-color: var(--border2); }
+    .clip-header { padding: 16px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 14px; }
+    .clip-preview {
+      width: 90px; height: 68px; border-radius: 8px; background: var(--surface3);
+      flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; cursor: pointer; position: relative;
+    }
+    .clip-play {
+      position: absolute; inset: 0; background: rgba(0,0,0,.4);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity .2s; border-radius: 8px;
+    }
+    .clip-preview:hover .clip-play { opacity: 1; }
+    .clip-info { flex: 1; }
+    .clip-title { font-size: .9rem; font-weight: 700; margin-bottom: 4px; }
+    .clip-meta  { font-size: .75rem; color: var(--muted); margin-bottom: 10px; }
+    .clip-badges { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    /* Virality badges */
+    .vbadge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 12px; border-radius: 99px; font-size: .78rem; font-weight: 700;
+      letter-spacing: .02em; border: 1px solid;
+    }
+    /* Virality — únicas cores intencionais (escala de temperatura) */
+    .vbadge-frio   { background: rgba(59,130,246,.12); color: var(--v-frio); border-color: rgba(59,130,246,.3); }
+    .vbadge-morno  { background: rgba(139,92,246,.12); color: var(--v-morno); border-color: rgba(139,92,246,.3); }
+    .vbadge-quente { background: rgba(249,115,22,.12); color: var(--v-quente); border-color: rgba(249,115,22,.3); }
+    .vbadge-viral  {
+      background: rgba(239,68,68,.15); color: var(--v-viral); border-color: rgba(239,68,68,.4);
+      animation: viralAnim 1.8s ease-in-out infinite;
+    }
+    @keyframes viralAnim {
+      0%,100% { box-shadow: 0 0 8px 2px rgba(239,68,68,.35); }
+      50% { box-shadow: 0 0 20px 6px rgba(239,68,68,.7); }
+    }
+    .views-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: .75rem; color: var(--muted2);
+    }
+
+    .clip-body { padding: 14px 18px; }
+    .feedback-box {
+      background: var(--surface2); border-left: 3px solid var(--purple);
+      border-radius: 0 8px 8px 0; padding: 10px 14px;
+      font-size: .8rem; color: var(--muted2); margin-bottom: 14px; line-height: 1.6;
+    }
+    .feedback-label { font-size: .7rem; color: var(--purple); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+
+    .clip-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* ── EMPTY STATE ── */
+    .empty {
+      text-align: center; padding: 48px 24px;
+      color: var(--muted); font-size: .9rem;
+    }
+    .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .empty-title { font-size: 1rem; font-weight: 700; color: var(--muted2); margin-bottom: 6px; }
+
+    /* ── STYLES GRID ── */
+    .styles-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .style-card {
+      background: var(--surface2); border: 2px solid var(--border);
+      border-radius: var(--radius); padding: 18px; cursor: pointer; transition: all .2s;
+    }
+    .style-card:hover { border-color: rgba(255,255,255,.2); }
+    .style-card.selected { border-color: rgba(255,255,255,.35); background: rgba(255,255,255,.05); }
+    .style-card-preview {
+      width: 100%; height: 80px; background: var(--surface3); border-radius: 8px;
+      margin-bottom: 12px; display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; overflow: hidden;
+    }
+    .style-name { font-size: .88rem; font-weight: 700; margin-bottom: 4px; }
+    .style-desc { font-size: .75rem; color: var(--muted); line-height: 1.5; }
+    .style-check {
+      width: 20px; height: 20px; border-radius: 50%; background: var(--purple);
+      display: flex; align-items: center; justify-content: center;
+      float: right; margin-top: -4px; font-size: .7rem;
+    }
+
+    /* ── CREDITS PAGE ── */
+    .credits-banner {
+      background: linear-gradient(135deg, rgba(124,58,237,.15), rgba(249,115,22,.08));
+      border: 1px solid rgba(124,58,237,.25); border-radius: var(--radius);
+      padding: 24px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    }
+    .credits-big { font-size: 3rem; font-weight: 900; background: linear-gradient(135deg,var(--purple),var(--orange)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .credits-after { font-size: .8rem; color: var(--muted); margin-top: 4px; }
+
+    .packages-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 24px; }
+    .package-card {
+      background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius);
+      padding: 20px; cursor: pointer; transition: all .2s; position: relative;
+    }
+    .package-card:hover { border-color: rgba(255,255,255,.2); }
+    .package-card.popular { border-color: rgba(255,255,255,.3); background: rgba(255,255,255,.04); }
+    .popular-pill {
+      position: absolute; top: -11px; left: 50%; transform: translateX(-50%);
+      background: var(--purple); color: #fff; font-size: .72rem; font-weight: 700;
+      padding: 3px 12px; border-radius: 99px;
+    }
+    .pkg-name  { font-size: .85rem; font-weight: 700; margin-bottom: 8px; }
+    .pkg-price { font-size: 1.8rem; font-weight: 900; margin-bottom: 4px; }
+    .pkg-price span { font-size: .8rem; color: var(--muted); font-weight: 400; }
+    .pkg-credits { font-size: .78rem; color: var(--muted); margin-bottom: 12px; }
+    .pkg-reels { font-size: .78rem; color: var(--muted2); }
+
+    /* subscription upsell */
+    .upsell-block {
+      background: linear-gradient(135deg, rgba(124,58,237,.1), rgba(249,115,22,.06));
+      border: 1px solid rgba(124,58,237,.25); border-radius: var(--radius); padding: 24px;
+    }
+    .upsell-title { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+    .upsell-sub { font-size: .82rem; color: var(--muted2); margin-bottom: 16px; }
+    .plans-compare { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+    .plan-card {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 16px;
+    }
+    .plan-name { font-size: .82rem; font-weight: 700; margin-bottom: 4px; }
+    .plan-price { font-size: 1.2rem; font-weight: 800; color: var(--purple); }
+    .plan-price span { font-size: .75rem; color: var(--muted); font-weight: 400; }
+    .plan-credits { font-size: .75rem; color: var(--muted); margin-top: 4px; }
+
+    /* history */
+    .history-row {
+      display: flex; align-items: center; gap: 12px; padding: 12px 0;
+      border-bottom: 1px solid var(--border); font-size: .83rem;
+    }
+    .history-row:last-child { border-bottom: none; }
+    .history-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .history-desc { flex: 1; }
+    .history-date { color: var(--muted); font-size: .75rem; margin-top: 2px; }
+    .history-amount { font-weight: 700; }
+    .amount-add { color: var(--green); }
+    .amount-use { color: var(--orange); }
+
+    /* ── NOTIFICATIONS ── */
+    .notif-list { display: flex; flex-direction: column; gap: 10px; }
+    .notif-item {
+      display: flex; gap: 12px; padding: 14px; border-radius: var(--radius);
+      border: 1px solid var(--border); background: var(--surface);
+      transition: background .15s;
+    }
+    .notif-item.unread { background: var(--surface2); border-color: var(--border2); }
+    .notif-dot-ind { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+    .notif-text { font-size: .83rem; line-height: 1.5; flex: 1; }
+    .notif-time { font-size: .72rem; color: var(--muted); margin-top: 2px; }
+
+    /* ── INLINE TAG ── */
+    .tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 8px; border-radius: 5px; font-size: .72rem; font-weight: 600;
+    }
+    .tag-new { background: var(--green-light); color: var(--green); }
+
+    /* ── ACTION CARDS (Início) ── */
+    .action-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px;
+      transition: border-color .15s, background .15s;
+    }
+    .action-card:hover { border-color: var(--border2); background: var(--surface2); }
+    .action-icon {
+      width: 36px; height: 36px; border-radius: 9px;
+      background: var(--surface3); border: 1px solid var(--border2);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--fg);
+    }
+    .action-badge {
+      font-size: .7rem; font-weight: 700; padding: 3px 8px;
+      border-radius: 99px; background: rgba(255,255,255,.09);
+      color: var(--fg); border: 1px solid var(--border2);
+    }
+    .action-title { font-size: .9rem; font-weight: 600; margin-bottom: 4px; }
+    .action-sub { font-size: .78rem; color: var(--muted2); line-height: 1.5; margin-bottom: 14px; }
+    .action-cta { font-size: .78rem; font-weight: 600; color: var(--muted2); }
+    .action-card:hover .action-cta { color: var(--fg); }
+
+    /* scroll to top btn */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .progress-steps { display: flex; align-items: center; gap: 0; margin-bottom: 24px; }
+    .step { display: flex; align-items: center; }
+    .step-circle {
+      width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: .75rem; font-weight: 700; flex-shrink: 0;
+    }
+    .step-circle.done { background: var(--fg); color: #000; }
+    .step-circle.current { background: var(--fg); color: #000; }
+    .step-circle.todo { background: var(--surface2); border: 1px solid var(--border2); color: var(--muted); }
+    .step-label { font-size: .75rem; margin-left: 6px; color: var(--muted2); }
+    .step-line { flex: 1; height: 1px; background: var(--border2); margin: 0 8px; min-width: 20px; }
+    .step-label.done { color: var(--fg); }
+    .step-label.current { color: var(--fg); font-weight: 600; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.75);
+      backdrop-filter: blur(6px); z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-box {
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 16px; padding: 28px; width: 500px;
+      max-width: calc(100vw - 32px); max-height: calc(100vh - 64px);
+      overflow-y: auto; position: relative;
+    }
+    .modal-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 5px; }
+    .modal-sub { font-size: .82rem; color: var(--muted2); margin-bottom: 22px; }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px; width: 30px; height: 30px;
+      border-radius: 50%; border: 1px solid var(--border2); background: var(--surface2);
+      color: var(--muted2); cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center;
+    }
+    .modal-close:hover { color: var(--fg); border-color: rgba(255,255,255,.2); }
+    .modal-footer { display: flex; gap: 10px; margin-top: 20px; }
+
+    /* ── PERFORMANCE ── */
+    .perf-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+    .perf-stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
+    .perf-val { font-size: 1.7rem; font-weight: 800; margin-bottom: 3px; }
+    .perf-lbl { font-size: .72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+    .perf-change { font-size: .72rem; color: var(--muted2); margin-top: 4px; }
+    .chart-wrap { display: flex; align-items: flex-end; gap: 5px; height: 80px; }
+    .chart-bar { flex: 1; border-radius: 4px 4px 0 0; background: var(--surface3); position: relative; min-width: 0; }
+    .chart-bar:hover { background: var(--border2); }
+
+    /* ── CALENDAR ── */
+    .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+    .cal-day-name { text-align: center; font-size: .68rem; color: var(--muted); font-weight: 600; padding: 6px 0; }
+    .cal-day {
+      aspect-ratio: 1; border-radius: 6px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; font-size: .78rem;
+      cursor: pointer; transition: all .15s; position: relative; border: 1px solid transparent;
+    }
+    .cal-day:hover { background: var(--surface2); }
+    .cal-day.today { border-color: rgba(255,255,255,.2); font-weight: 700; color: var(--fg); }
+    .cal-day.posted { background: rgba(255,255,255,.05); }
+    .cal-day.scheduled { background: rgba(255,255,255,.02); }
+    .cal-day.off { color: var(--muted); }
+    .cal-dot { width: 5px; height: 5px; border-radius: 50%; margin-top: 2px; }
+
+    /* ── CONFIG TABS ── */
+    .cfg-tabs {
+      display: flex; gap: 0; border-bottom: 1px solid var(--border);
+      margin-bottom: 24px; overflow-x: auto;
+    }
+    .cfg-tab {
+      padding: 10px 16px; font-size: .82rem; font-weight: 600; color: var(--muted2);
+      cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent;
+      white-space: nowrap; transition: all .15s;
+    }
+    .cfg-tab:hover { color: var(--fg); }
+    .cfg-tab.active { color: var(--fg); border-bottom-color: var(--fg); }
+    .cfg-pane { display: none; }
+    .cfg-pane.active { display: block; }
+
+    /* ── TOGGLE SWITCH ── */
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 13px 0; border-bottom: 1px solid var(--border);
+    }
+    .toggle-row:last-child { border-bottom: none; }
+    .toggle-label { font-size: .85rem; font-weight: 600; }
+    .toggle-sub { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+    .toggle {
+      width: 40px; height: 22px; border-radius: 11px; background: var(--surface3);
+      border: 1px solid var(--border2); position: relative; cursor: pointer; flex-shrink: 0; transition: background .2s;
+    }
+    .toggle.on { background: var(--fg); border-color: var(--fg); }
+    .toggle::after {
+      content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px;
+      border-radius: 50%; background: var(--muted); transition: transform .2s, background .2s;
+    }
+    .toggle.on::after { background: #000; transform: translateX(18px); }
+
+    /* ── PLATFORM CONNECT ROW ── */
+    .plat-row {
+      display: flex; align-items: center; gap: 14px; padding: 14px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius); margin-bottom: 10px;
+    }
+    .plat-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.25rem; flex-shrink: 0; background: var(--surface3);
+    }
+
+    /* ── PLANS PAGE ── */
+    .plans-page-header {
+      text-align: center; padding: 48px 24px 40px; max-width: 600px; margin: 0 auto;
+    }
+    .plans-eyebrow {
+      font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .14em;
+      color: var(--muted2); margin-bottom: 16px;
+    }
+    .plans-title { font-size: 2.2rem; font-weight: 900; letter-spacing: -.03em; margin-bottom: 12px; line-height: 1.15; }
+    .plans-sub { font-size: .95rem; color: var(--muted2); line-height: 1.65; margin-bottom: 20px; }
+    .plans-impact {
+      display: inline-block; font-size: .88rem; font-weight: 600;
+      color: var(--muted2); border: 1px solid var(--border2);
+      border-radius: 99px; padding: 8px 20px; margin-bottom: 0;
+    }
+    .plans-grid {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 16px;
+      max-width: 1000px; margin: 0 auto 40px; align-items: stretch;
+    }
+    .plan-main-card {
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 16px; padding: 28px; display: flex; flex-direction: column;
+      position: relative; transition: border-color .2s;
+    }
+    .plan-main-card:hover { border-color: rgba(255,255,255,.2); }
+    .plan-featured {
+      background: var(--surface2); border-color: rgba(255,255,255,.25);
+      box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 20px 60px rgba(0,0,0,.4);
+      transform: scale(1.02);
+    }
+    .plan-featured:hover { border-color: rgba(255,255,255,.4); }
+    .plan-badge {
+      position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+      background: var(--fg); color: #000; font-size: .7rem; font-weight: 800;
+      padding: 4px 14px; border-radius: 99px; white-space: nowrap; letter-spacing: .04em;
+    }
+    .plan-main-name { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted2); margin-bottom: 10px; }
+    .plan-main-headline { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; line-height: 1.35; }
+    .plan-main-desc { font-size: .8rem; color: var(--muted2); line-height: 1.6; margin-bottom: 20px; flex: 0; }
+    .plan-main-support { font-size: .78rem; color: var(--muted2); margin-bottom: 14px; font-style: italic; line-height: 1.5; }
+    .plan-price-block { margin-bottom: 20px; }
+    .plan-main-price { font-size: 2.4rem; font-weight: 900; letter-spacing: -.04em; line-height: 1; }
+    .plan-main-price span { font-size: 1rem; font-weight: 400; color: var(--muted2); }
+    .plan-volume { font-size: .78rem; color: var(--muted); margin-top: 5px; }
+    .plan-cta { margin-bottom: 24px; }
+    .plan-divider { height: 1px; background: var(--border); margin-bottom: 20px; }
+    .feature-list { list-style: none; display: flex; flex-direction: column; gap: 9px; flex: 1; }
+    .feature-item { display: flex; align-items: flex-start; gap: 9px; font-size: .8rem; color: var(--muted2); line-height: 1.45; }
+    .feature-check { width: 16px; height: 16px; border-radius: 50%; background: rgba(255,255,255,.08); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; font-size: .6rem; }
+    .plan-featured .feature-check { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.2); }
+    .plans-footer { text-align: center; max-width: 640px; margin: 0 auto 12px; }
+    .plans-guarantee { display: flex; align-items: center; justify-content: center; gap: 24px; font-size: .78rem; color: var(--muted2); margin-bottom: 20px; }
+    .plans-disclaimer { font-size: .72rem; color: var(--muted); line-height: 1.7; }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 999;
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 10px; padding: 14px 18px; font-size: .84rem; font-weight: 600;
+      display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 32px rgba(0,0,0,.5);
+      transform: translateY(80px); opacity: 0; transition: all .3s ease; pointer-events: none;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ── VAULT CTA ── */
+    .vault-cta {
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: var(--radius); padding: 28px 28px 22px; margin-bottom: 24px;
+      position: relative; overflow: hidden;
+    }
+    .vault-cta::before {
+      content: ''; position: absolute; top: -60px; right: -60px;
+      width: 220px; height: 220px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,.025) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .vault-label {
+      font-size: .68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .12em; color: var(--muted2); margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .vault-label::before { content: ''; display: inline-block; width: 16px; height: 1px; background: var(--muted); }
+    .vault-headline { font-size: 1.55rem; font-weight: 900; line-height: 1.25; margin-bottom: 8px; letter-spacing: -.02em; }
+    .vault-headline em { font-style: normal; }
+    .vault-sub { font-size: .85rem; color: var(--muted2); line-height: 1.6; margin-bottom: 22px; max-width: 520px; }
+    .vault-metrics {
+      display: flex; gap: 0; margin-bottom: 22px;
+      border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+    }
+    .vault-metric {
+      flex: 1; padding: 12px 14px; border-right: 1px solid var(--border);
+      text-align: center;
+    }
+    .vault-metric:last-child { border-right: none; }
+    .vault-metric-val { font-size: 1.1rem; font-weight: 800; display: block; margin-bottom: 2px; }
+    .vault-metric-lbl { font-size: .65rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+    .vault-btns { display: flex; gap: 10px; align-items: center; }
+    .vault-disclaimer { font-size: .68rem; color: var(--muted); margin-top: 14px; }
+
+    /* ── RANK CARD ── */
+    .rank-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px; margin-bottom: 10px;
+      display: flex; gap: 16px; align-items: flex-start; transition: border-color .15s;
+    }
+    .rank-card:hover { border-color: var(--border2); }
+    .rank-pos { font-size: 1rem; font-weight: 800; color: var(--muted); width: 22px; flex-shrink: 0; padding-top: 2px; }
+    .rank-thumb {
+      width: 88px; height: 50px; border-radius: 6px; background: var(--surface3);
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+    }
+    .rank-info { flex: 1; min-width: 0; }
+    .rank-title { font-size: .88rem; font-weight: 700; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rank-meta { font-size: .72rem; color: var(--muted); margin-bottom: 7px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .rank-reason { font-size: .75rem; color: var(--muted2); line-height: 1.5; margin-bottom: 10px; }
+    .rank-potential { font-size: 1.05rem; font-weight: 800; margin-bottom: 8px; }
+    .rank-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; align-items: flex-end; }
+
+    /* ── CUTS DRAWER ── */
+    .cut-item { padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .cut-item:last-child { border-bottom: none; }
+    .cut-title { font-size: .88rem; font-weight: 700; margin-bottom: 4px; }
+    .cut-meta { font-size: .72rem; color: var(--muted); margin-bottom: 6px; }
+    .cut-reason { font-size: .75rem; color: var(--muted2); line-height: 1.5; margin-bottom: 10px; }
+    .cut-foot { display: flex; align-items: center; justify-content: space-between; }
+
+    /* ── ANALYSIS MODAL ── */
+    .analysis-step { display: flex; align-items: center; gap: 12px; padding: 9px 0; }
+    .an-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border2); flex-shrink: 0; transition: background .3s; }
+    .an-dot.done { background: var(--fg); }
+    .an-dot.running { background: var(--muted); animation: anPulse 0.8s infinite; }
+    @keyframes anPulse { 0%,100%{opacity:1}50%{opacity:.2} }
+    .an-text { font-size: .85rem; color: var(--muted); transition: color .3s; }
+    .an-done .an-text { color: var(--fg); }
+    .analysis-result { animation: fadeIn .4s ease; }
+
+    /* ── THEME CARD ── */
+    .theme-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+    .theme-row:last-child { border-bottom: none; }
+    .theme-name { flex: 1; font-size: .85rem; font-weight: 600; }
+    .theme-bar-wrap { flex: 2; }
+    .theme-bar { height: 4px; background: var(--surface3); border-radius: 99px; overflow: hidden; }
+    .theme-bar-fill { height: 100%; background: var(--fg); border-radius: 99px; }
+    .theme-val { font-size: .8rem; font-weight: 700; white-space: nowrap; color: var(--muted2); min-width: 60px; text-align: right; }
+
+    /* ── VAULT HERO (full section) ── */
+    .vault-hero {
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: var(--radius); padding: 36px; margin-bottom: 20px;
+      position: relative; overflow: hidden;
+    }
+    .vault-hero::before {
+      content: ''; position: absolute; top: -80px; right: -80px;
+      width: 300px; height: 300px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,.02) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .vault-hero-pre { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: var(--muted2); margin-bottom: 16px; }
+    .vault-hero-title { font-size: 1.15rem; color: var(--muted2); font-weight: 500; margin-bottom: 8px; }
+    .vault-hero-num { font-size: 3rem; font-weight: 900; line-height: 1; letter-spacing: -.03em; margin-bottom: 6px; }
+    .vault-hero-sub { font-size: .9rem; color: var(--muted2); line-height: 1.6; margin-bottom: 28px; max-width: 540px; }
+
+    /* ── CREDIT ESTIMATION ── */
+    .credit-est {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px; margin-bottom: 18px;
+    }
+    .credit-est-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; font-size: .83rem; }
+    .credit-est-row.total { border-top: 1px solid var(--border); margin-top: 6px; padding-top: 10px; font-weight: 800; font-size: .9rem; }
+    .credit-warning { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.25); color: rgba(239,68,68,.9); border-radius: 8px; padding: 10px 14px; font-size: .78rem; margin-bottom: 14px; }
+    .credit-ok { background: rgba(255,255,255,.04); border: 1px solid var(--border2); color: var(--muted2); border-radius: 8px; padding: 10px 14px; font-size: .78rem; margin-bottom: 14px; }
+
+    /* ── YT VIDEO CARD (Meu YouTube) ── */
+    .yt-video-row {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 16px 0; border-bottom: 1px solid var(--border);
+    }
+    .yt-video-row:last-child { border-bottom: none; }
+    .yt-video-thumb {
+      width: 120px; height: 68px; border-radius: 8px; background: var(--surface3);
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 2rem;
+    }
+    .yt-new-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 99px;
+      background: rgba(255,255,255,.09); border: 1px solid var(--border2);
+      font-size: .68rem; font-weight: 700; color: var(--fg); margin-left: 6px;
+    }
+
+    /* ── CLIP COUNTER ── */
+    .clip-counter {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 18px; margin-bottom: 18px;
+    }
+    .counter-btn {
+      width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border2);
+      background: var(--surface3); color: var(--fg); font-size: 1.1rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .counter-val { font-size: 1.6rem; font-weight: 800; flex: 1; text-align: center; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <img src="/public/logo.png" alt="UPFY Clipes" />
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" onclick="goTo('inicio',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Início
+      </button>
+      <button class="nav-item" onclick="goTo('youtube',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 001.46 6.42C1 8.14 1 12 1 12s0 3.86.46 5.58a2.78 2.78 0 001.95 1.95C5.12 20 12 20 12 20s6.88 0 8.59-.47a2.78 2.78 0 001.95-1.95C23 15.86 23 12 23 12s0-3.86-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg>
+        Meu YouTube
+        <span style="margin-left:auto;background:rgba(255,255,255,.07);color:var(--fg);font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:99px;border:1px solid var(--border2)">2</span>
+      </button>
+      <button class="nav-item" onclick="goTo('cofre',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>
+        Cofre de Views
+        <span style="margin-left:auto;background:rgba(239,68,68,.15);color:#F87171;font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:99px;border:1px solid rgba(239,68,68,.25)">27M</span>
+      </button>
+      <button class="nav-item" onclick="goTo('avulsos',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Cortes Avulsos
+      </button>
+      <button class="nav-item" onclick="goTo('clipes',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+        Meus Clipes
+        <span style="margin-left:auto;background:rgba(255,255,255,.07);color:var(--fg);font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:99px;border:1px solid var(--border2)">3</span>
+      </button>
+      <button class="nav-item" onclick="goTo('performance',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Performance
+      </button>
+      <button class="nav-item" onclick="goTo('agenda',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Agenda de Postagem
+      </button>
+      <button class="nav-item" onclick="goTo('config',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Configurações
+      </button>
+      <button class="nav-item" onclick="goTo('planos',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        Planos
+      </button>
+    </nav>
+    <div class="sidebar-credits">
+      <div class="credits-label">Créditos disponíveis</div>
+      <div class="credits-value">18.200</div>
+      <div class="credits-bar-track"><div class="credits-bar-fill"></div></div>
+      <div class="credits-sub">9.000 usados de 20.000</div>
+      <button class="btn-recharge" onclick="goTo('config',document.querySelectorAll('.nav-item')[7])">+ Recarregar</button>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar">P</div>
+      <div>
+        <div class="user-name">Pedro Seixas</div>
+        <div class="user-role">Cliente Creator</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══ MAIN ═══ -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Início</div>
+      <div class="topbar-actions">
+        <div class="icon-btn" onclick="goTo('clipes',null)" title="Notificações">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <div class="notif-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ══ INÍCIO ══ -->
+      <!-- ══ INÍCIO ══ -->
+      <div id="screen-inicio" class="screen active">
+
+        <!-- Saudação pessoal -->
+        <div style="margin-bottom:28px">
+          <div style="font-size:1.5rem;font-weight:700;margin-bottom:6px;">Olá, Pedro 👋</div>
+          <div style="font-size:.95rem;color:var(--muted2);line-height:1.6">
+            Você tem <strong style="color:var(--fg)">3 clipes prontos pra postar</strong> e <strong style="color:var(--fg)">2 vídeos novos no YouTube</strong> esperando virar clipe.
+          </div>
+        </div>
+
+        <!-- Atalhos rápidos -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px">
+
+          <!-- Clipes prontos -->
+          <div class="action-card" onclick="goTo('clipes',document.querySelectorAll('.nav-item')[4])" style="cursor:pointer">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px">
+              <div class="action-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+              </div>
+              <span class="action-badge">3 prontos</span>
+            </div>
+            <div class="action-title">Clipes prontos pra postar</div>
+            <div class="action-sub">Aprove e poste no Instagram ou TikTok agora</div>
+            <div class="action-cta">Ver clipes →</div>
+          </div>
+
+          <!-- Vídeos YouTube -->
+          <div class="action-card" onclick="goTo('youtube',document.querySelectorAll('.nav-item')[1])" style="cursor:pointer">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px">
+              <div class="action-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 001.46 6.42C1 8.14 1 12 1 12s0 3.86.46 5.58a2.78 2.78 0 001.95 1.95C5.12 20 12 20 12 20s6.88 0 8.59-.47a2.78 2.78 0 001.95-1.95C23 15.86 23 12 23 12s0-3.86-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg>
+              </div>
+              <span class="action-badge">2 novos</span>
+            </div>
+            <div class="action-title">Vídeos novos no YouTube</div>
+            <div class="action-sub">Detectados automaticamente no seu canal</div>
+            <div class="action-cta">Pedir clipes →</div>
+          </div>
+
+          <!-- Créditos -->
+          <div class="action-card" onclick="goTo('config',document.querySelectorAll('.nav-item')[7])" style="cursor:pointer">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
+              <div class="action-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+              </div>
+              <span style="font-size:.72rem;color:var(--muted2)">45% usado</span>
+            </div>
+            <div class="action-title" style="font-size:1.6rem;font-weight:800;margin-bottom:2px">18.200</div>
+            <div class="action-sub" style="margin-bottom:10px">créditos disponíveis · ~10 reels</div>
+            <div style="height:3px;background:var(--surface3);border-radius:99px;overflow:hidden">
+              <div style="width:45%;height:100%;background:var(--fg);border-radius:99px"></div>
+            </div>
+          </div>
+
+          <!-- Próxima postagem -->
+          <div class="action-card" onclick="goTo('agenda',document.querySelectorAll('.nav-item')[6])" style="cursor:pointer">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px">
+              <div class="action-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <span class="action-badge" style="background:rgba(255,255,255,.05)">hoje</span>
+            </div>
+            <div class="action-title">Próxima postagem</div>
+            <div style="font-size:1.4rem;font-weight:700;margin:6px 0 4px">18:00</div>
+            <div class="action-sub">Instagram · Reel — Produtividade</div>
+            <div class="action-cta">Ver agenda →</div>
+          </div>
+
+        </div>
+
+        <!-- Clipe viralizando -->
+        <div class="section-card">
+          <div class="section-head">
+            <span class="section-title">🔥 Clipe viralizando agora</span>
+            <button class="btn btn-ghost btn-sm" onclick="goTo('performance',document.querySelectorAll('.nav-item')[5])">Ver performance →</button>
+          </div>
+          <div class="section-body" style="display:flex;gap:20px;align-items:flex-start">
+            <div style="width:140px;height:88px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0;border:1px solid var(--border)">🎬</div>
+            <div style="flex:1">
+              <div style="font-weight:700;margin-bottom:4px">Como criar conteúdo que viraliza — Corte #3</div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                <span class="vbadge vbadge-viral">🔥 Viral</span>
+                <span style="font-size:.78rem;color:var(--muted2)">28.4k views · postado há 2 dias</span>
+              </div>
+              <div class="feedback-box" style="margin-bottom:14px">"Hook perfeito nos primeiros 3 segundos. Ritmo de corte ideal pra reter atenção no TikTok."</div>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-outline btn-sm">⬇ Baixar</button>
+                <button class="btn btn-gradient btn-sm">▶ Postar agora</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /inicio -->
+
+      <!-- ══ ENVIAR VÍDEO ══ -->
+      <div id="screen-enviar" class="screen">
+        <div class="page-header">
+          <div class="page-title">Enviar Vídeo</div>
+          <div class="page-sub">Escolha como quer enviar seu conteúdo</div>
+        </div>
+
+        <div class="upload-tabs">
+          <button class="upload-tab active" onclick="switchUploadTab('reel',this)">📱 Reel avulso</button>
+          <button class="upload-tab" onclick="switchUploadTab('youtube',this)">▶ Vídeo do YouTube</button>
+        </div>
+
+        <!-- REEL TAB -->
+        <div id="tab-reel">
+          <!-- Steps -->
+          <div class="progress-steps">
+            <div class="step">
+              <div class="step-circle current">1</div>
+              <div class="step-label current">Vídeo</div>
+            </div>
+            <div class="step-line"></div>
+            <div class="step">
+              <div class="step-circle todo">2</div>
+              <div class="step-label">Briefing</div>
+            </div>
+            <div class="step-line"></div>
+            <div class="step">
+              <div class="step-circle todo">3</div>
+              <div class="step-label">Confirmar</div>
+            </div>
+          </div>
+
+          <div class="two-col" style="align-items:start">
+            <div>
+              <!-- Upload -->
+              <div class="upload-zone" onclick="this.classList.toggle('drag')">
+                <div class="upload-icon">☁️</div>
+                <div class="upload-title">Arraste seu vídeo aqui</div>
+                <div class="upload-sub">ou clique para selecionar do computador</div>
+                <div class="upload-formats">MP4, MOV, AVI · Máximo 2GB</div>
+              </div>
+              <div style="text-align:center;font-size:.82rem;color:var(--muted);margin:0 0 16px">— ou —</div>
+              <!-- Record -->
+              <div class="record-zone">
+                <div class="record-btn">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+                </div>
+                <div class="upload-title" style="font-size:.9rem">Gravar direto pela câmera</div>
+                <div class="upload-sub" style="margin-top:4px">Use a webcam ou câmera do celular</div>
+              </div>
+            </div>
+            <!-- Briefing -->
+            <div class="section-card">
+              <div class="section-head"><span class="section-title">Briefing do clipe</span></div>
+              <div class="section-body">
+                <div class="form-group">
+                  <label class="form-label">Tom do vídeo</label>
+                  <select class="form-select">
+                    <option>Energético e rápido</option>
+                    <option>Calmo e educativo</option>
+                    <option>Humorístico</option>
+                    <option>Profissional</option>
+                    <option>Motivacional</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Música de fundo</label>
+                  <select class="form-select">
+                    <option>Sem música</option>
+                    <option>Trap/Lo-fi</option>
+                    <option>Pop energético</option>
+                    <option>Ambiente</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Call to action (CTA)</label>
+                  <input class="form-input" type="text" placeholder="Ex: Siga pra mais dicas" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Plataformas de destino</label>
+                  <div class="platform-checks">
+                    <div class="platform-check on" onclick="this.classList.toggle('on')">📸 Instagram</div>
+                    <div class="platform-check on" onclick="this.classList.toggle('on')">🎵 TikTok</div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Observações (opcional)</label>
+                  <textarea class="form-textarea" placeholder="Ex: destacar o momento em que falo sobre produtividade..."></textarea>
+                </div>
+                <div class="credit-cost-box">
+                  <div>
+                    <div class="cost-label">Custo do pedido</div>
+                    <div class="cost-after">Saldo após: 16.400 créditos</div>
+                  </div>
+                  <div style="text-align:right">
+                    <div class="cost-value">1.800 créditos</div>
+                    <div class="cost-after">1 reel avulso</div>
+                  </div>
+                </div>
+                <button class="btn btn-gradient btn-xl">Confirmar pedido → 1.800 créditos</button>
+              </div>
+            </div>
+          </div>
+        </div><!-- /tab-reel -->
+
+        <!-- YOUTUBE TAB -->
+        <div id="tab-youtube" style="display:none">
+          <div class="yt-channel-card">
+            <div class="yt-thumb">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 001.46 6.42C1 8.14 1 12 1 12s0 3.86.46 5.58a2.78 2.78 0 001.95 1.95C5.12 20 12 20 12 20s6.88 0 8.59-.47a2.78 2.78 0 001.95-1.95C23 15.86 23 12 23 12s0-3.86-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#FF0000"/></svg>
+            </div>
+            <div>
+              <div class="yt-name">Pedro Seixas</div>
+              <div class="yt-sub">14.2k inscritos · canal conectado</div>
+            </div>
+            <div class="yt-status"><div class="yt-dot"></div> Monitorando novos vídeos</div>
+          </div>
+
+          <div class="section-card" style="margin-bottom:16px">
+            <div class="section-head">
+              <span class="section-title">Vídeos detectados</span>
+              <span class="tag tag-new">2 novos</span>
+            </div>
+            <div class="section-body" style="padding:12px 18px">
+              <div class="video-detect-card">
+                <div class="video-thumb">🎥</div>
+                <div style="flex:1">
+                  <div class="video-title">Como criar conteúdo todos os dias sem esgotar</div>
+                  <div class="video-meta">47 min · Publicado há 1 hora</div>
+                  <span class="clips-estimate">✦ Encontramos 4 clipes nesse vídeo</span>
+                  <div class="video-actions">
+                    <button class="btn btn-gradient btn-sm">Solicitar 4 clipes → 10.000 créditos</button>
+                    <button class="btn btn-outline btn-sm">Ignorar</button>
+                  </div>
+                </div>
+              </div>
+              <div class="video-detect-card">
+                <div class="video-thumb">🎥</div>
+                <div style="flex:1">
+                  <div class="video-title">Minha rotina matinal de criador — sem mentiras</div>
+                  <div class="video-meta">28 min · Publicado há 2 dias</div>
+                  <span class="clips-estimate">✦ Encontramos 2 clipes nesse vídeo</span>
+                  <div class="video-actions">
+                    <button class="btn btn-gradient btn-sm">Solicitar 2 clipes → 5.000 créditos</button>
+                    <button class="btn btn-outline btn-sm">Ignorar</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div><!-- /tab-youtube -->
+      </div><!-- /enviar -->
+
+      <!-- ══ MEUS CLIPES ══ -->
+      <div id="screen-clipes" class="screen">
+        <div class="page-header">
+          <div class="page-title">Meus Clipes</div>
+          <div class="page-sub">12 clipes entregues · 3 em produção</div>
+        </div>
+
+        <div class="clips-filters">
+          <button class="filter-btn on" onclick="toggleFilter(this)">Todos</button>
+          <button class="filter-btn" onclick="toggleFilter(this)">🔥 Viral</button>
+          <button class="filter-btn" onclick="toggleFilter(this)">Quente</button>
+          <button class="filter-btn" onclick="toggleFilter(this)">Em produção</button>
+          <button class="filter-btn" onclick="toggleFilter(this)">Revisão</button>
+        </div>
+
+        <!-- Clipe 1 — Viral -->
+        <div class="clip-card">
+          <div class="clip-header">
+            <div class="clip-preview">🎬<div class="clip-play">▶</div></div>
+            <div class="clip-info">
+              <div class="clip-title">Como criar conteúdo que viraliza — Corte #3</div>
+              <div class="clip-meta">Entregue há 2 dias · Reel avulso · Estilo Raiam Santos</div>
+              <div class="clip-badges">
+                <span class="vbadge vbadge-viral">🔥 Viral</span>
+                <span class="views-badge">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  28.4k views
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="clip-body">
+            <div class="feedback-box">
+              <div class="feedback-label">Feedback do especialista</div>
+              "Hook perfeito nos primeiros 3 segundos. Ritmo de corte ideal pra reter atenção no TikTok. Continue abrindo com uma pergunta provocativa."
+            </div>
+            <div class="clip-actions">
+              <button class="btn btn-outline btn-sm">⬇ Baixar</button>
+              <button class="btn btn-gradient btn-sm" onclick="openModal('modal-postar')">▶ Aprovar e Postar</button>
+              <button class="btn btn-ghost btn-sm">↩ Pedir revisão</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Clipe 2 — Alto -->
+        <div class="clip-card">
+          <div class="clip-header">
+            <div class="clip-preview">🎬<div class="clip-play">▶</div></div>
+            <div class="clip-info">
+              <div class="clip-title">Rotina matinal para criadores de conteúdo</div>
+              <div class="clip-meta">Entregue há 5 dias · Reel avulso · Estilo Corte Direto</div>
+              <div class="clip-badges">
+                <span class="vbadge vbadge-quente">🌡 Quente</span>
+                <span class="views-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 6.1k views</span>
+              </div>
+            </div>
+          </div>
+          <div class="clip-body">
+            <div class="feedback-box">
+              <div class="feedback-label">Feedback do especialista</div>
+              "Boa iluminação e energia. Tente falar mais devagar nas próximas gravações — você gagueja levemente no início. O CTA ficou forte."
+            </div>
+            <div class="clip-actions">
+              <button class="btn btn-outline btn-sm">⬇ Baixar</button>
+              <button class="btn btn-gradient btn-sm" onclick="openModal('modal-postar')">▶ Aprovar e Postar</button>
+              <button class="btn btn-ghost btn-sm">↩ Pedir revisão</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Clipe 3 — Médio -->
+        <div class="clip-card">
+          <div class="clip-header">
+            <div class="clip-preview">🎬<div class="clip-play">▶</div></div>
+            <div class="clip-info">
+              <div class="clip-title">3 erros que quebram qualquer vídeo</div>
+              <div class="clip-meta">Entregue há 1 semana · Vídeo longo YouTube · Estilo Educativo</div>
+              <div class="clip-badges">
+                <span class="vbadge vbadge-morno">~ Morno</span>
+                <span class="views-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 2.8k views</span>
+              </div>
+            </div>
+          </div>
+          <div class="clip-body">
+            <div class="feedback-box">
+              <div class="feedback-label">Feedback do especialista</div>
+              "Hook fraco nos primeiros 3 segundos. A iluminação prejudicou a qualidade do corte. Na próxima, grava em frente à janela durante o dia."
+            </div>
+            <div class="clip-actions">
+              <button class="btn btn-outline btn-sm">⬇ Baixar</button>
+              <button class="btn btn-gradient btn-sm" onclick="openModal('modal-postar')">▶ Aprovar e Postar</button>
+              <button class="btn btn-ghost btn-sm">↩ Pedir revisão</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Em produção -->
+        <div class="clip-card" style="border-color:rgba(59,130,246,.3)">
+          <div class="clip-header">
+            <div class="clip-preview" style="background:var(--surface3)">⏳</div>
+            <div class="clip-info">
+              <div class="clip-title">Rotina matinal — YouTube (4 clipes)</div>
+              <div class="clip-meta">Enviado há 2h · Vídeo longo YouTube · 47 min de conteúdo</div>
+              <div class="clip-badges">
+                <span class="status-badge status-production" style="border-radius:99px">Em edição</span>
+                <span class="views-badge" style="margin-left:4px">Prazo estimado: ~30h</span>
+              </div>
+            </div>
+          </div>
+          <div class="clip-body" style="padding-top:0">
+            <div style="background:var(--surface2);border-radius:8px;padding:10px 14px;font-size:.78rem;color:var(--muted)">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Progresso</span><span style="color:var(--blue)">Em edição</span></div>
+              <div class="credits-bar-track" style="height:5px"><div class="credits-bar-fill" style="width:40%;background:var(--blue)"></div></div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /clipes -->
+
+      <!-- ══ ESTILOS ══ -->
+      <div id="screen-estilos" class="screen">
+        <div class="page-header">
+          <div class="page-title">Estilo de Clipe</div>
+          <div class="page-sub">Escolha uma vez — vale pra todos os seus clipes</div>
+        </div>
+        <div class="section-card">
+          <div class="section-head">
+            <span class="section-title">Estilo atual: <strong style="color:var(--fg)">Raiam Santos</strong></span>
+            <button class="btn btn-primary btn-sm">Salvar estilo</button>
+          </div>
+          <div class="section-body">
+            <div class="styles-grid">
+              <div class="style-card selected" onclick="selectStyle(this)">
+                <div class="style-card-preview">⚡</div>
+                <div style="display:flex;align-items:flex-start;justify-content:space-between">
+                  <div>
+                    <div class="style-name">Estilo Raiam Santos</div>
+                    <div class="style-desc">Ritmo acelerado, cortes rápidos e legendas dinâmicas. Ideal pra reter atenção nos primeiros 3 segundos.</div>
+                  </div>
+                  <div class="style-check">✓</div>
+                </div>
+              </div>
+              <div class="style-card" onclick="selectStyle(this)">
+                <div class="style-card-preview">🎯</div>
+                <div>
+                  <div class="style-name">Estilo Corte Direto</div>
+                  <div class="style-desc">Sem rodeios — vai direto ao ponto com impacto visual. Cortes secos e objetivos.</div>
+                </div>
+              </div>
+              <div class="style-card" onclick="selectStyle(this)">
+                <div class="style-card-preview">🎙️</div>
+                <div>
+                  <div class="style-name">Estilo Podcast Viral</div>
+                  <div class="style-desc">Ideal para cortes de conversas e entrevistas. Destaca os momentos mais impactantes.</div>
+                </div>
+              </div>
+              <div class="style-card" onclick="selectStyle(this)">
+                <div class="style-card-preview">📚</div>
+                <div>
+                  <div class="style-name">Estilo Educativo</div>
+                  <div class="style-desc">Clareza, didática e alta retenção. Perfeito para conteúdo de valor com CTA forte.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /estilos -->
+
+      <!-- ══ CRÉDITOS ══ -->
+      <div id="screen-creditos" class="screen">
+        <div class="page-header">
+          <div class="page-title">Créditos</div>
+          <div class="page-sub">Gerencie seu saldo e histórico de compras</div>
+        </div>
+
+        <!-- Saldo -->
+        <div class="credits-banner">
+          <div>
+            <div style="font-size:.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Seu saldo atual</div>
+            <div class="credits-big">18.200</div>
+            <div class="credits-after">créditos disponíveis · ~10 reels ou 7 clipes longos</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:.78rem;color:var(--muted);margin-bottom:6px">Já utilizados</div>
+            <div style="font-size:1.4rem;font-weight:800;color:var(--muted2)">9.000</div>
+            <div style="font-size:.75rem;color:var(--muted);margin-top:4px">de 20.000 comprados</div>
+          </div>
+        </div>
+
+        <!-- Pacotes avulsos -->
+        <div class="section-card" style="margin-bottom:20px">
+          <div class="section-head"><span class="section-title">Comprar mais créditos</span></div>
+          <div class="section-body">
+            <div class="packages-grid">
+              <div class="package-card" onclick="this.style.borderColor='var(--purple)'">
+                <div class="pkg-name">Starter</div>
+                <div class="pkg-price">R$297 <span>único</span></div>
+                <div class="pkg-credits">10.000 créditos · não expiram</div>
+                <div class="pkg-reels">≈ 5 reels · 4 clipes longos</div>
+                <button class="btn btn-outline btn-sm" style="margin-top:14px;width:100%;justify-content:center">Comprar</button>
+              </div>
+              <div class="package-card popular">
+                <div class="popular-pill">⚡ Mais popular</div>
+                <div class="pkg-name">Creator</div>
+                <div class="pkg-price">R$497 <span>único</span></div>
+                <div class="pkg-credits">20.000 créditos · não expiram</div>
+                <div class="pkg-reels">≈ 11 reels · 8 clipes longos</div>
+                <button class="btn btn-gradient btn-sm" style="margin-top:14px;width:100%;justify-content:center">Comprar</button>
+              </div>
+              <div class="package-card" onclick="this.style.borderColor='var(--purple)'">
+                <div class="pkg-name">Pro</div>
+                <div class="pkg-price">R$797 <span>único</span></div>
+                <div class="pkg-credits">40.000 créditos · não expiram</div>
+                <div class="pkg-reels">≈ 22 reels · 16 clipes longos</div>
+                <button class="btn btn-outline btn-sm" style="margin-top:14px;width:100%;justify-content:center">Comprar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Upsell mensal -->
+        <div class="upsell-block" style="margin-bottom:20px">
+          <div class="upsell-title">📅 Todo dia, um clipe pronto pra postar</div>
+          <div class="upsell-sub">No plano mensal não existe crédito — você recebe X clipes por dia, fixo e automático. Muito mais barato por clipe do que comprar avulso.</div>
+          <div class="plans-compare">
+            <div class="plan-card">
+              <div class="plan-name">Starter</div>
+              <div class="plan-price">R$597 <span>/mês</span></div>
+              <div class="plan-credits" style="font-size:1.5rem;font-weight:800;color:var(--fg)">1 clipe/dia</div>
+              <div style="font-size:.72rem;color:var(--muted);margin-top:2px">~30 clipes/mês · R$19,90/clipe</div>
+              <button class="btn btn-outline btn-sm" style="margin-top:12px;width:100%;justify-content:center">Assinar</button>
+            </div>
+            <div class="plan-card" style="border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.04)">
+              <div class="plan-name" style="color:var(--fg)">Crescimento ⭐</div>
+              <div class="plan-price">R$997 <span>/mês</span></div>
+              <div class="plan-credits" style="font-size:1.5rem;font-weight:800;color:var(--fg)">2 clipes/dia</div>
+              <div style="font-size:.72rem;color:var(--muted);margin-top:2px">~60 clipes/mês · R$16,62/clipe</div>
+              <button class="btn btn-gradient btn-sm" style="margin-top:12px;width:100%;justify-content:center">Assinar</button>
+            </div>
+            <div class="plan-card">
+              <div class="plan-name">Diário</div>
+              <div class="plan-price">R$1.297 <span>/mês</span></div>
+              <div class="plan-credits" style="font-size:1.5rem;font-weight:800;color:var(--fg)">3 clipes/dia</div>
+              <div style="font-size:.72rem;color:var(--muted);margin-top:2px">~90 clipes/mês · R$14,41/clipe</div>
+              <button class="btn btn-outline btn-sm" style="margin-top:12px;width:100%;justify-content:center">Assinar</button>
+            </div>
+          </div>
+          <div style="font-size:.75rem;color:var(--muted);margin-top:12px">✓ 7 dias de garantia · Cancele quando quiser · Sem créditos, sem contagem</div>
+        </div>
+
+        <!-- Histórico -->
+        <div class="section-card">
+          <div class="section-head"><span class="section-title">Histórico de créditos</span></div>
+          <div class="section-body" style="padding:8px 18px">
+            <div class="history-row">
+              <div class="history-icon bg-green"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+              <div class="history-desc">
+                <div>Compra — Pacote Creator</div>
+                <div class="history-date">12/05/2026 · Stripe · R$497,00</div>
+              </div>
+              <div class="history-amount amount-add">+20.000</div>
+            </div>
+            <div class="history-row">
+              <div class="history-icon bg-orange"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2"><path d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg></div>
+              <div class="history-desc">
+                <div>Pedido — Reel: Produtividade</div>
+                <div class="history-date">13/05/2026</div>
+              </div>
+              <div class="history-amount amount-use">-1.800</div>
+            </div>
+            <div class="history-row">
+              <div class="history-icon bg-orange"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 001.46 6.42C1 8.14 1 12 1 12s0 3.86.46 5.58a2.78 2.78 0 001.95 1.95C5.12 20 12 20 12 20s6.88 0 8.59-.47a2.78 2.78 0 001.95-1.95C23 15.86 23 12 23 12s0-3.86-.46-5.58z"/></svg></div>
+              <div class="history-desc">
+                <div>Pedido — YouTube: 3 clipes</div>
+                <div class="history-date">11/05/2026</div>
+              </div>
+              <div class="history-amount amount-use">-7.500</div>
+            </div>
+            <div class="history-row">
+              <div class="history-icon bg-green"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+              <div class="history-desc">
+                <div>Compra — Pacote Starter</div>
+                <div class="history-date">01/05/2026 · Stripe · R$297,00</div>
+              </div>
+              <div class="history-amount amount-add">+10.000</div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /creditos -->
+
+      <!-- ══ MEU YOUTUBE ══ -->
+      <div id="screen-youtube" class="screen">
+        <div class="page-header">
+          <div class="page-title">Meu YouTube</div>
+          <div class="page-sub">Vídeos do seu canal detectados automaticamente — escolha quais virar clipe.</div>
+        </div>
+
+        <!-- ── Vault CTA ── -->
+        <div class="vault-cta">
+          <div class="vault-label">Cofre de Views</div>
+          <div class="vault-headline">Você tem até <em>27 milhões de views</em><br>em potencial paradas em 23 clipes.</div>
+          <div class="vault-sub">Seu próximo viral pode já estar gravado. A UPFY encontrou cortes com alto potencial escondidos nos seus vídeos antigos.</div>
+          <div class="vault-metrics">
+            <div class="vault-metric">
+              <span class="vault-metric-val">23</span>
+              <span class="vault-metric-lbl">Clipes encontrados</span>
+            </div>
+            <div class="vault-metric">
+              <span class="vault-metric-val" style="color:var(--v-viral)">7</span>
+              <span class="vault-metric-lbl">Potencial viral</span>
+            </div>
+            <div class="vault-metric">
+              <span class="vault-metric-val" style="color:var(--v-quente)">11</span>
+              <span class="vault-metric-lbl">Quentes</span>
+            </div>
+            <div class="vault-metric">
+              <span class="vault-metric-val" style="color:var(--v-morno)">5</span>
+              <span class="vault-metric-lbl">Mornos</span>
+            </div>
+            <div class="vault-metric">
+              <span class="vault-metric-val">27M</span>
+              <span class="vault-metric-lbl">Views potencial</span>
+            </div>
+          </div>
+          <div class="vault-btns">
+            <button class="btn btn-primary" onclick="document.getElementById('rank-videos-yt').scrollIntoView({behavior:'smooth'})">Clipar agora</button>
+            <button class="btn btn-outline" onclick="goTo('cofre',document.querySelectorAll('.nav-item')[2])">Abrir Cofre de Views →</button>
+          </div>
+          <div class="vault-disclaimer">Estimativa de potencial, não promessa de resultado.</div>
+        </div>
+
+        <!-- Canal conectado -->
+        <div class="yt-channel-card" style="margin-bottom:20px">
+          <div class="yt-thumb">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 001.46 6.42C1 8.14 1 12 1 12s0 3.86.46 5.58a2.78 2.78 0 001.95 1.95C5.12 20 12 20 12 20s6.88 0 8.59-.47a2.78 2.78 0 001.95-1.95C23 15.86 23 12 23 12s0-3.86-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#FF0000"/></svg>
+          </div>
+          <div>
+            <div class="yt-name">Pedro Seixas</div>
+            <div class="yt-sub">14.200 inscritos · 87 vídeos</div>
+          </div>
+          <div class="yt-status"><div class="yt-dot"></div> Monitorando automaticamente</div>
+          <button class="btn btn-outline btn-sm" style="margin-left:12px">Desconectar</button>
+        </div>
+
+        <!-- Videos detectados -->
+        <div class="section-card">
+          <div class="section-head">
+            <span class="section-title">Vídeos detectados</span>
+            <span class="tag tag-new">2 novos</span>
+          </div>
+          <div class="section-body" style="padding:0 18px">
+
+            <!-- Video 1 — novo -->
+            <div class="yt-video-row">
+              <div class="yt-video-thumb">🎥</div>
+              <div style="flex:1">
+                <div style="display:flex;align-items:center;margin-bottom:3px">
+                  <div class="video-title" style="margin:0">Como criar conteúdo todos os dias sem esgotar</div>
+                  <span class="yt-new-badge">Novo</span>
+                </div>
+                <div class="video-meta">47 min · Publicado há 1 hora · 320 visualizações</div>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                  <span class="clips-estimate" style="background:rgba(255,255,255,.05);border-color:var(--border2);color:var(--muted2)">✦ Estimativa: 4–6 clipes</span>
+                  <div class="video-actions" style="margin-top:0">
+                    <button class="btn btn-gradient btn-sm" onclick="openModal('modal-pedir-clipes','Como criar conteúdo todos os dias sem esgotar')">Pedir clipes</button>
+                    <button class="btn btn-ghost btn-sm">Ignorar</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Video 2 — novo -->
+            <div class="yt-video-row">
+              <div class="yt-video-thumb">🎥</div>
+              <div style="flex:1">
+                <div style="display:flex;align-items:center;margin-bottom:3px">
+                  <div class="video-title" style="margin:0">Minha rotina matinal de criador — sem mentiras</div>
+                  <span class="yt-new-badge">Novo</span>
+                </div>
+                <div class="video-meta">28 min · Publicado há 2 dias · 1.2k visualizações</div>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                  <span class="clips-estimate" style="background:rgba(255,255,255,.05);border-color:var(--border2);color:var(--muted2)">✦ Estimativa: 2–4 clipes</span>
+                  <div class="video-actions" style="margin-top:0">
+                    <button class="btn btn-gradient btn-sm" onclick="openModal('modal-pedir-clipes','Minha rotina matinal de criador — sem mentiras')">Pedir clipes</button>
+                    <button class="btn btn-ghost btn-sm">Ignorar</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Video 3 — já pedido -->
+            <div class="yt-video-row" style="opacity:.6">
+              <div class="yt-video-thumb">🎥</div>
+              <div style="flex:1">
+                <div class="video-title" style="margin-bottom:3px">Como criar conteúdo que viraliza — aula completa</div>
+                <div class="video-meta">1h 12min · Publicado há 5 dias · 4.7k visualizações</div>
+                <div>
+                  <span class="status-badge status-production" style="border-radius:99px">Em edição — 4 clipes</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <!-- ── Mini ranking ── -->
+        <div class="section-card" id="rank-videos-yt">
+          <div class="section-head">
+            <span class="section-title">Vídeos com mais views paradas</span>
+            <button class="btn btn-ghost btn-sm" onclick="goTo('cofre',document.querySelectorAll('.nav-item')[2])">Ver ranking completo →</button>
+          </div>
+          <div class="section-body" style="padding:12px 18px">
+
+            <!-- #1 -->
+            <div class="rank-card">
+              <div class="rank-pos">#1</div>
+              <div class="rank-thumb">🎥</div>
+              <div class="rank-info">
+                <div class="rank-title">A verdade sobre tráfego pago</div>
+                <div class="rank-meta">
+                  <span>84.2k views</span><span>42 min</span><span>8 clipes encontrados</span>
+                </div>
+                <div class="rank-reason">"Tema polêmico, alta dor do público e vários trechos com frases fortes."</div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div class="rank-potential">até 9,2M views</div>
+                  <span class="vbadge vbadge-viral">🔥 Viral</span>
+                </div>
+              </div>
+              <div class="rank-actions">
+                <button class="btn btn-primary btn-sm" onclick="openClipVideoModal('trafego',8)">Clipar este vídeo</button>
+                <button class="btn btn-outline btn-sm" onclick="openModal('modal-cuts','trafego')">Ver cortes</button>
+              </div>
+            </div>
+
+            <!-- #2 -->
+            <div class="rank-card">
+              <div class="rank-pos">#2</div>
+              <div class="rank-thumb">🎥</div>
+              <div class="rank-info">
+                <div class="rank-title">Como vender todos os dias no Instagram</div>
+                <div class="rank-meta">
+                  <span>51.9k views</span><span>36 min</span><span>6 clipes encontrados</span>
+                </div>
+                <div class="rank-reason">"Promessa clara, assunto comercial forte e cortes com aplicação prática."</div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div class="rank-potential">até 6,8M views</div>
+                  <span class="vbadge vbadge-viral">🔥 Viral</span>
+                </div>
+              </div>
+              <div class="rank-actions">
+                <button class="btn btn-primary btn-sm" onclick="openClipVideoModal('vendas',6)">Clipar este vídeo</button>
+                <button class="btn btn-outline btn-sm" onclick="openModal('modal-cuts','vendas')">Ver cortes</button>
+              </div>
+            </div>
+
+            <!-- #3 -->
+            <div class="rank-card">
+              <div class="rank-pos">#3</div>
+              <div class="rank-thumb">🎥</div>
+              <div class="rank-info">
+                <div class="rank-title">Por que seu conteúdo não cresce</div>
+                <div class="rank-meta">
+                  <span>22.5k views</span><span>28 min</span><span>5 clipes encontrados</span>
+                </div>
+                <div class="rank-reason">"Dor direta do criador, gancho forte e potencial de identificação."</div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div class="rank-potential">até 5,1M views</div>
+                  <span class="vbadge vbadge-quente">🌡 Quente</span>
+                </div>
+              </div>
+              <div class="rank-actions">
+                <button class="btn btn-primary btn-sm" onclick="openClipVideoModal('conteudo',5)">Clipar este vídeo</button>
+                <button class="btn btn-outline btn-sm" onclick="openModal('modal-cuts','conteudo')">Ver cortes</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div><!-- /youtube -->
+
+      <!-- ══ COFRE DE VIEWS ══ -->
+      <div id="screen-cofre" class="screen">
+        <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div>
+            <div class="page-title">Cofre de Views</div>
+            <div class="page-sub">Veja quantas views em potencial estão escondidas nos vídeos que você já gravou.</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="openModal('modal-metodologia')">Ver metodologia</button>
+        </div>
+
+        <!-- Hero -->
+        <div class="vault-hero">
+          <div class="vault-hero-pre">Cofre de Views — análise dos seus vídeos</div>
+          <div class="vault-hero-title">Antes de gravar mais, extraia o que você já tem.</div>
+          <div class="vault-hero-num">até 27 milhões</div>
+          <div style="font-size:.85rem;color:var(--muted2);margin-bottom:12px">de views em potencial</div>
+          <div class="vault-hero-sub">A UPFY analisou seus vídeos antigos e encontrou 23 clipes com potencial para virar Reels, TikToks e Shorts — sem precisar gravar nada novo.</div>
+          <div style="display:flex;gap:10px;margin-bottom:16px">
+            <button class="btn btn-primary" onclick="document.getElementById('rank-completo').scrollIntoView({behavior:'smooth'})">Ver vídeos ranqueados</button>
+            <button class="btn btn-ghost" onclick="openModal('modal-metodologia')">Ver metodologia</button>
+          </div>
+          <div style="font-size:.7rem;color:var(--muted)">Estimativa de potencial, não promessa de resultado.</div>
+        </div>
+
+        <!-- Stat cards -->
+        <div class="stats-grid" style="margin-bottom:24px">
+          <div class="stat-card">
+            <div class="stat-label">Clipes encontrados</div>
+            <div class="stat-value">23</div>
+            <div class="stat-change">em 5 vídeos analisados</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Potencial viral</div>
+            <div class="stat-value" style="color:var(--v-viral)">7</div>
+            <div class="stat-change">score acima de 85</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Views em potencial</div>
+            <div class="stat-value">27M</div>
+            <div class="stat-change">estimativa acumulada</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Dias de conteúdo</div>
+            <div class="stat-value">23</div>
+            <div class="stat-change">postando 1 clipe/dia</div>
+          </div>
+        </div>
+
+        <!-- Ranking completo -->
+        <div class="section-card" id="rank-completo" style="margin-bottom:20px">
+          <div class="section-head">
+            <span class="section-title">Ranking de vídeos com mais views paradas</span>
+            <span style="font-size:.75rem;color:var(--muted)">5 vídeos analisados</span>
+          </div>
+          <div class="section-body" style="padding:12px 18px">
+
+            <!-- #1 Tráfego pago -->
+            <div class="rank-card">
+              <div class="rank-pos">#1</div>
+              <div class="rank-thumb">🎥</div>
+              <div class="rank-info">
+                <div class="rank-title">A verdade sobre tráfego pago</div>
+                <div class="rank-meta">
+                  <span>84.200 views</span><span>42 min</span><span>8 clipes encontrados</span>
+                </div>
+                <div class="rank-reason">"Tema polêmico, alta dor do público e vários trechos com frases fortes que criam curiosidade imediata."</div>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                  <div class="rank-potential">até 9,2M views em potencial</div>
+                  <span class="vbadge vbadge-viral">🔥 Viral</span>
+                </div>
+              </div>
+              <div class="rank-actions">
+                <button class="btn btn-primary btn-sm" onclick="openClipVideoModal('trafego',8)">Clipar este vídeo</button>
+                <button class="btn btn-outline btn-sm" onclick="openModal('modal-cuts','trafego')">Ver cortes</button>
+              </div>
+            </div>
+
+            <!-- #2 Vendas Instagram -->
+            <div class="rank-card">
+              <div class="rank-pos">#2</div>
+              <div class="rank-thumb">🎥</div>
+              <div class="rank-info">
+                <div class="rank-title">Como vender todos os dias no Instagram</div>
+                <div class="rank-meta">
+                  <span>51.900 views</span><span>36 min</span><span>6 clipes encontrados</span>
+                </div>
+                <div class="rank-reason">"Promessa clara, assunto comercial forte e cortes com aplicação prática imediata."</div>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                  <div class="rank-potential">até 6,8M views em potencial</div>
+                  <span class="vbadge vbadge-viral">🔥 Viral</span>
+                </div>
+              </div>
+              <div class="rank-actions">
+                <button class="btn btn-primary btn-sm" onclick="openClipVideoModal('vendas',6)">Clipar este vídeo</button>
+                <button class="btn btn-outline btn-sm" onclick="openModal('modal-cuts','vendas')">Ver cortes</button>
+              </div>
+            </div>
+
+            <!-- #3 Conteúdo não cresce -->
+            <div class="rank-card">
+              <div class="rank-pos">#3</div>
+              <div class="rank-thumb">🎥</div>
+              <div class="rank-info">
+                <div class="rank-title">Por que seu conteúdo não cresce</div>
+                <div class="rank-meta">
+                  <span>22.500 views</span><span>28 min</span><span>5 clipes encontrados</span>
+                </div>
+                <div class="rank-reason">"Dor direta do criador, gancho forte e alto potencial de identificação do público."</div>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                  <div class="rank-potential">até 5,1M views em potencial</div>
+                  <span class="vbadge vbadge-quente">🌡 Quente</span>
+                </div>
+              </div>
+              <div class="rank-actions">
+                <button class="btn btn-primary btn-sm" onclick="openClipVideoModal('conteudo',5)">Clipar este vídeo</button>
+                <button class="btn btn-outline btn-sm" onclick="openModal('modal-cuts','conteudo')">Ver cortes</button>
+              </div>
+            </div>
+
+            <!-- #4 Minha história -->
+            <div class="rank-card">
+              <div class="rank-pos">#4</div>
+              <div class="rank-thumb">🎥</div>
+              <div class="rank-info">
+                <div class="rank-title">Minha história no digital</div>
+                <div class="rank-meta">
+                  <span>13.800 views</span><span>31 min</span><span>4 clipes encontrados</span>
+                </div>
+                <div class="rank-reason">"Narrativa pessoal com momentos de virada e construção de autoridade."</div>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                  <div class="rank-potential">até 3,9M views em potencial</div>
+                  <span class="vbadge vbadge-quente">🌡 Quente</span>
+                </div>
+              </div>
+              <div class="rank-actions">
+                <button class="btn btn-primary btn-sm" onclick="openClipVideoModal('historia',4)">Clipar este vídeo</button>
+                <button class="btn btn-outline btn-sm" onclick="openModal('modal-cuts','historia')">Ver cortes</button>
+              </div>
+            </div>
+
+            <!-- #5 Erros e perdas -->
+            <div class="rank-card">
+              <div class="rank-pos">#5</div>
+              <div class="rank-thumb">🎥</div>
+              <div class="rank-info">
+                <div class="rank-title">Os erros que me fizeram perder dinheiro</div>
+                <div class="rank-meta">
+                  <span>18.300 views</span><span>26 min</span><span>3 clipes encontrados</span>
+                </div>
+                <div class="rank-reason">"Tema bom, mas precisa de cortes mais objetivos para performar melhor."</div>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                  <div class="rank-potential">até 2M views em potencial</div>
+                  <span class="vbadge vbadge-morno">~ Morno</span>
+                </div>
+              </div>
+              <div class="rank-actions">
+                <button class="btn btn-primary btn-sm" onclick="openClipVideoModal('erros',3)">Clipar este vídeo</button>
+                <button class="btn btn-outline btn-sm" onclick="openModal('modal-cuts','erros')">Ver cortes</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Linha inferior: temas + metodologia -->
+        <div class="two-col" style="align-items:start">
+
+          <!-- Temas com mais views paradas -->
+          <div class="section-card">
+            <div class="section-head"><span class="section-title">Temas com mais views paradas</span></div>
+            <div class="section-body" style="padding:0 18px">
+              <div class="theme-row">
+                <div class="theme-name">Tráfego pago</div>
+                <div class="theme-bar-wrap"><div class="theme-bar"><div class="theme-bar-fill" style="width:100%"></div></div></div>
+                <div class="theme-val">9,2M</div>
+              </div>
+              <div class="theme-row">
+                <div class="theme-name">Vendas</div>
+                <div class="theme-bar-wrap"><div class="theme-bar"><div class="theme-bar-fill" style="width:74%"></div></div></div>
+                <div class="theme-val">6,8M</div>
+              </div>
+              <div class="theme-row">
+                <div class="theme-name">Conteúdo orgânico</div>
+                <div class="theme-bar-wrap"><div class="theme-bar"><div class="theme-bar-fill" style="width:55%"></div></div></div>
+                <div class="theme-val">5,1M</div>
+              </div>
+              <div class="theme-row">
+                <div class="theme-name">História pessoal</div>
+                <div class="theme-bar-wrap"><div class="theme-bar"><div class="theme-bar-fill" style="width:42%"></div></div></div>
+                <div class="theme-val">3,9M</div>
+              </div>
+              <div class="theme-row">
+                <div class="theme-name">Erros e aprendizados</div>
+                <div class="theme-bar-wrap"><div class="theme-bar"><div class="theme-bar-fill" style="width:22%"></div></div></div>
+                <div class="theme-val">2M</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resumo da análise -->
+          <div class="section-card">
+            <div class="section-head"><span class="section-title">Como calculamos o potencial</span></div>
+            <div class="section-body">
+              <div style="font-size:.82rem;color:var(--muted2);line-height:1.7;margin-bottom:16px">
+                Cada corte recebe um <strong style="color:var(--fg)">score de 0 a 100</strong> com base na força do gancho, clareza do tema, independência do corte e qualidade da gravação.
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+                <div style="display:flex;align-items:center;justify-content:space-between;font-size:.78rem">
+                  <span class="vbadge vbadge-frio" style="font-size:.7rem">Frio (0–39)</span>
+                  <span style="color:var(--muted)">0,5× da média do canal</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;font-size:.78rem">
+                  <span class="vbadge vbadge-morno" style="font-size:.7rem">Morno (40–64)</span>
+                  <span style="color:var(--muted)">1× da média do canal</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;font-size:.78rem">
+                  <span class="vbadge vbadge-quente" style="font-size:.7rem">Quente (65–84)</span>
+                  <span style="color:var(--muted)">3× da média do canal</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;font-size:.78rem">
+                  <span class="vbadge vbadge-viral" style="font-size:.7rem">🔥 Viral (85–100)</span>
+                  <span style="color:var(--muted)">10× da média do canal</span>
+                </div>
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="openModal('modal-metodologia')">Ver metodologia completa →</button>
+            </div>
+          </div>
+
+        </div>
+      </div><!-- /cofre -->
+
+      <!-- ══ CORTES AVULSOS ══ -->
+      <div id="screen-avulsos" class="screen">
+        <div class="page-header">
+          <div class="page-title">Cortes Avulsos</div>
+          <div class="page-sub">Envie ou grave um vídeo curto e receba um reel editado e pronto pra postar.</div>
+        </div>
+
+        <div class="two-col" style="align-items:start">
+
+          <!-- Coluna esquerda: upload / record -->
+          <div>
+            <div class="upload-zone" onclick="this.classList.toggle('drag')">
+              <div class="upload-icon">☁️</div>
+              <div class="upload-title">Arraste seu vídeo aqui</div>
+              <div class="upload-sub">ou clique para selecionar do computador</div>
+              <div class="upload-formats">MP4, MOV, AVI · Máximo 2 GB</div>
+            </div>
+            <div style="text-align:center;font-size:.82rem;color:var(--muted);margin:0 0 16px">— ou grave direto —</div>
+            <div class="record-zone">
+              <div class="record-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="8"/></svg>
+              </div>
+              <div class="upload-title" style="font-size:.9rem">Gravar pela câmera</div>
+              <div class="upload-sub" style="margin-top:4px">Webcam ou câmera do celular</div>
+            </div>
+            <div style="margin-top:16px;padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;font-size:.78rem;color:var(--muted)">
+              <strong style="color:var(--muted2)">Custo:</strong> 1.800 créditos por reel &nbsp;·&nbsp; Seu saldo: 18.200
+            </div>
+          </div>
+
+          <!-- Coluna direita: briefing -->
+          <div class="section-card">
+            <div class="section-head"><span class="section-title">Briefing do clipe</span></div>
+            <div class="section-body">
+              <div class="form-group">
+                <label class="form-label">Tom do vídeo</label>
+                <select class="form-select">
+                  <option>Energético e rápido</option>
+                  <option>Calmo e educativo</option>
+                  <option>Humorístico</option>
+                  <option>Profissional</option>
+                  <option>Motivacional</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Estilo de edição</label>
+                <select class="form-select">
+                  <option>Raiam Santos</option>
+                  <option>Corte Direto</option>
+                  <option>Podcast Viral</option>
+                  <option>Educativo</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Música de fundo</label>
+                <select class="form-select">
+                  <option>Sem música</option>
+                  <option>Trap / Lo-fi</option>
+                  <option>Pop energético</option>
+                  <option>Ambiente</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Call to action (CTA)</label>
+                <input class="form-input" type="text" placeholder="Ex: Siga para mais dicas" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Plataformas de destino</label>
+                <div class="platform-checks">
+                  <div class="platform-check on" onclick="this.classList.toggle('on')">📸 Instagram</div>
+                  <div class="platform-check on" onclick="this.classList.toggle('on')">🎵 TikTok</div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Observações (opcional)</label>
+                <textarea class="form-textarea" placeholder="Ex: destaque o momento em que falo sobre produtividade..."></textarea>
+              </div>
+              <div class="credit-cost-box">
+                <div>
+                  <div class="cost-label">Custo do pedido</div>
+                  <div class="cost-after">Saldo após: 16.400 créditos</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-size:1.1rem;font-weight:800">1.800 créditos</div>
+                  <div class="cost-after">1 reel avulso</div>
+                </div>
+              </div>
+              <button class="btn btn-gradient btn-xl">Confirmar pedido → 1.800 créditos</button>
+            </div>
+          </div>
+        </div>
+      </div><!-- /avulsos -->
+
+      <!-- ══ PERFORMANCE ══ -->
+      <div id="screen-performance" class="screen">
+        <div class="page-header">
+          <div class="page-title">Performance</div>
+          <div class="page-sub">Resultados gerados pelos seus clipes nos últimos 30 dias.</div>
+        </div>
+
+        <!-- Stats -->
+        <div class="perf-grid" style="margin-bottom:20px">
+          <div class="perf-stat">
+            <div class="perf-val">34,7k</div>
+            <div class="perf-lbl">Views totais</div>
+            <div class="perf-change">↑ 148% vs mês anterior</div>
+          </div>
+          <div class="perf-stat">
+            <div class="perf-val" style="display:flex;align-items:center;gap:8px">2 <span class="vbadge vbadge-viral" style="font-size:.65rem;padding:3px 8px">🔥 Viral</span></div>
+            <div class="perf-lbl">Clipes virais</div>
+            <div class="perf-change">+1 este mês</div>
+          </div>
+          <div class="perf-stat">
+            <div class="perf-val">6</div>
+            <div class="perf-lbl">Clipes entregues</div>
+            <div class="perf-change">este mês</div>
+          </div>
+          <div class="perf-stat">
+            <div class="perf-val" style="font-size:1.3rem">28,4k</div>
+            <div class="perf-lbl">Melhor clipe</div>
+            <div class="perf-change">Conteúdo que viraliza #3</div>
+          </div>
+        </div>
+
+        <!-- Chart + top clips side by side -->
+        <div class="two-col" style="align-items:start">
+
+          <!-- Chart -->
+          <div class="section-card">
+            <div class="section-head"><span class="section-title">Views por semana</span></div>
+            <div class="section-body">
+              <div style="display:flex;align-items:flex-end;gap:6px;height:120px;margin-bottom:8px">
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+                  <div class="chart-bar" style="height:28%;width:100%;border-radius:4px 4px 0 0"></div>
+                  <div style="font-size:.65rem;color:var(--muted)">Abr 14</div>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+                  <div class="chart-bar" style="height:45%;width:100%;border-radius:4px 4px 0 0"></div>
+                  <div style="font-size:.65rem;color:var(--muted)">Abr 21</div>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+                  <div class="chart-bar" style="height:62%;width:100%;border-radius:4px 4px 0 0"></div>
+                  <div style="font-size:.65rem;color:var(--muted)">Abr 28</div>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+                  <div class="chart-bar" style="height:38%;width:100%;border-radius:4px 4px 0 0"></div>
+                  <div style="font-size:.65rem;color:var(--muted)">Mai 5</div>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+                  <div class="chart-bar" style="height:80%;width:100%;border-radius:4px 4px 0 0;background:var(--fg)"></div>
+                  <div style="font-size:.65rem;color:var(--fg)">Mai 12</div>
+                </div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted)">
+                <span>Últimas 5 semanas</span>
+                <span style="color:var(--fg)">↑ 148% crescimento</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top clips by views -->
+          <div class="section-card">
+            <div class="section-head"><span class="section-title">Top clipes por views</span></div>
+            <div class="section-body" style="padding:0 18px">
+              <div class="order-row">
+                <div style="font-size:1rem;font-weight:800;color:var(--muted);width:20px;flex-shrink:0">#1</div>
+                <div class="order-info">
+                  <div class="order-title">Conteúdo que viraliza — Corte #3</div>
+                  <div class="order-meta">28.4k views · TikTok</div>
+                </div>
+                <span class="vbadge vbadge-viral">🔥 Viral</span>
+              </div>
+              <div class="order-row">
+                <div style="font-size:1rem;font-weight:800;color:var(--muted);width:20px;flex-shrink:0">#2</div>
+                <div class="order-info">
+                  <div class="order-title">Rotina matinal de criador</div>
+                  <div class="order-meta">6.1k views · Instagram</div>
+                </div>
+                <span class="vbadge vbadge-quente">🌡 Quente</span>
+              </div>
+              <div class="order-row">
+                <div style="font-size:1rem;font-weight:800;color:var(--muted);width:20px;flex-shrink:0">#3</div>
+                <div class="order-info">
+                  <div class="order-title">3 erros que quebram qualquer vídeo</div>
+                  <div class="order-meta">2.8k views · Instagram</div>
+                </div>
+                <span class="vbadge vbadge-morno">~ Morno</span>
+              </div>
+              <div class="order-row">
+                <div style="font-size:1rem;font-weight:800;color:var(--muted);width:20px;flex-shrink:0">#4</div>
+                <div class="order-info">
+                  <div class="order-title">Como usar IA pra criar roteiro</div>
+                  <div class="order-meta">1.4k views · TikTok</div>
+                </div>
+                <span class="vbadge vbadge-frio">Frio</span>
+              </div>
+              <div class="order-row" style="border:none">
+                <div style="font-size:1rem;font-weight:800;color:var(--muted);width:20px;flex-shrink:0">#5</div>
+                <div class="order-info">
+                  <div class="order-title">Minha câmera e setup completo</div>
+                  <div class="order-meta">990 views · Instagram</div>
+                </div>
+                <span class="vbadge vbadge-frio">Frio</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /performance -->
+
+      <!-- ══ AGENDA DE POSTAGEM ══ -->
+      <div id="screen-agenda" class="screen">
+        <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div>
+            <div class="page-title">Agenda de Postagem</div>
+            <div class="page-sub">Calendário de postagens automáticas. Clique em um dia para agendar.</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-agendar')">+ Agendar clipe</button>
+        </div>
+
+        <div class="two-col" style="align-items:start;gap:20px">
+
+          <!-- Calendário maio 2026 -->
+          <div class="section-card">
+            <div class="section-head">
+              <span class="section-title">Maio 2026</span>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-ghost btn-sm">‹</button>
+                <button class="btn btn-ghost btn-sm">›</button>
+              </div>
+            </div>
+            <div class="section-body">
+              <div class="cal-grid">
+                <div class="cal-day-name">Dom</div><div class="cal-day-name">Seg</div>
+                <div class="cal-day-name">Ter</div><div class="cal-day-name">Qua</div>
+                <div class="cal-day-name">Qui</div><div class="cal-day-name">Sex</div>
+                <div class="cal-day-name">Sáb</div>
+                <!-- Semana 1 (mai começa quinta) -->
+                <div class="cal-day off"></div><div class="cal-day off"></div>
+                <div class="cal-day off"></div><div class="cal-day off"></div>
+                <div class="cal-day posted">1<div class="cal-dot" style="background:var(--fg)"></div></div>
+                <div class="cal-day posted">2<div class="cal-dot" style="background:var(--fg)"></div></div>
+                <div class="cal-day">3</div>
+                <!-- Semana 2 -->
+                <div class="cal-day">4</div>
+                <div class="cal-day posted">5<div class="cal-dot" style="background:var(--fg)"></div></div>
+                <div class="cal-day posted">6<div class="cal-dot" style="background:var(--fg)"></div></div>
+                <div class="cal-day">7</div>
+                <div class="cal-day posted">8<div class="cal-dot" style="background:var(--fg)"></div></div>
+                <div class="cal-day posted">9<div class="cal-dot" style="background:var(--fg)"></div></div>
+                <div class="cal-day">10</div>
+                <!-- Semana 3 -->
+                <div class="cal-day">11</div>
+                <div class="cal-day posted">12<div class="cal-dot" style="background:var(--fg)"></div></div>
+                <div class="cal-day posted">13<div class="cal-dot" style="background:var(--fg)"></div></div>
+                <div class="cal-day today">14<div class="cal-dot" style="background:var(--fg)"></div></div>
+                <div class="cal-day scheduled" onclick="openModal('modal-agendar')">15<div class="cal-dot" style="background:var(--muted)"></div></div>
+                <div class="cal-day scheduled" onclick="openModal('modal-agendar')">16<div class="cal-dot" style="background:var(--muted)"></div></div>
+                <div class="cal-day">17</div>
+                <!-- Semana 4 -->
+                <div class="cal-day">18</div>
+                <div class="cal-day scheduled" onclick="openModal('modal-agendar')">19<div class="cal-dot" style="background:var(--muted)"></div></div>
+                <div class="cal-day">20</div>
+                <div class="cal-day">21</div>
+                <div class="cal-day scheduled" onclick="openModal('modal-agendar')">22<div class="cal-dot" style="background:var(--muted)"></div></div>
+                <div class="cal-day">23</div>
+                <div class="cal-day">24</div>
+                <!-- Semana 5 -->
+                <div class="cal-day">25</div>
+                <div class="cal-day">26</div>
+                <div class="cal-day">27</div>
+                <div class="cal-day">28</div>
+                <div class="cal-day">29</div>
+                <div class="cal-day">30</div>
+                <div class="cal-day">31</div>
+              </div>
+              <!-- Legenda -->
+              <div style="display:flex;gap:16px;margin-top:14px;font-size:.72rem;color:var(--muted)">
+                <span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:rgba(255,255,255,.05);border:1px solid var(--border2);display:inline-block"></span>Postado</span>
+                <span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:rgba(255,255,255,.02);border:1px solid var(--border2);display:inline-block"></span>Agendado</span>
+                <span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:transparent;border:1px solid rgba(255,255,255,.2);display:inline-block"></span>Hoje</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lista de agendamentos -->
+          <div>
+            <div class="section-card" style="margin-bottom:14px">
+              <div class="section-head"><span class="section-title">Hoje — 14 Mai</span></div>
+              <div class="section-body" style="padding:12px 18px">
+                <div class="order-row">
+                  <div class="order-icon" style="background:var(--surface3)">📱</div>
+                  <div class="order-info">
+                    <div class="order-title">Rotina matinal de criador</div>
+                    <div class="order-meta">Instagram · 18:00</div>
+                  </div>
+                  <button class="btn btn-outline btn-sm">Editar</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-card" style="margin-bottom:14px">
+              <div class="section-head"><span class="section-title">Próximos agendamentos</span></div>
+              <div class="section-body" style="padding:0 18px">
+                <div class="order-row">
+                  <div class="order-icon" style="background:var(--surface3)">📱</div>
+                  <div class="order-info">
+                    <div class="order-title">Conteúdo que viraliza #3</div>
+                    <div class="order-meta">TikTok · 15 Mai · 19:00</div>
+                  </div>
+                  <button class="btn btn-outline btn-sm">Editar</button>
+                </div>
+                <div class="order-row">
+                  <div class="order-icon" style="background:var(--surface3)">📱</div>
+                  <div class="order-info">
+                    <div class="order-title">3 erros que quebram qualquer vídeo</div>
+                    <div class="order-meta">Instagram · 16 Mai · 18:00</div>
+                  </div>
+                  <button class="btn btn-outline btn-sm">Editar</button>
+                </div>
+                <div class="order-row" style="border:none">
+                  <div class="order-icon" style="background:var(--surface3)">📱</div>
+                  <div class="order-info">
+                    <div class="order-title">Rotina matinal — Corte #2</div>
+                    <div class="order-meta">TikTok · 19 Mai · 20:00</div>
+                  </div>
+                  <button class="btn btn-outline btn-sm">Editar</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Config de horários automáticos -->
+            <div class="section-card">
+              <div class="section-head">
+                <span class="section-title">Horários automáticos</span>
+                <button class="btn btn-ghost btn-sm" onclick="cfgTab('cfg-automacao')">Configurar</button>
+              </div>
+              <div class="section-body" style="padding:12px 18px">
+                <div class="toggle-row">
+                  <div><div class="toggle-label">Instagram</div><div class="toggle-sub">Sex, Seg, Qua às 18:00</div></div>
+                  <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+                </div>
+                <div class="toggle-row">
+                  <div><div class="toggle-label">TikTok</div><div class="toggle-sub">Ter, Qui às 19:00</div></div>
+                  <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /agenda -->
+
+      <!-- ══ CONFIGURAÇÕES ══ -->
+      <div id="screen-config" class="screen">
+        <div class="page-header">
+          <div class="page-title">Configurações</div>
+          <div class="page-sub">Gerencie seu perfil, plataformas e automações.</div>
+        </div>
+
+        <div class="cfg-tabs" id="cfg-tab-bar">
+          <button class="cfg-tab active" onclick="cfgTab('cfg-perfil')">Perfil</button>
+          <button class="cfg-tab" onclick="cfgTab('cfg-notif')">Notificações</button>
+          <button class="cfg-tab" onclick="cfgTab('cfg-plat')">Plataformas</button>
+          <button class="cfg-tab" onclick="cfgTab('cfg-estilo')">Estilo e Edição</button>
+          <button class="cfg-tab" onclick="cfgTab('cfg-automacao')">Automação</button>
+          <button class="cfg-tab" onclick="cfgTab('cfg-plano')">Plano e Créditos</button>
+        </div>
+
+        <!-- PERFIL -->
+        <div id="cfg-perfil" class="cfg-pane active">
+          <div class="two-col" style="align-items:start">
+            <div class="section-card">
+              <div class="section-head"><span class="section-title">Dados pessoais</span></div>
+              <div class="section-body">
+                <div class="form-group"><label class="form-label">Nome completo</label><input class="form-input" value="Pedro Seixas" /></div>
+                <div class="form-group"><label class="form-label">E-mail</label><input class="form-input" value="pedro@upfy.com.br" /></div>
+                <div class="form-group"><label class="form-label">Telefone / WhatsApp</label><input class="form-input" value="+55 11 99999-0000" /></div>
+                <button class="btn btn-primary btn-sm">Salvar alterações</button>
+              </div>
+            </div>
+            <div class="section-card">
+              <div class="section-head"><span class="section-title">Segurança</span></div>
+              <div class="section-body">
+                <div class="form-group"><label class="form-label">Senha atual</label><input class="form-input" type="password" placeholder="••••••••" /></div>
+                <div class="form-group"><label class="form-label">Nova senha</label><input class="form-input" type="password" placeholder="••••••••" /></div>
+                <div class="form-group"><label class="form-label">Confirmar nova senha</label><input class="form-input" type="password" placeholder="••••••••" /></div>
+                <button class="btn btn-outline btn-sm">Alterar senha</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NOTIFICAÇÕES -->
+        <div id="cfg-notif" class="cfg-pane">
+          <div class="section-card">
+            <div class="section-head"><span class="section-title">Notificações por WhatsApp</span></div>
+            <div class="section-body">
+              <div class="toggle-row"><div><div class="toggle-label">Clipe pronto para revisar</div><div class="toggle-sub">Aviso quando o editor finalizar um clipe</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+              <div class="toggle-row"><div><div class="toggle-label">Créditos baixos</div><div class="toggle-sub">Alerta quando restar crédito para menos de 3 clipes</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+              <div class="toggle-row"><div><div class="toggle-label">Novo vídeo detectado no YouTube</div><div class="toggle-sub">Quando publicar um vídeo novo no seu canal</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+              <div class="toggle-row"><div><div class="toggle-label">Alerta de viral</div><div class="toggle-sub">Quando um clipe ultrapassar 10k views</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+              <div class="toggle-row"><div><div class="toggle-label">Revisão concluída</div><div class="toggle-sub">Quando o editor finalizar uma revisão</div></div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+            </div>
+          </div>
+          <div class="section-card" style="margin-top:14px">
+            <div class="section-head"><span class="section-title">Notificações por e-mail</span></div>
+            <div class="section-body">
+              <div class="toggle-row"><div><div class="toggle-label">Resumo semanal de performance</div><div class="toggle-sub">Relatório com views, clipes e destaques da semana</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+              <div class="toggle-row"><div><div class="toggle-label">Novidades e updates da plataforma</div></div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PLATAFORMAS -->
+        <div id="cfg-plat" class="cfg-pane">
+          <div class="section-card" style="margin-bottom:14px">
+            <div class="section-head"><span class="section-title">Redes conectadas</span></div>
+            <div class="section-body">
+              <div class="plat-row">
+                <div class="plat-icon">▶️</div>
+                <div style="flex:1">
+                  <div style="font-size:.9rem;font-weight:700">YouTube</div>
+                  <div style="font-size:.75rem;color:var(--fg);margin-top:2px">Pedro Seixas · 14.200 inscritos</div>
+                </div>
+                <span class="status-badge status-delivered" style="border-radius:99px">Conectado</span>
+                <button class="btn btn-ghost btn-sm" style="margin-left:8px">Desconectar</button>
+              </div>
+              <div class="plat-row">
+                <div class="plat-icon">📸</div>
+                <div style="flex:1">
+                  <div style="font-size:.9rem;font-weight:700">Instagram</div>
+                  <div style="font-size:.75rem;color:var(--fg);margin-top:2px">@pedroseixas · 8.400 seguidores</div>
+                </div>
+                <span class="status-badge status-delivered" style="border-radius:99px">Conectado</span>
+                <button class="btn btn-ghost btn-sm" style="margin-left:8px">Desconectar</button>
+              </div>
+              <div class="plat-row">
+                <div class="plat-icon">🎵</div>
+                <div style="flex:1">
+                  <div style="font-size:.9rem;font-weight:700">TikTok</div>
+                  <div style="font-size:.75rem;color:var(--muted);margin-top:2px">Não conectado</div>
+                </div>
+                <button class="btn btn-primary btn-sm">Conectar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ESTILO E EDIÇÃO -->
+        <div id="cfg-estilo" class="cfg-pane">
+          <div class="section-card">
+            <div class="section-head">
+              <span class="section-title">Estilo padrão: <strong>Raiam Santos</strong></span>
+              <button class="btn btn-primary btn-sm">Salvar</button>
+            </div>
+            <div class="section-body">
+              <div class="styles-grid">
+                <div class="style-card selected" onclick="selectStyle(this)">
+                  <div class="style-card-preview">⚡</div>
+                  <div style="display:flex;align-items:flex-start;justify-content:space-between">
+                    <div><div class="style-name">Raiam Santos</div><div class="style-desc">Cortes rápidos, legendas dinâmicas. Ideal para os primeiros 3 segundos.</div></div>
+                    <div class="style-check">✓</div>
+                  </div>
+                </div>
+                <div class="style-card" onclick="selectStyle(this)">
+                  <div class="style-card-preview">🎯</div>
+                  <div><div class="style-name">Corte Direto</div><div class="style-desc">Sem rodeios — impacto visual imediato com cortes secos.</div></div>
+                </div>
+                <div class="style-card" onclick="selectStyle(this)">
+                  <div class="style-card-preview">🎙️</div>
+                  <div><div class="style-name">Podcast Viral</div><div class="style-desc">Destaca os melhores momentos de conversas e entrevistas.</div></div>
+                </div>
+                <div class="style-card" onclick="selectStyle(this)">
+                  <div class="style-card-preview">📚</div>
+                  <div><div class="style-name">Educativo</div><div class="style-desc">Clareza e didática. CTA forte ao final de cada clipe.</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AUTOMAÇÃO -->
+        <div id="cfg-automacao" class="cfg-pane">
+          <div class="section-card" style="margin-bottom:14px">
+            <div class="section-head"><span class="section-title">Piloto automático</span></div>
+            <div class="section-body">
+              <div class="toggle-row">
+                <div>
+                  <div class="toggle-label">Ativar piloto automático</div>
+                  <div class="toggle-sub">Clipes aprovados pelo admin são postados automaticamente no horário configurado</div>
+                </div>
+                <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+              </div>
+            </div>
+          </div>
+          <div class="section-card">
+            <div class="section-head"><span class="section-title">Horários de postagem</span></div>
+            <div class="section-body">
+              <div style="margin-bottom:18px">
+                <div class="form-label" style="font-size:.82rem;margin-bottom:10px">Instagram</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+                  <div class="platform-check on" onclick="this.classList.toggle('on')">Dom</div>
+                  <div class="platform-check" onclick="this.classList.toggle('on')">Seg</div>
+                  <div class="platform-check on" onclick="this.classList.toggle('on')">Ter</div>
+                  <div class="platform-check" onclick="this.classList.toggle('on')">Qua</div>
+                  <div class="platform-check on" onclick="this.classList.toggle('on')">Qui</div>
+                  <div class="platform-check on" onclick="this.classList.toggle('on')">Sex</div>
+                  <div class="platform-check" onclick="this.classList.toggle('on')">Sáb</div>
+                </div>
+                <input class="form-input" type="time" value="18:00" style="max-width:120px" />
+              </div>
+              <div>
+                <div class="form-label" style="font-size:.82rem;margin-bottom:10px">TikTok</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+                  <div class="platform-check" onclick="this.classList.toggle('on')">Dom</div>
+                  <div class="platform-check on" onclick="this.classList.toggle('on')">Seg</div>
+                  <div class="platform-check" onclick="this.classList.toggle('on')">Ter</div>
+                  <div class="platform-check on" onclick="this.classList.toggle('on')">Qua</div>
+                  <div class="platform-check" onclick="this.classList.toggle('on')">Qui</div>
+                  <div class="platform-check" onclick="this.classList.toggle('on')">Sex</div>
+                  <div class="platform-check" onclick="this.classList.toggle('on')">Sáb</div>
+                </div>
+                <input class="form-input" type="time" value="19:00" style="max-width:120px" />
+              </div>
+              <button class="btn btn-primary btn-sm" style="margin-top:18px">Salvar horários</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PLANO E CRÉDITOS -->
+        <div id="cfg-plano" class="cfg-pane">
+
+          <!-- Plano atual -->
+          <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+            <div>
+              <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Plano atual</div>
+              <div style="font-size:1rem;font-weight:700;margin-bottom:3px">Sem plano ativo</div>
+              <div style="font-size:.78rem;color:var(--muted2)">Você está usando clipes avulsos. Assine um plano e ganhe constância automática.</div>
+            </div>
+            <button class="btn btn-primary" style="flex-shrink:0" onclick="goTo('planos',null)">Ver planos</button>
+          </div>
+
+          <!-- Resumo dos planos (compacto) -->
+          <div class="section-card" style="margin-bottom:16px">
+            <div class="section-head">
+              <span class="section-title">Planos mensais</span>
+              <button class="btn btn-ghost btn-sm" onclick="goTo('planos',null)">Ver tela completa →</button>
+            </div>
+            <div class="section-body" style="padding:0 18px">
+
+              <div class="order-row">
+                <div class="order-info">
+                  <div class="order-title">Presença · 1 vídeo/dia · 30/mês</div>
+                  <div class="order-meta">Para quem quer sair da inconsistência</div>
+                </div>
+                <div style="font-weight:800;font-size:.95rem;margin-right:12px;white-space:nowrap">R$997/mês</div>
+                <button class="btn btn-outline btn-sm" onclick="handleSelectPlan('presenca_monthly','Presença')">Assinar</button>
+              </div>
+
+              <div class="order-row" style="background:rgba(255,255,255,.02);border-radius:8px;padding:8px 10px;margin:-4px -10px">
+                <div class="order-info">
+                  <div class="order-title" style="display:flex;align-items:center;gap:8px">
+                    Constância · 2 vídeos/dia · 60/mês
+                    <span style="background:var(--fg);color:#000;font-size:.6rem;font-weight:800;padding:2px 8px;border-radius:99px">Recomendado</span>
+                  </div>
+                  <div class="order-meta">2 chances por dia de um conteúdo estourar</div>
+                </div>
+                <div style="font-weight:800;font-size:.95rem;margin-right:12px;white-space:nowrap">R$1.997/mês</div>
+                <button class="btn btn-primary btn-sm" onclick="handleSelectPlan('constancia_monthly','Constância')">Assinar</button>
+              </div>
+
+              <div class="order-row" style="border:none">
+                <div class="order-info">
+                  <div class="order-title">Domínio · 3 vídeos/dia · 90/mês</div>
+                  <div class="order-meta">Volume, presença e velocidade para testar</div>
+                </div>
+                <div style="font-weight:800;font-size:.95rem;margin-right:12px;white-space:nowrap">R$2.997/mês</div>
+                <button class="btn btn-outline btn-sm" onclick="handleSelectPlan('dominio_monthly','Domínio')">Assinar</button>
+              </div>
+
+            </div>
+          </div>
+
+          <div style="font-size:.72rem;color:var(--muted);line-height:1.7">✓ 7 dias de garantia · Cancele quando quiser · Sem fidelidade</div>
+        </div>
+
+      </div><!-- /config -->
+
+      <!-- ══ PLANOS ══ -->
+      <div id="screen-planos" class="screen">
+
+        <!-- Header -->
+        <div class="plans-page-header">
+          <div class="plans-eyebrow">Planos mensais</div>
+          <div class="plans-title">Escolha sua constância</div>
+          <div class="plans-sub">Planos mensais para manter seu perfil rodando todos os dias com clipes prontos para postar.</div>
+          <div class="plans-impact">"Você não precisa postar quando der. Precisa aparecer todos os dias."</div>
+        </div>
+
+        <!-- 3 Plan cards -->
+        <div class="plans-grid">
+
+          <!-- PRESENÇA -->
+          <div class="plan-main-card">
+            <div class="plan-main-name">Presença</div>
+            <div class="plan-main-headline">Comece a aparecer todos os dias.</div>
+            <div class="plan-main-desc">Para quem quer sair da inconsistência e começar a postar todos os dias.</div>
+            <div class="plan-price-block">
+              <div class="plan-main-price">R$997<span>/mês</span></div>
+              <div class="plan-volume">1 vídeo por dia · 30 por mês</div>
+            </div>
+            <div class="plan-cta">
+              <button class="btn btn-outline btn-xl" onclick="handleSelectPlan('presenca_monthly','Presença')">Começar minha constância</button>
+            </div>
+            <div class="plan-divider"></div>
+            <ul class="feature-list">
+              <li class="feature-item"><span class="feature-check">✓</span>1 vídeo por dia</li>
+              <li class="feature-item"><span class="feature-check">✓</span>30 vídeos por mês</li>
+              <li class="feature-item"><span class="feature-check">✓</span>Clipes editados no padrão UPFY</li>
+              <li class="feature-item"><span class="feature-check">✓</span>Legendas dinâmicas</li>
+              <li class="feature-item"><span class="feature-check">✓</span>1 revisão por clipe</li>
+              <li class="feature-item"><span class="feature-check">✓</span>Organização dos conteúdos</li>
+              <li class="feature-item"><span class="feature-check">✓</span>Feedback básico dos melhores cortes</li>
+            </ul>
+          </div>
+
+          <!-- CONSTÂNCIA (destaque) -->
+          <div class="plan-main-card plan-featured">
+            <div class="plan-badge">Mais recomendado</div>
+            <div class="plan-main-name" style="color:var(--fg)">Constância</div>
+            <div class="plan-main-headline">Seu perfil rodando por 30 dias.</div>
+            <div class="plan-main-desc">Para criadores que querem constância real: 2 chances por dia de um conteúdo estourar.</div>
+            <div class="plan-main-support">30 dias. 60 vídeos. 2 chances por dia de crescer no orgânico.</div>
+            <div class="plan-price-block">
+              <div class="plan-main-price">R$1.997<span>/mês</span></div>
+              <div class="plan-volume">2 vídeos por dia · 60 por mês</div>
+            </div>
+            <div class="plan-cta">
+              <button class="btn btn-primary btn-xl" onclick="handleSelectPlan('constancia_monthly','Constância')">Colocar meu perfil pra rodar</button>
+            </div>
+            <div class="plan-divider"></div>
+            <ul class="feature-list">
+              <li class="feature-item"><span class="feature-check">✓</span>2 vídeos por dia</li>
+              <li class="feature-item"><span class="feature-check">✓</span>60 vídeos por mês</li>
+              <li class="feature-item"><span class="feature-check">✓</span>Clipes editados no padrão UPFY</li>
+              <li class="feature-item"><span class="feature-check">✓</span>Legendas dinâmicas</li>
+              <li class="feature-item"><span class="feature-check">✓</span>1 revisão por clipe</li>
+              <li class="feature-item"><span class="feature-check">✓</span>Ranking dos melhores cortes</li>
+              <li class="feature-item"><span class="feature-check">✓</span>Feedback de potencial por conteúdo</li>
+              <li class="feature-item"><span class="feature-check">✓</span>Sugestão de horários</li>
+              <li class="feature-item"><span class="feature-check">✓</span>Relatório semanal simples</li>
+              <li class="feature-item"><span class="feature-check">✓</span>Organização e agendamento</li>
+            </ul>
+          </div>
+
+          <!-- DOMÍNIO -->
+          <div class="plan-main-card">
+            <div class="plan-main-name">Domínio</div>
+            <div class="plan-main-headline">Domine seu nicho com volume.</div>
+            <div class="plan-main-desc">Para quem quer volume, presença diária e mais velocidade para testar formatos.</div>
+            <div class="plan-price-block">
+              <div class="plan-main-price">R$2.997<span>/mês</span></div>
+              <div class="plan-volume">3 vídeos por dia · 90 por mês</div>
+            </div>
+            <div class="plan-cta">
+              <button class="btn btn-outline btn-xl" onclick="handleSelectPlan('dominio_monthly','Domínio')">Dominar meu nicho</button>
+            </div>
+            <div class="plan-divider"></div>
+            <ul class="feature-list">
+              <li class="feature-item"><span class="feature-check">✓</span>3 vídeos por dia</li>
+              <li class="feature-item"><span class="feature-check">✓</span>90 vídeos por mês</li>
+              <li class="feature-item"><span class="feature-check">✓</span>Clipes editados no padrão UPFY</li>
+              <li class="feature-item"><span class="feature-check">✓</span>Legendas dinâmicas</li>
+              <li class="feature-item"><span class="feature-check">✓</span>1 revisão por clipe</li>
+              <li class="feature-item"><span class="feature-check">✓</span>Priorização dos vídeos com mais potencial</li>
+              <li class="feature-item"><span class="feature-check">✓</span>Feedback estratégico</li>
+              <li class="feature-item"><span class="feature-check">✓</span>Relatório semanal</li>
+              <li class="feature-item"><span class="feature-check">✓</span>Análise de performance</li>
+              <li class="feature-item"><span class="feature-check">✓</span>Ajustes de direção com base no que performou</li>
+              <li class="feature-item"><span class="feature-check">✓</span>Organização e agendamento</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <!-- Rodapé da seção -->
+        <div class="plans-footer">
+          <div class="plans-guarantee">
+            <span>✓ 7 dias de garantia</span>
+            <span>✓ Cancele quando quiser</span>
+            <span>✓ Sem fidelidade</span>
+            <span>✓ Suporte via WhatsApp</span>
+          </div>
+          <div style="font-size:.85rem;font-weight:600;color:var(--muted2);margin-bottom:12px;line-height:1.6">
+            "A constância é o que separa quem posta de quem cresce.<br>A UPFY mantém seu conteúdo rodando todos os dias."
+          </div>
+          <div class="plans-disclaimer">
+            Os planos incluem produção mensal dos clipes conforme o volume contratado. Resultados de visualizações podem variar de acordo com conteúdo, frequência, nicho e distribuição.
+          </div>
+        </div>
+
+      </div><!-- /planos -->
+
+      <!-- ══ MODAIS ══ -->
+
+      <!-- Modal: Pedir clipes do YouTube -->
+      <div id="modal-pedir-clipes" class="modal-overlay" style="display:none" onclick="closeModal(event,this)">
+        <div class="modal-box" onclick="event.stopPropagation()">
+          <button class="modal-close" onclick="document.getElementById('modal-pedir-clipes').style.display='none'">✕</button>
+          <div class="modal-title">Pedir clipes</div>
+          <div class="modal-sub" id="modal-yt-video-title">Selecione quantos clipes deseja extrair deste vídeo.</div>
+
+          <div class="form-group">
+            <label class="form-label">Quantidade de clipes</label>
+            <div class="clip-counter">
+              <button class="counter-btn" onclick="changeCount(-1)">−</button>
+              <div class="counter-val" id="clip-count">3</div>
+              <button class="counter-btn" onclick="changeCount(1)">+</button>
+              <div style="font-size:.78rem;color:var(--muted)">clipes</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Estilo de edição</label>
+            <select class="form-select">
+              <option>Raiam Santos (padrão)</option>
+              <option>Corte Direto</option>
+              <option>Podcast Viral</option>
+              <option>Educativo</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Observações (opcional)</label>
+            <textarea class="form-textarea" placeholder="Ex: foque nos momentos de maior energia, evite os primeiros 5 minutos..."></textarea>
+          </div>
+
+          <div class="credit-cost-box">
+            <div>
+              <div class="cost-label">Custo total</div>
+              <div class="cost-after">Saldo após: <span id="balance-after">10.700</span> créditos</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:1.1rem;font-weight:800" id="total-cost">7.500 créditos</div>
+              <div class="cost-after">2.500 por clipe longo</div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-outline" style="flex:1" onclick="document.getElementById('modal-pedir-clipes').style.display='none'">Cancelar</button>
+            <button class="btn btn-gradient" style="flex:2" onclick="document.getElementById('modal-pedir-clipes').style.display='none'">Confirmar pedido</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal: Postar agora -->
+      <div id="modal-postar" class="modal-overlay" style="display:none" onclick="closeModal(event,this)">
+        <div class="modal-box" onclick="event.stopPropagation()">
+          <button class="modal-close" onclick="document.getElementById('modal-postar').style.display='none'">✕</button>
+          <div class="modal-title">Postar agora</div>
+          <div class="modal-sub">Escolha onde postar e revise a legenda antes de publicar.</div>
+
+          <div class="form-group">
+            <label class="form-label">Plataformas</label>
+            <div class="platform-checks">
+              <div class="platform-check on" onclick="this.classList.toggle('on')">📸 Instagram</div>
+              <div class="platform-check on" onclick="this.classList.toggle('on')">🎵 TikTok</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Legenda</label>
+            <textarea class="form-textarea" style="min-height:100px">Como criar conteúdo que viraliza — o segredo que ninguém te conta 🔥
+
+#criação #conteúdo #viral #produtividade #creator</textarea>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-outline" style="flex:1" onclick="document.getElementById('modal-postar').style.display='none'">Cancelar</button>
+            <button class="btn btn-gradient" style="flex:2" onclick="document.getElementById('modal-postar').style.display='none'">Publicar agora</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal: Agendar -->
+      <div id="modal-agendar" class="modal-overlay" style="display:none" onclick="closeModal(event,this)">
+        <div class="modal-box" onclick="event.stopPropagation()">
+          <button class="modal-close" onclick="document.getElementById('modal-agendar').style.display='none'">✕</button>
+          <div class="modal-title">Agendar postagem</div>
+          <div class="modal-sub">Escolha o clipe, plataforma, data e horário.</div>
+
+          <div class="form-group">
+            <label class="form-label">Clipe</label>
+            <select class="form-select">
+              <option>Conteúdo que viraliza — Corte #3</option>
+              <option>Rotina matinal de criador</option>
+              <option>3 erros que quebram qualquer vídeo</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Plataforma</label>
+            <div class="platform-checks">
+              <div class="platform-check on" onclick="this.classList.toggle('on');this.parentElement.querySelectorAll('.platform-check').forEach(x=>x!==this&&x.classList.remove('on'))">📸 Instagram</div>
+              <div class="platform-check" onclick="this.classList.toggle('on');this.parentElement.querySelectorAll('.platform-check').forEach(x=>x!==this&&x.classList.remove('on'))">🎵 TikTok</div>
+            </div>
+          </div>
+          <div class="two-col">
+            <div class="form-group"><label class="form-label">Data</label><input class="form-input" type="date" value="2026-05-15" /></div>
+            <div class="form-group"><label class="form-label">Horário</label><input class="form-input" type="time" value="18:00" /></div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-outline" style="flex:1" onclick="document.getElementById('modal-agendar').style.display='none'">Cancelar</button>
+            <button class="btn btn-gradient" style="flex:2" onclick="document.getElementById('modal-agendar').style.display='none'">Confirmar agendamento</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal: Clipar este vídeo (estimativa de créditos) -->
+      <div id="modal-clip-video" class="modal-overlay" style="display:none" onclick="closeModal(event,this)">
+        <div class="modal-box" onclick="event.stopPropagation()">
+          <button class="modal-close" onclick="document.getElementById('modal-clip-video').style.display='none'">✕</button>
+          <div class="modal-title" id="cv-title">Clipar este vídeo</div>
+          <div class="modal-sub" id="cv-sub">Escolha quantos clipes você quer extrair.</div>
+
+          <div class="form-group">
+            <label class="form-label">Quantidade de clipes</label>
+            <div class="clip-counter">
+              <button class="counter-btn" onclick="cvChangeCount(-1)">−</button>
+              <div class="counter-val" id="cv-count">4</div>
+              <button class="counter-btn" onclick="cvChangeCount(1)">+</button>
+              <div style="font-size:.75rem;color:var(--muted)">de <span id="cv-max">8</span> encontrados</div>
+            </div>
+          </div>
+
+          <div class="credit-est">
+            <div class="credit-est-row">
+              <span style="color:var(--muted)">Clipes selecionados</span>
+              <span id="cv-clips-label">4 clipes</span>
+            </div>
+            <div class="credit-est-row">
+              <span style="color:var(--muted)">Custo por clipe (vídeo longo)</span>
+              <span>2.500 créditos</span>
+            </div>
+            <div class="credit-est-row total">
+              <span>Total</span>
+              <span id="cv-total">10.000 créditos</span>
+            </div>
+          </div>
+
+          <div id="cv-balance-status"></div>
+
+          <div style="display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted);margin-bottom:18px">
+            <span>Saldo atual: <strong style="color:var(--fg)">18.200 créditos</strong></span>
+            <span>Saldo após: <strong id="cv-after" style="color:var(--fg)">8.200 créditos</strong></span>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-outline" style="flex:1" onclick="document.getElementById('modal-clip-video').style.display='none'">Cancelar</button>
+            <button class="btn btn-gradient" style="flex:2" id="cv-confirm-btn" onclick="document.getElementById('modal-clip-video').style.display='none'">Confirmar pedido → 10.000 créditos</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal: Cortes encontrados (drawer) -->
+      <div id="modal-cuts" class="modal-overlay" style="display:none" onclick="closeModal(event,this)">
+        <div class="modal-box" style="width:560px" onclick="event.stopPropagation()">
+          <button class="modal-close" onclick="document.getElementById('modal-cuts').style.display='none'">✕</button>
+          <div class="modal-title" id="cuts-video-title">Cortes encontrados</div>
+          <div class="modal-sub" id="cuts-video-sub">Selecione quais cortes deseja desbloquear individualmente.</div>
+
+          <div id="cuts-list">
+            <!-- Populado pelo JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal: Análise do YouTube (conexão inicial) -->
+      <div id="modal-analise" class="modal-overlay" style="display:none" onclick="closeModal(event,this)">
+        <div class="modal-box" style="width:480px;text-align:center" onclick="event.stopPropagation()">
+          <div id="analise-steps">
+            <div style="font-size:1.5rem;margin-bottom:20px">🔍</div>
+            <div class="modal-title" style="margin-bottom:4px">Analisando seu canal...</div>
+            <div class="modal-sub">Isso leva apenas alguns segundos.</div>
+            <div style="text-align:left;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px">
+              <div class="analysis-step" id="an-step-1"><div class="an-dot running"></div><div class="an-text">Analisando seus vídeos antigos...</div></div>
+              <div class="analysis-step" id="an-step-2"><div class="an-dot"></div><div class="an-text">Encontrando cortes com potencial...</div></div>
+              <div class="analysis-step" id="an-step-3"><div class="an-dot"></div><div class="an-text">Calculando views em potencial...</div></div>
+              <div class="analysis-step" id="an-step-4"><div class="an-dot"></div><div class="an-text">Ranqueando seus melhores vídeos...</div></div>
+            </div>
+            <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden">
+              <div id="an-progress" style="height:100%;background:var(--fg);border-radius:99px;width:0%;transition:width .6s ease"></div>
+            </div>
+          </div>
+          <div id="analise-result" style="display:none">
+            <div style="font-size:1.5rem;margin-bottom:16px">🔓</div>
+            <div class="modal-title" style="margin-bottom:6px">Seu Cofre de Views está pronto.</div>
+            <div class="modal-sub">Encontramos até 27 milhões de views em potencial em 23 clipes.</div>
+            <div class="vault-metrics" style="margin-bottom:20px">
+              <div class="vault-metric"><span class="vault-metric-val">23</span><span class="vault-metric-lbl">Clipes</span></div>
+              <div class="vault-metric"><span class="vault-metric-val" style="color:var(--v-viral)">7</span><span class="vault-metric-lbl">Virais</span></div>
+              <div class="vault-metric"><span class="vault-metric-val" style="color:var(--v-quente)">11</span><span class="vault-metric-lbl">Quentes</span></div>
+              <div class="vault-metric"><span class="vault-metric-val">27M</span><span class="vault-metric-lbl">Potencial</span></div>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:center;margin-bottom:14px">
+              <button class="btn btn-primary" onclick="document.getElementById('modal-analise').style.display='none';document.getElementById('rank-videos-yt').scrollIntoView({behavior:'smooth'})">Clipar agora</button>
+              <button class="btn btn-outline" onclick="document.getElementById('modal-analise').style.display='none';goTo('cofre',document.querySelectorAll('.nav-item')[2])">Abrir Cofre de Views</button>
+            </div>
+            <div style="font-size:.7rem;color:var(--muted)">Estimativa de potencial, não promessa de resultado.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal: Metodologia -->
+      <div id="modal-metodologia" class="modal-overlay" style="display:none" onclick="closeModal(event,this)">
+        <div class="modal-box" style="width:480px" onclick="event.stopPropagation()">
+          <button class="modal-close" onclick="document.getElementById('modal-metodologia').style.display='none'">✕</button>
+          <div class="modal-title">Como calculamos as views em potencial</div>
+          <div class="modal-sub">Metodologia de análise da UPFY Clipes</div>
+          <div style="font-size:.85rem;color:var(--muted2);line-height:1.75;margin-bottom:20px">
+            O cálculo considera a performance do vídeo original, a média de views do canal, a força do gancho, a clareza do tema, a independência do corte, a qualidade da gravação e a validação editorial da equipe UPFY.
+          </div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px">
+            <div style="font-size:.75rem;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Faixas de score e multiplicadores</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span class="vbadge vbadge-frio">Frio · score 0–39</span>
+                <span style="font-size:.82rem;color:var(--muted)">0,5× média do canal</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span class="vbadge vbadge-morno">~ Morno · score 40–64</span>
+                <span style="font-size:.82rem;color:var(--muted)">1× média do canal</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span class="vbadge vbadge-quente">🌡 Quente · score 65–84</span>
+                <span style="font-size:.82rem;color:var(--muted)">3× média do canal</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span class="vbadge vbadge-viral">🔥 Viral · score 85–100</span>
+                <span style="font-size:.82rem;color:var(--muted)">10× média do canal</span>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:.75rem;color:var(--muted);line-height:1.6;padding:12px;background:rgba(255,255,255,.02);border-radius:8px;border:1px solid var(--border)">
+            ⚠️ Essa é uma estimativa de potencial baseada em análise editorial, não uma promessa de resultado. A performance real depende de fatores externos como algoritmo, frequência de postagem e engajamento da audiência.
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- Toast global -->
+<div id="toast">
+  <span id="toast-icon">✓</span>
+  <span id="toast-text">Plano selecionado</span>
+</div>
+
+<script>
+  const titles = { inicio:'Início', youtube:'Meu YouTube', cofre:'Cofre de Views', avulsos:'Cortes Avulsos', clipes:'Meus Clipes', performance:'Performance', agenda:'Agenda de Postagem', config:'Configurações', planos:'Planos' };
+  function goTo(id, btn) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('screen-' + id).classList.add('active');
+    document.getElementById('topbar-title').textContent = titles[id];
+    if (btn) btn.classList.add('active');
+  }
+  function switchUploadTab(tab, btn) {
+    document.querySelectorAll('.upload-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-reel').style.display = tab === 'reel' ? '' : 'none';
+    document.getElementById('tab-youtube').style.display = tab === 'youtube' ? '' : 'none';
+  }
+  // ── Video data for cuts modal ──
+  const VIDEO_DATA = {
+    trafego: {
+      title: 'A verdade sobre tráfego pago',
+      cuts: [
+        { title: 'Você não precisa de tráfego, precisa de atenção', time: '12:40–13:22', dur: '42s', potential: '1.800.000', grade: 'viral', reason: 'Frase polêmica, dor clara e promessa forte logo no início.' },
+        { title: 'O erro que faz 90% das pessoas perderem dinheiro', time: '08:15–09:10', dur: '55s', potential: '1.200.000', grade: 'viral', reason: 'Dado forte + curiosidade + identificação imediata.' },
+        { title: 'Por que anúncio barato sai caro', time: '22:30–23:05', dur: '35s', potential: '1.100.000', grade: 'viral', reason: 'Paradoxo que gera curiosidade e retém atenção.' },
+        { title: 'O que nenhum guru de tráfego te conta', time: '31:45–32:40', dur: '55s', potential: '980.000', grade: 'quente', reason: 'Autoridade + promessa de revelação.' },
+        { title: 'Como escalar sem aumentar o orçamento', time: '41:00–41:50', dur: '50s', potential: '820.000', grade: 'quente', reason: 'Aplicação prática com resultado imediato.' },
+        { title: 'O segredo das campanhas que convertem', time: '17:20–18:10', dur: '50s', potential: '750.000', grade: 'morno', reason: 'Tema bom mas precisa de gancho mais forte.' },
+        { title: 'Qual tipo de tráfego dá retorno mais rápido', time: '05:00–05:42', dur: '42s', potential: '680.000', grade: 'morno', reason: 'Clareza do tema. Hook pode ser melhorado.' },
+        { title: 'Tráfego pago vs orgânico — a verdade', time: '35:10–36:00', dur: '50s', potential: '560.000', grade: 'frio', reason: 'Tema saturado. Precisa de ângulo diferente.' },
+      ]
+    },
+    vendas: {
+      title: 'Como vender todos os dias no Instagram',
+      cuts: [
+        { title: 'A única coisa que separa quem vende de quem não vende', time: '05:20–06:10', dur: '50s', potential: '1.500.000', grade: 'viral', reason: 'Promessa de revelação + diferenciação.' },
+        { title: 'Como criar uma oferta irresistível em 3 passos', time: '18:00–19:05', dur: '65s', potential: '1.200.000', grade: 'viral', reason: 'Aplicação direta, promessa clara, gancho forte.' },
+        { title: 'Por que você está vendendo do jeito errado', time: '28:30–29:15', dur: '45s', potential: '1.100.000', grade: 'quente', reason: 'Dor direta + provocação ao ego.' },
+        { title: 'O post que vende sem parecer venda', time: '11:45–12:30', dur: '45s', potential: '980.000', grade: 'quente', reason: 'Aplicação prática com resultado imediato.' },
+        { title: 'Como fechar no direct sem soar desesperado', time: '33:00–33:55', dur: '55s', potential: '760.000', grade: 'morno', reason: 'Bom tema, gancho pode ser mais forte.' },
+        { title: 'A frequência certa de posts de vendas', time: '22:10–23:00', dur: '50s', potential: '680.000', grade: 'morno', reason: 'Tema relevante mas precisa de mais energia.' },
+      ]
+    },
+    conteudo: {
+      title: 'Por que seu conteúdo não cresce',
+      cuts: [
+        { title: 'O motivo real pelo qual seu conteúdo não cresce', time: '03:10–04:00', dur: '50s', potential: '1.400.000', grade: 'viral', reason: 'Gancho na dor exata do criador. Alta identificação.' },
+        { title: 'Você não tem problema de conteúdo, tem problema de gancho', time: '14:20–15:10', dur: '50s', potential: '1.100.000', grade: 'viral', reason: 'Revelação que muda a percepção. Muito compartilhável.' },
+        { title: 'O único número que importa no Instagram', time: '22:00–22:45', dur: '45s', potential: '980.000', grade: 'quente', reason: 'Curiosidade + simplicidade.' },
+        { title: 'Por que consistência não é suficiente', time: '08:30–09:20', dur: '50s', potential: '870.000', grade: 'quente', reason: 'Vai contra o senso comum — gera debate.' },
+        { title: 'O que separa 1k de 100k seguidores', time: '31:00–31:50', dur: '50s', potential: '750.000', grade: 'morno', reason: 'Tema bom mas gancho previsível.' },
+      ]
+    },
+    historia: {
+      title: 'Minha história no digital',
+      cuts: [
+        { title: 'Como eu falhei 3 vezes antes de ter resultado', time: '07:00–08:00', dur: '60s', potential: '1.200.000', grade: 'viral', reason: 'Vulnerabilidade + virada. Altamente compartilhável.' },
+        { title: 'O momento que mudou tudo pra mim', time: '19:30–20:15', dur: '45s', potential: '980.000', grade: 'quente', reason: 'Narrativa emocional com pico de atenção.' },
+        { title: 'O que eu faria diferente se começasse hoje', time: '28:40–29:30', dur: '50s', potential: '850.000', grade: 'quente', reason: 'Conselho prático com autoridade de quem viveu.' },
+        { title: 'A verdade que ninguém te conta sobre o digital', time: '33:10–34:00', dur: '50s', potential: '870.000', grade: 'morno', reason: 'Promessa boa mas conteúdo precisa de edição.' },
+      ]
+    },
+    erros: {
+      title: 'Os erros que me fizeram perder dinheiro',
+      cuts: [
+        { title: 'O erro que me custou 50 mil reais', time: '08:30–09:25', dur: '55s', potential: '850.000', grade: 'quente', reason: 'Número específico + dor real. Muito identificável.' },
+        { title: 'Por que eu parei de terceirizar tudo', time: '17:00–17:50', dur: '50s', potential: '680.000', grade: 'morno', reason: 'Tema relevante mas gancho pode ser mais forte.' },
+        { title: 'O maior erro que cometi no começo', time: '03:20–04:10', dur: '50s', potential: '470.000', grade: 'morno', reason: 'Abertura fraca. Precisa de gancho mais agressivo.' },
+      ]
+    }
+  };
+
+  function openModal(id, param) {
+    if (id === 'modal-cuts') {
+      const vid = VIDEO_DATA[param];
+      if (vid) {
+        document.getElementById('cuts-video-title').textContent = vid.title;
+        document.getElementById('cuts-video-sub').textContent = vid.cuts.length + ' cortes encontrados — clique em "Desbloquear" para pedir individualmente.';
+        const gradeMap = {
+          viral: '<span class="vbadge vbadge-viral">🔥 Viral</span>',
+          quente: '<span class="vbadge vbadge-quente">🌡 Quente</span>',
+          morno: '<span class="vbadge vbadge-morno">~ Morno</span>',
+          frio: '<span class="vbadge vbadge-frio">Frio</span>'
+        };
+        document.getElementById('cuts-list').innerHTML = vid.cuts.map(c => `
+          <div class="cut-item">
+            <div class="cut-title">${c.title}</div>
+            <div class="cut-meta">${c.time} · ${c.dur}</div>
+            <div class="cut-foot" style="margin-bottom:6px">
+              ${gradeMap[c.grade]}
+              <span style="font-size:.78rem;font-weight:700">até ${Number(c.potential).toLocaleString('pt-BR')} views</span>
+            </div>
+            <div class="cut-reason">"${c.reason}"</div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-primary btn-sm" onclick="openClipVideoModal('1corte',1,'${c.title}')">Desbloquear esse corte → 2.500 créditos</button>
+            </div>
+          </div>`).join('');
+      }
+    } else if (id === 'modal-pedir-clipes') {
+      if (param && document.getElementById('modal-yt-video-title')) {
+        document.getElementById('modal-yt-video-title').textContent = param;
+      }
+    }
+    document.getElementById(id).style.display = 'flex';
+  }
+  function closeModal(event, overlay) {
+    if (event.target === overlay) overlay.style.display = 'none';
+  }
+
+  // ── Clip video modal (credit estimation) ──
+  let cvCount = 4, cvMax = 8;
+  const BALANCE = 18200;
+  const COST_PER_CLIP = 2500;
+
+  function openClipVideoModal(videoKey, maxClips, customTitle) {
+    const vid = VIDEO_DATA[videoKey];
+    cvMax = maxClips;
+    cvCount = Math.min(maxClips, 4);
+    document.getElementById('cv-max').textContent = maxClips;
+    document.getElementById('cv-title').textContent = customTitle || (vid ? 'Clipar: ' + vid.title.substring(0,40) + (vid.title.length > 40 ? '...' : '') : 'Clipar este vídeo');
+    document.getElementById('cv-sub').textContent = videoKey === '1corte'
+      ? 'Desbloquear 1 corte específico — 2.500 créditos.'
+      : `Escolha quantos dos ${maxClips} clipes encontrados você quer pedir agora.`;
+    cvUpdate();
+    document.getElementById('modal-clip-video').style.display = 'flex';
+  }
+  function cvUpdate() {
+    const total = cvCount * COST_PER_CLIP;
+    const after = BALANCE - total;
+    document.getElementById('cv-count').textContent = cvCount;
+    document.getElementById('cv-clips-label').textContent = cvCount + (cvCount === 1 ? ' corte' : ' clipes');
+    document.getElementById('cv-total').textContent = total.toLocaleString('pt-BR') + ' créditos';
+    document.getElementById('cv-after').textContent = after >= 0 ? after.toLocaleString('pt-BR') + ' créditos' : '— saldo insuficiente';
+    document.getElementById('cv-after').style.color = after >= 0 ? 'var(--fg)' : '#F87171';
+    document.getElementById('cv-confirm-btn').textContent = 'Confirmar → ' + total.toLocaleString('pt-BR') + ' créditos';
+    const statusEl = document.getElementById('cv-balance-status');
+    if (after < 0) {
+      statusEl.innerHTML = '<div class="credit-warning">⚠️ Saldo insuficiente para ' + cvCount + ' clipes. Reduza a quantidade ou recarregue seus créditos.</div>';
+      document.getElementById('cv-confirm-btn').disabled = true;
+      document.getElementById('cv-confirm-btn').style.opacity = '.4';
+    } else {
+      statusEl.innerHTML = '<div class="credit-ok">✓ Saldo suficiente. Após o pedido restarão ' + after.toLocaleString('pt-BR') + ' créditos.</div>';
+      document.getElementById('cv-confirm-btn').disabled = false;
+      document.getElementById('cv-confirm-btn').style.opacity = '1';
+    }
+  }
+  function cvChangeCount(delta) {
+    cvCount = Math.max(1, Math.min(cvMax, cvCount + delta));
+    cvUpdate();
+  }
+
+  // ── Analysis modal animation ──
+  function runAnalysis() {
+    document.getElementById('modal-analise').style.display = 'flex';
+    const steps = [1,2,3,4];
+    const delays = [0, 1200, 2400, 3600];
+    const progress = document.getElementById('an-progress');
+    steps.forEach((s, i) => {
+      setTimeout(() => {
+        const el = document.getElementById('an-step-' + s);
+        el.querySelector('.an-dot').classList.remove('running');
+        if (i > 0) {
+          document.getElementById('an-step-' + steps[i-1]).querySelector('.an-dot').classList.add('done');
+          document.getElementById('an-step-' + steps[i-1]).classList.add('an-done');
+        }
+        el.querySelector('.an-dot').classList.add('running');
+        progress.style.width = ((i+1)*25) + '%';
+      }, delays[i]);
+    });
+    setTimeout(() => {
+      document.getElementById('an-step-4').querySelector('.an-dot').classList.remove('running');
+      document.getElementById('an-step-4').querySelector('.an-dot').classList.add('done');
+      document.getElementById('an-step-4').classList.add('an-done');
+      progress.style.width = '100%';
+      setTimeout(() => {
+        document.getElementById('analise-steps').style.display = 'none';
+        document.getElementById('analise-result').style.display = 'block';
+      }, 400);
+    }, 5000);
+  }
+  function cfgTab(paneId) {
+    // Switch to config screen first
+    goTo('config', document.querySelectorAll('.nav-item')[7]);
+    // Then activate the right pane
+    document.querySelectorAll('.cfg-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.cfg-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(paneId).classList.add('active');
+    const idx = ['cfg-perfil','cfg-notif','cfg-plat','cfg-estilo','cfg-automacao','cfg-plano'].indexOf(paneId);
+    document.querySelectorAll('.cfg-tab')[idx].classList.add('active');
+  }
+  // Clip counter for YouTube modal
+  let clipCount = 3;
+  function changeCount(delta) {
+    clipCount = Math.max(1, Math.min(10, clipCount + delta));
+    document.getElementById('clip-count').textContent = clipCount;
+    const cost = clipCount * 2500;
+    document.getElementById('total-cost').textContent = cost.toLocaleString('pt-BR') + ' créditos';
+    document.getElementById('balance-after').textContent = (18200 - cost).toLocaleString('pt-BR');
+  }
+  // ── Monthly Plans data (ready for Stripe integration) ──
+  const monthlyPlans = [
+    {
+      id: 'presenca_monthly',
+      name: 'Presença',
+      price: 997,
+      priceLabel: 'R$997/mês',
+      videosPerDay: 1,
+      videosPerMonth: 30,
+      headline: 'Comece a aparecer todos os dias.',
+      description: 'Para quem quer sair da inconsistência e começar a postar todos os dias.',
+      cta: 'Começar minha constância',
+      highlighted: false,
+      stripePriceId: 'price_presenca_placeholder',
+      features: ['1 vídeo por dia','30 vídeos por mês','Clipes editados no padrão UPFY','Legendas dinâmicas','1 revisão por clipe','Organização dos conteúdos','Feedback básico dos melhores cortes']
+    },
+    {
+      id: 'constancia_monthly',
+      name: 'Constância',
+      price: 1997,
+      priceLabel: 'R$1.997/mês',
+      videosPerDay: 2,
+      videosPerMonth: 60,
+      headline: 'Seu perfil rodando por 30 dias.',
+      description: 'Para criadores que querem constância real: 2 chances por dia de um conteúdo estourar.',
+      supportCopy: '30 dias. 60 vídeos. 2 chances por dia de crescer no orgânico.',
+      cta: 'Colocar meu perfil pra rodar',
+      highlighted: true,
+      badge: 'Mais recomendado',
+      stripePriceId: 'price_constancia_placeholder',
+      features: ['2 vídeos por dia','60 vídeos por mês','Clipes editados no padrão UPFY','Legendas dinâmicas','1 revisão por clipe','Ranking dos melhores cortes','Feedback de potencial por conteúdo','Sugestão de horários','Relatório semanal simples','Organização e agendamento']
+    },
+    {
+      id: 'dominio_monthly',
+      name: 'Domínio',
+      price: 2997,
+      priceLabel: 'R$2.997/mês',
+      videosPerDay: 3,
+      videosPerMonth: 90,
+      headline: 'Domine seu nicho com volume.',
+      description: 'Para quem quer volume, presença diária e mais velocidade para testar formatos.',
+      cta: 'Dominar meu nicho',
+      highlighted: false,
+      stripePriceId: 'price_dominio_placeholder',
+      features: ['3 vídeos por dia','90 vídeos por mês','Clipes editados no padrão UPFY','Legendas dinâmicas','1 revisão por clipe','Priorização dos vídeos com mais potencial','Feedback estratégico','Relatório semanal','Análise de performance','Ajustes de direção com base no que performou','Organização e agendamento']
+    }
+  ];
+
+  // ── handleSelectPlan — pronto para integrar com Stripe Checkout ──
+  function handleSelectPlan(planId, planName) {
+    const plan = monthlyPlans.find(p => p.id === planId);
+    console.log('Plano selecionado:', plan ? plan.name : planName, '| ID:', planId, '| Stripe:', plan ? plan.stripePriceId : '—');
+    // TODO: redirecionar para Stripe Checkout
+    // window.location.href = `/api/checkout?priceId=${plan.stripePriceId}`;
+    showToast('✓', 'Plano ' + (planName || planId) + ' selecionado');
+  }
+
+  // ── Toast ──
+  let toastTimer;
+  function showToast(icon, text) {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-icon').textContent = icon;
+    document.getElementById('toast-text').textContent = text;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+  }
+
+  function toggleFilter(btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+  }
+  function selectStyle(card) {
+    document.querySelectorAll('.style-card').forEach(c => { c.classList.remove('selected'); c.querySelector('.style-check')?.remove(); });
+    card.classList.add('selected');
+    const chk = document.createElement('div'); chk.className = 'style-check'; chk.textContent = '✓';
+    card.querySelector('div > div').prepend(chk);
+  }
+</script>
+</body>
+</html>

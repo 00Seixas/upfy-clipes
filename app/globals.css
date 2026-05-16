@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 1%;
+    --foreground: 240 5% 94%;
+    --card: 240 6% 4%;
+    --card-foreground: 240 5% 94%;
+    --popover: 240 6% 4%;
+    --popover-foreground: 240 5% 94%;
+    --primary: 263 75% 58%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 25 95% 53%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 240 5% 8%;
+    --muted-foreground: 240 4% 53%;
+    --accent: 240 5% 8%;
+    --accent-foreground: 240 5% 94%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 5% 11%;
+    --input: 240 5% 8%;
+    --ring: 263 75% 58%;
+    --radius: 0.625rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-upfy-dark text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  ::selection {
+    @apply bg-primary/30 text-foreground;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-upfy-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-upfy-border-2;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-upfy-surface/60 backdrop-blur-md border border-upfy-border;
+  }
+
+  .glass-2 {
+    @apply bg-upfy-surface-2/60 backdrop-blur-md border border-upfy-border;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-upfy bg-clip-text text-transparent;
+  }
+
+  .surface {
+    @apply bg-upfy-surface border border-upfy-border rounded-xl;
+  }
+
+  .surface-2 {
+    @apply bg-upfy-surface-2 border border-upfy-border rounded-xl;
+  }
+
+  .glow-purple {
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+  }
+
+  .glow-orange {
+    box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+  }
+}

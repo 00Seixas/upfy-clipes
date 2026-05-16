@@ -1,0 +1,23 @@
+-- Admin seed: run this after setting up Supabase Auth manually
+-- 1. Create an admin user in Supabase Auth dashboard (or via API)
+-- 2. Copy the user UUID and replace ADMIN_USER_UUID below
+-- 3. Run this SQL in Supabase SQL editor
+
+-- Update the profile role to admin (profile is auto-created by the trigger)
+-- Replace 'ADMIN_USER_UUID' with the actual UUID from Supabase Auth
+--
+-- UPDATE profiles
+-- SET role = 'admin', name = 'Admin UPFY'
+-- WHERE id = 'ADMIN_USER_UUID';
+--
+-- Alternatively, create admin directly via Supabase Auth API:
+-- curl -X POST 'https://YOUR_PROJECT.supabase.co/auth/v1/admin/users' \
+--   -H 'Authorization: Bearer SERVICE_ROLE_KEY' \
+--   -H 'Content-Type: application/json' \
+--   -d '{
+--     "email": "admin@upfymidia.com",
+--     "password": "YOUR_SECURE_PASSWORD",
+--     "user_metadata": {"name": "Admin UPFY", "role": "admin"},
+--     "email_confirm": true
+--   }'
+-- Then run: UPDATE profiles SET role = 'admin' WHERE email = 'admin@upfymidia.com';

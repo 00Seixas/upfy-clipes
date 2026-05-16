@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>UPFY — Painel do Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:       #FFFFFF;
+  --surface:  #F5F5F7;
+  --surface2: #EBEBEF;
+  --surface3: #E0E0E6;
+  --border:   #D8D8E0;
+  --border2:  #C8C8D4;
+  --fg:       #0A0A0B;
+  --muted:    #9090A0;
+  --muted2:   #6B6B7A;
+  --radius:   12px;
+  /* virality — mesma exceção do cliente */
+  --v-frio:   #3B82F6;
+  --v-morno:  #8B5CF6;
+  --v-quente: #F97316;
+  --v-viral:  #EF4444;
+}
+html, body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  height: 100%;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+.app { display: flex; height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 224px; min-width: 224px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+}
+.sidebar-logo {
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.logo-brand { font-size: .95rem; font-weight: 800; color: var(--fg); }
+.logo-role {
+  font-size: .68rem; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+.sidebar-nav { flex: 1; padding: 10px 8px; display: flex; flex-direction: column; gap: 1px; }
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 11px; border-radius: 9px;
+  font-size: .82rem; font-weight: 500; color: var(--muted2);
+  cursor: pointer; transition: all .15s;
+  border: none; background: none; width: 100%; text-align: left;
+}
+.nav-item:hover { background: var(--surface2); color: var(--fg); }
+.nav-item.active { background: var(--fg); color: var(--bg); }
+.nav-item.active svg { color: var(--bg); }
+.nav-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--fg); color: var(--bg);
+  font-size: .62rem; font-weight: 700;
+  padding: 2px 7px; border-radius: 99px;
+  min-width: 20px; text-align: center;
+}
+.nav-item.active .nav-badge { background: var(--bg); color: var(--fg); }
+.sidebar-profile {
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.profile-av {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--surface3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .8rem; font-weight: 700; color: var(--muted2);
+  flex-shrink: 0;
+}
+.profile-name { font-size: .8rem; font-weight: 600; }
+.profile-status { font-size: .7rem; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: #22C55E; }
+
+/* ── MAIN ── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ── TOPBAR ── */
+.topbar {
+  height: 54px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; flex-shrink: 0;
+}
+.topbar-title { font-size: .9rem; font-weight: 600; }
+.topbar-right { display: flex; align-items: center; gap: 8px; }
+.icon-btn {
+  width: 34px; height: 34px; border-radius: 9px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--muted2); transition: all .15s;
+  position: relative;
+}
+.icon-btn:hover { border-color: var(--border2); color: var(--fg); background: var(--surface); }
+.notif-dot {
+  position: absolute; top: 7px; right: 7px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--v-viral); border: 1px solid var(--bg);
+}
+
+/* ── CONTENT ── */
+.content { flex: 1; overflow-y: auto; padding: 24px; }
+.content::-webkit-scrollbar { width: 4px; }
+.content::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+/* ── SCREENS ── */
+.screen { display: none; }
+.screen.active { display: block; animation: fadeIn .2s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── PAGE HEADER ── */
+.page-header { margin-bottom: 22px; display: flex; align-items: flex-start; justify-content: space-between; }
+.page-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 3px; }
+.page-sub { font-size: .82rem; color: var(--muted2); }
+
+/* ── BTNS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 16px; border-radius: 9px;
+  font-size: .82rem; font-weight: 600;
+  cursor: pointer; border: none; transition: all .15s;
+  text-decoration: none; font-family: inherit;
+}
+.btn-primary { background: var(--fg); color: var(--bg); }
+.btn-primary:hover { background: #2a2a2e; }
+.btn-outline { background: transparent; border: 1px solid var(--border2); color: var(--muted2); }
+.btn-outline:hover { border-color: var(--border2); color: var(--fg); background: var(--surface); }
+.btn-ghost { background: transparent; color: var(--muted2); }
+.btn-ghost:hover { background: var(--surface2); color: var(--fg); }
+.btn-sm { padding: 5px 12px; font-size: .76rem; border-radius: 7px; }
+.btn-danger { background: transparent; border: 1px solid rgba(239,68,68,.3); color: #EF4444; }
+.btn-danger:hover { background: rgba(239,68,68,.06); }
+
+/* ── STAT CARDS ── */
+.stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 22px; }
+.stat-card {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px;
+}
+.stat-label { font-size: .68rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px; }
+.stat-value { font-size: 1.8rem; font-weight: 800; color: var(--fg); }
+.stat-sub { font-size: .72rem; color: var(--muted); margin-top: 3px; }
+
+/* ── QUEUE CARDS ── */
+.queue-grid { display: flex; flex-direction: column; gap: 8px; }
+.queue-card {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 18px;
+  cursor: pointer; transition: all .18s;
+  display: flex; align-items: center; gap: 14px;
+}
+.queue-card:hover { border-color: var(--border2); box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+.queue-card.selected { border-color: var(--fg); background: var(--surface); }
+.queue-card.urgent { border-left: 3px solid var(--v-viral); }
+.queue-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: var(--surface2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; flex-shrink: 0;
+}
+.queue-info { flex: 1; min-width: 0; }
+.queue-title { font-size: .88rem; font-weight: 600; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.queue-meta { font-size: .74rem; color: var(--muted2); display: flex; align-items: center; gap: 10px; }
+.queue-meta-sep { color: var(--border2); }
+.queue-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.time-badge {
+  font-size: .7rem; font-weight: 600;
+  padding: 3px 9px; border-radius: 99px;
+  border: 1px solid var(--border2); color: var(--muted2);
+}
+.time-badge.urgent { border-color: rgba(239,68,68,.4); color: var(--v-viral); background: rgba(239,68,68,.05); }
+.time-badge.ok     { border-color: rgba(34,197,94,.3);  color: #16A34A;       background: rgba(34,197,94,.05); }
+
+/* ── STATUS BADGE ── */
+.s-badge {
+  font-size: .68rem; font-weight: 700;
+  padding: 3px 9px; border-radius: 99px; white-space: nowrap;
+}
+.s-queued   { background: var(--surface2); color: var(--muted2); border: 1px solid var(--border2); }
+.s-assigned { background: rgba(59,130,246,.08); color: #2563EB; border: 1px solid rgba(59,130,246,.2); }
+.s-editing  { background: rgba(234,179,8,.08);  color: #A16207; border: 1px solid rgba(234,179,8,.2); }
+.s-review   { background: rgba(139,92,246,.08); color: #7C3AED; border: 1px solid rgba(139,92,246,.2); }
+.s-done     { background: rgba(34,197,94,.08);  color: #15803D; border: 1px solid rgba(34,197,94,.2); }
+
+/* ── VIRALITY ── */
+.vbadge { font-size: .68rem; font-weight: 700; padding: 3px 9px; border-radius: 99px; }
+.vb-frio   { background: rgba(59,130,246,.1);  color: var(--v-frio);   border:1px solid rgba(59,130,246,.25); }
+.vb-morno  { background: rgba(139,92,246,.1);  color: var(--v-morno);  border:1px solid rgba(139,92,246,.25); }
+.vb-quente { background: rgba(249,115,22,.1);  color: var(--v-quente); border:1px solid rgba(249,115,22,.25); }
+.vb-viral  { background: rgba(239,68,68,.1);   color: var(--v-viral);  border:1px solid rgba(239,68,68,.25);
+             animation: vpulse 1.8s ease-in-out infinite; }
+@keyframes vpulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.2)} 50%{box-shadow:0 0 0 4px rgba(239,68,68,.1)} }
+
+/* ── SPLIT VIEW ── */
+.split { display: grid; grid-template-columns: 1fr 400px; gap: 16px; }
+
+/* ── DETAIL PANEL ── */
+.detail-panel {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  display: flex; flex-direction: column;
+  position: sticky; top: 0; max-height: calc(100vh - 100px);
+  overflow-y: auto;
+}
+.detail-header {
+  padding: 16px 18px; border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.detail-title { font-size: .92rem; font-weight: 700; margin-bottom: 6px; }
+.detail-id { font-size: .7rem; color: var(--muted); font-family: monospace; }
+.detail-body { padding: 18px; display: flex; flex-direction: column; gap: 18px; }
+
+.detail-section { display: flex; flex-direction: column; gap: 8px; }
+.detail-section-label {
+  font-size: .68rem; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+.detail-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.detail-key { font-size: .78rem; color: var(--muted2); flex-shrink: 0; }
+.detail-val { font-size: .78rem; font-weight: 600; text-align: right; }
+
+/* ── BRIEFING BOX ── */
+.briefing-box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 9px; padding: 12px 14px;
+}
+.briefing-item { font-size: .8rem; color: var(--muted2); margin-bottom: 6px; }
+.briefing-item:last-child { margin-bottom: 0; }
+.briefing-item strong { color: var(--fg); }
+
+/* ── UPLOAD BOX ── */
+.upload-box {
+  border: 2px dashed var(--border2);
+  border-radius: 10px; padding: 28px;
+  text-align: center; cursor: pointer;
+  transition: all .2s;
+}
+.upload-box:hover, .upload-box.drag { border-color: var(--fg); background: var(--surface); }
+.upload-icon { font-size: 1.5rem; margin-bottom: 8px; }
+.upload-title { font-size: .85rem; font-weight: 600; margin-bottom: 4px; }
+.upload-sub { font-size: .75rem; color: var(--muted); }
+.upload-done {
+  background: rgba(34,197,94,.06);
+  border: 1px solid rgba(34,197,94,.3);
+  border-radius: 10px; padding: 14px 16px;
+  display: flex; align-items: center; gap: 10px;
+}
+.upload-done-icon { font-size: 1.1rem; }
+.upload-done-name { font-size: .82rem; font-weight: 600; }
+.upload-done-size { font-size: .72rem; color: var(--muted); }
+
+/* ── VIRALITY SELECTOR ── */
+.virality-picker { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
+.vp-btn {
+  padding: 8px 4px; border-radius: 8px;
+  border: 1px solid var(--border2);
+  text-align: center; cursor: pointer; transition: all .15s;
+  background: var(--bg);
+}
+.vp-btn .vp-label { font-size: .72rem; font-weight: 700; margin-top: 4px; display: block; color: var(--muted2); }
+.vp-btn .vp-icon  { font-size: .95rem; }
+.vp-btn:hover { border-color: var(--border2); background: var(--surface); }
+.vp-btn.active-frio   { border-color: var(--v-frio);   background: rgba(59,130,246,.07); }
+.vp-btn.active-morno  { border-color: var(--v-morno);  background: rgba(139,92,246,.07); }
+.vp-btn.active-quente { border-color: var(--v-quente); background: rgba(249,115,22,.07); }
+.vp-btn.active-viral  { border-color: var(--v-viral);  background: rgba(239,68,68,.07); animation: vpulse 1.8s ease-in-out infinite; }
+.vp-btn.active-frio   .vp-label { color: var(--v-frio);   }
+.vp-btn.active-morno  .vp-label { color: var(--v-morno);  }
+.vp-btn.active-quente .vp-label { color: var(--v-quente); }
+.vp-btn.active-viral  .vp-label { color: var(--v-viral);  }
+
+/* ── TEXTAREA ── */
+.field-label { font-size: .78rem; font-weight: 600; margin-bottom: 6px; display: block; }
+textarea, input[type=text] {
+  width: 100%; padding: 10px 12px;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 9px; font-size: .82rem; color: var(--fg);
+  font-family: inherit; resize: none; transition: border-color .15s;
+  outline: none;
+}
+textarea:focus, input[type=text]:focus { border-color: var(--fg); }
+textarea { min-height: 80px; }
+
+/* ── ACTION BAR ── */
+.action-bar {
+  padding: 14px 18px; border-top: 1px solid var(--border);
+  background: var(--surface);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.action-bar-row { display: flex; gap: 8px; }
+
+/* ── KANBAN ── */
+.kanban { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 12px; min-height: calc(100vh - 160px); }
+.kanban-col {
+  flex-shrink: 0; width: 256px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); display: flex; flex-direction: column;
+}
+.kanban-head {
+  padding: 12px 14px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.kanban-title { font-size: .8rem; font-weight: 700; }
+.kanban-count {
+  font-size: .68rem; font-weight: 700;
+  background: var(--surface2); color: var(--muted2);
+  padding: 2px 7px; border-radius: 99px;
+}
+.kanban-cards { padding: 8px; display: flex; flex-direction: column; gap: 7px; flex: 1; }
+.kanban-card {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 9px; padding: 12px; cursor: pointer;
+  transition: all .15s;
+}
+.kanban-card:hover { border-color: var(--border2); box-shadow: 0 2px 8px rgba(0,0,0,.07); }
+.kanban-card-title { font-size: .78rem; font-weight: 600; margin-bottom: 4px; }
+.kanban-card-id { font-size: .65rem; color: var(--muted); font-family: monospace; margin-bottom: 8px; }
+.kanban-card-footer { display: flex; align-items: center; justify-content: space-between; }
+.kanban-card-time { font-size: .67rem; color: var(--muted); }
+
+/* ── ENTREGUES (delivered clips) ── */
+.delivered-grid { display: flex; flex-direction: column; gap: 10px; }
+.delivered-card {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 18px;
+  display: flex; align-items: center; gap: 14px;
+  transition: border-color .15s;
+}
+.delivered-card:hover { border-color: var(--border2); }
+.dc-thumb {
+  width: 48px; height: 48px; border-radius: 9px;
+  background: var(--surface2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+}
+.dc-info { flex: 1; }
+.dc-title { font-size: .85rem; font-weight: 600; margin-bottom: 3px; }
+.dc-meta  { font-size: .74rem; color: var(--muted2); display: flex; gap: 8px; }
+.dc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+
+/* ── PERFIL ── */
+.profile-card {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px;
+  max-width: 520px;
+}
+.profile-av-lg {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: var(--surface2); border: 2px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; font-weight: 800; color: var(--muted2);
+  margin-bottom: 16px;
+}
+.profile-field { margin-bottom: 14px; }
+.profile-stat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 20px; }
+.profile-stat {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 9px; padding: 12px; text-align: center;
+}
+.profile-stat-val { font-size: 1.3rem; font-weight: 800; }
+.profile-stat-lbl { font-size: .68rem; color: var(--muted); margin-top: 2px; }
+
+/* ── EMPTY STATE ── */
+.empty {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 64px 24px; text-align: center;
+}
+.empty-icon { font-size: 2.5rem; margin-bottom: 14px; opacity: .4; }
+.empty-title { font-size: .92rem; font-weight: 600; margin-bottom: 6px; }
+.empty-sub { font-size: .82rem; color: var(--muted2); }
+
+/* ── NOTIF BADGE ── */
+.notif-item {
+  display: flex; gap: 10px; padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.notif-item:last-child { border-bottom: none; }
+.notif-dot-item { width: 8px; height: 8px; border-radius: 50%; background: var(--fg); margin-top: 5px; flex-shrink: 0; }
+.notif-text { font-size: .82rem; color: var(--muted2); }
+.notif-text strong { color: var(--fg); }
+.notif-time { font-size: .72rem; color: var(--muted); margin-top: 2px; }
+
+/* ── DIVIDER ── */
+.sep { height: 1px; background: var(--border); margin: 4px 0; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-brand">UPFY Clipes</div>
+    <div class="logo-role">Painel do Editor</div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <button class="nav-item active" onclick="showScreen('fila', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      Fila de produção
+      <span class="nav-badge" id="badge-fila">7</span>
+    </button>
+    <button class="nav-item" onclick="showScreen('kanban', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Kanban
+    </button>
+    <button class="nav-item" onclick="showScreen('entregues', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      Entregues
+    </button>
+    <div class="sep" style="margin:4px 6px"></div>
+    <button class="nav-item" onclick="showScreen('perfil', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Meu perfil
+    </button>
+  </nav>
+
+  <div class="sidebar-profile">
+    <div class="profile-av">M</div>
+    <div>
+      <div class="profile-name">Marcos Edits</div>
+      <div class="profile-status"><span class="status-dot"></span> Online</div>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title" id="topbar-title">Fila de produção</span>
+    <div class="topbar-right">
+      <div class="icon-btn" onclick="showScreen('notif', null)" title="Notificações">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span class="notif-dot"></span>
+      </div>
+      <div class="icon-btn" title="Ajuda">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══ FILA ══ -->
+    <div class="screen active" id="screen-fila">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Fila de produção</div>
+          <div class="page-sub">7 pedidos ativos · 3 com prazo hoje</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline btn-sm" onclick="showScreen('kanban',null)">Ver kanban</button>
+          <button class="btn btn-primary btn-sm">Filtrar</button>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Na fila</div>
+          <div class="stat-value">4</div>
+          <div class="stat-sub">aguardando</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Editando</div>
+          <div class="stat-value">2</div>
+          <div class="stat-sub">em andamento</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Revisão</div>
+          <div class="stat-value">1</div>
+          <div class="stat-sub">aguarda aprovação</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Entregues hoje</div>
+          <div class="stat-value">3</div>
+          <div class="stat-sub">esta semana: 14</div>
+        </div>
+      </div>
+
+      <div class="split">
+        <!-- lista de pedidos -->
+        <div class="queue-grid">
+          <div class="queue-card selected urgent" onclick="selectOrder(this,'#ORD-0049','Raiam Santos','Como vender todos os dias no Instagram','youtube_video','editing')">
+            <div class="queue-icon">🎬</div>
+            <div class="queue-info">
+              <div class="queue-title">Como vender todos os dias no Instagram</div>
+              <div class="queue-meta">
+                <span>Raiam Santos</span>
+                <span class="queue-meta-sep">·</span>
+                <span>YouTube · 24min</span>
+                <span class="queue-meta-sep">·</span>
+                <span>#ORD-0049</span>
+              </div>
+            </div>
+            <div class="queue-right">
+              <span class="s-badge s-editing">Editando</span>
+              <span class="time-badge urgent">⏰ 4h restantes</span>
+            </div>
+          </div>
+
+          <div class="queue-card" onclick="selectOrder(this,'#ORD-0050','Enrico Beltrão','Por que seu conteúdo não cresce','short_video','queued')">
+            <div class="queue-icon">📱</div>
+            <div class="queue-info">
+              <div class="queue-title">Por que seu conteúdo não cresce — Reel</div>
+              <div class="queue-meta">
+                <span>Enrico Beltrão</span>
+                <span class="queue-meta-sep">·</span>
+                <span>Reel avulso · 8min</span>
+                <span class="queue-meta-sep">·</span>
+                <span>#ORD-0050</span>
+              </div>
+            </div>
+            <div class="queue-right">
+              <span class="s-badge s-queued">Na fila</span>
+              <span class="time-badge ok">✓ 22h restantes</span>
+            </div>
+          </div>
+
+          <div class="queue-card" onclick="selectOrder(this,'#ORD-0047','Leo Bettanin','Rotina matinal completa — vlog','youtube_video','review')">
+            <div class="queue-icon">🎙️</div>
+            <div class="queue-info">
+              <div class="queue-title">Rotina matinal completa — vlog</div>
+              <div class="queue-meta">
+                <span>Leo Bettanin</span>
+                <span class="queue-meta-sep">·</span>
+                <span>YouTube · 18min</span>
+                <span class="queue-meta-sep">·</span>
+                <span>#ORD-0047</span>
+              </div>
+            </div>
+            <div class="queue-right">
+              <span class="s-badge s-review">Revisão admin</span>
+              <span class="time-badge ok">Aguardando</span>
+            </div>
+          </div>
+
+          <div class="queue-card" onclick="selectOrder(this,'#ORD-0051','Morgana Politze','Os 5 erros que matam seu Instagram','short_video','queued')">
+            <div class="queue-icon">📱</div>
+            <div class="queue-info">
+              <div class="queue-title">Os 5 erros que matam seu Instagram — Reel</div>
+              <div class="queue-meta">
+                <span>Morgana Politze</span>
+                <span class="queue-meta-sep">·</span>
+                <span>Reel avulso · 6min</span>
+                <span class="queue-meta-sep">·</span>
+                <span>#ORD-0051</span>
+              </div>
+            </div>
+            <div class="queue-right">
+              <span class="s-badge s-queued">Na fila</span>
+              <span class="time-badge ok">✓ 36h restantes</span>
+            </div>
+          </div>
+
+          <div class="queue-card" onclick="selectOrder(this,'#ORD-0045','Gabriel Finance','Como sair das dívidas em 12 meses','youtube_video','assigned')">
+            <div class="queue-icon">🎬</div>
+            <div class="queue-info">
+              <div class="queue-title">Como sair das dívidas em 12 meses</div>
+              <div class="queue-meta">
+                <span>Gabriel Finance</span>
+                <span class="queue-meta-sep">·</span>
+                <span>YouTube · 31min</span>
+                <span class="queue-meta-sep">·</span>
+                <span>#ORD-0045</span>
+              </div>
+            </div>
+            <div class="queue-right">
+              <span class="s-badge s-assigned">Atribuído</span>
+              <span class="time-badge ok">✓ 28h restantes</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- detail panel -->
+        <div class="detail-panel" id="detail-panel">
+          <div class="detail-header">
+            <div class="detail-title" id="dp-title">Como vender todos os dias no Instagram</div>
+            <div class="detail-id" id="dp-id">#ORD-0049 · Raiam Santos</div>
+          </div>
+          <div class="detail-body">
+
+            <!-- info -->
+            <div class="detail-section">
+              <div class="detail-section-label">Informações</div>
+              <div class="detail-row">
+                <span class="detail-key">Tipo</span>
+                <span class="detail-val" id="dp-type">YouTube · 24 min</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-key">Status</span>
+                <span id="dp-status"><span class="s-badge s-editing">Editando</span></span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-key">Prazo</span>
+                <span class="detail-val" style="color:var(--v-viral)">Hoje às 22:00</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-key">Cliente</span>
+                <span class="detail-val">Raiam Santos</span>
+              </div>
+            </div>
+
+            <!-- briefing -->
+            <div class="detail-section">
+              <div class="detail-section-label">Briefing do cliente</div>
+              <div class="briefing-box">
+                <div class="briefing-item"><strong>Tom de voz:</strong> Motivacional, direto ao ponto</div>
+                <div class="briefing-item"><strong>Música:</strong> Trending TikTok, energética</div>
+                <div class="briefing-item"><strong>CTA:</strong> "Segue o perfil pra mais dicas"</div>
+                <div class="briefing-item"><strong>Plataformas:</strong> Instagram + TikTok</div>
+                <div class="briefing-item"><strong>Observações:</strong> Destacar os momentos 04:20 e 18:35 — são os mais impactantes segundo o cliente.</div>
+              </div>
+            </div>
+
+            <!-- upload -->
+            <div class="detail-section">
+              <div class="detail-section-label">Entrega do clipe</div>
+              <div class="upload-box" id="upload-area" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)" onclick="document.getElementById('file-input').click()">
+                <input type="file" id="file-input" accept="video/*" style="display:none" onchange="handleFile(this.files[0])">
+                <div class="upload-icon">☁️</div>
+                <div class="upload-title">Soltar clipe editado aqui</div>
+                <div class="upload-sub">MP4, MOV · Máx 2GB</div>
+              </div>
+            </div>
+
+            <!-- virality -->
+            <div class="detail-section">
+              <div class="detail-section-label">Grau de viralização</div>
+              <div class="virality-picker">
+                <div class="vp-btn" id="vp-frio"   onclick="selectVirality('frio')">
+                  <div class="vp-icon">🧊</div>
+                  <span class="vp-label">Frio</span>
+                </div>
+                <div class="vp-btn" id="vp-morno"  onclick="selectVirality('morno')">
+                  <div class="vp-icon">🔆</div>
+                  <span class="vp-label">Morno</span>
+                </div>
+                <div class="vp-btn" id="vp-quente" onclick="selectVirality('quente')">
+                  <div class="vp-icon">🔥</div>
+                  <span class="vp-label">Quente</span>
+                </div>
+                <div class="vp-btn active-viral" id="vp-viral" onclick="selectVirality('viral')">
+                  <div class="vp-icon">💥</div>
+                  <span class="vp-label">Viral</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- feedback -->
+            <div class="detail-section">
+              <label class="field-label">Feedback para o cliente</label>
+              <textarea rows="4" placeholder="Ex: Hook nos primeiros 3s garante retenção alta. Corte no minuto 18:35 tem potencial viral pelo tom emocional — sugiro como clipe principal...">Hook nos primeiros 3s garante retenção alta. O momento 04:20 onde ele fala sobre consistência tem potencial viral enorme — ritmo de corte e trilha estão alinhados com o trending do TikTok.</textarea>
+            </div>
+
+            <!-- notas internas -->
+            <div class="detail-section">
+              <label class="field-label">Notas internas <span style="font-size:.7rem;color:var(--muted);font-weight:400">(não visível ao cliente)</span></label>
+              <textarea rows="2" placeholder="Anotações para o time..."></textarea>
+            </div>
+
+          </div>
+
+          <!-- action bar -->
+          <div class="action-bar">
+            <div class="action-bar-row">
+              <button class="btn btn-primary" style="flex:1" onclick="submitClip()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Enviar para revisão
+              </button>
+            </div>
+            <div class="action-bar-row">
+              <button class="btn btn-outline btn-sm" style="flex:1">Salvar rascunho</button>
+              <button class="btn btn-danger btn-sm">Devolver à fila</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ KANBAN ══ -->
+    <div class="screen" id="screen-kanban">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Kanban</div>
+          <div class="page-sub">Visão geral de todos os pedidos ativos</div>
+        </div>
+      </div>
+      <div class="kanban">
+        <!-- Na fila -->
+        <div class="kanban-col">
+          <div class="kanban-head">
+            <span class="kanban-title">Na fila</span>
+            <span class="kanban-count">4</span>
+          </div>
+          <div class="kanban-cards">
+            <div class="kanban-card">
+              <div class="kanban-card-title">Os 5 erros que matam seu Instagram</div>
+              <div class="kanban-card-id">#ORD-0051</div>
+              <div class="kanban-card-footer">
+                <span class="kanban-card-time">Morgana · Reel</span>
+                <span class="s-badge s-queued" style="font-size:.6rem">Fila</span>
+              </div>
+            </div>
+            <div class="kanban-card">
+              <div class="kanban-card-title">Por que seu conteúdo não cresce</div>
+              <div class="kanban-card-id">#ORD-0050</div>
+              <div class="kanban-card-footer">
+                <span class="kanban-card-time">Enrico · Reel</span>
+                <span class="s-badge s-queued" style="font-size:.6rem">Fila</span>
+              </div>
+            </div>
+            <div class="kanban-card">
+              <div class="kanban-card-title">A verdade sobre tráfego pago</div>
+              <div class="kanban-card-id">#ORD-0052</div>
+              <div class="kanban-card-footer">
+                <span class="kanban-card-time">Juliana · YouTube</span>
+                <span class="s-badge s-queued" style="font-size:.6rem">Fila</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Editando -->
+        <div class="kanban-col">
+          <div class="kanban-head">
+            <span class="kanban-title">Editando</span>
+            <span class="kanban-count">2</span>
+          </div>
+          <div class="kanban-cards">
+            <div class="kanban-card" style="border-left:3px solid var(--v-viral)">
+              <div class="kanban-card-title">Como vender todos os dias no Instagram</div>
+              <div class="kanban-card-id">#ORD-0049</div>
+              <div class="kanban-card-footer">
+                <span class="kanban-card-time" style="color:var(--v-viral)">⏰ 4h restantes</span>
+                <span class="s-badge s-editing" style="font-size:.6rem">Editando</span>
+              </div>
+            </div>
+            <div class="kanban-card">
+              <div class="kanban-card-title">Como sair das dívidas em 12 meses</div>
+              <div class="kanban-card-id">#ORD-0045</div>
+              <div class="kanban-card-footer">
+                <span class="kanban-card-time">28h restantes</span>
+                <span class="s-badge s-editing" style="font-size:.6rem">Editando</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Revisão interna -->
+        <div class="kanban-col">
+          <div class="kanban-head">
+            <span class="kanban-title">Revisão admin</span>
+            <span class="kanban-count">1</span>
+          </div>
+          <div class="kanban-cards">
+            <div class="kanban-card">
+              <div class="kanban-card-title">Rotina matinal completa — vlog</div>
+              <div class="kanban-card-id">#ORD-0047</div>
+              <div class="kanban-card-footer">
+                <span class="kanban-card-time">Leo · YouTube</span>
+                <span class="s-badge s-review" style="font-size:.6rem">Revisão</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pronto p/ cliente -->
+        <div class="kanban-col">
+          <div class="kanban-head">
+            <span class="kanban-title">Pronto p/ cliente</span>
+            <span class="kanban-count">2</span>
+          </div>
+          <div class="kanban-cards">
+            <div class="kanban-card">
+              <div class="kanban-card-title">Minha história no digital</div>
+              <div class="kanban-card-id">#ORD-0043</div>
+              <div class="kanban-card-footer">
+                <span class="kanban-card-time">Raiam · Reel</span>
+                <span class="s-badge s-done" style="font-size:.6rem">Pronto</span>
+              </div>
+            </div>
+            <div class="kanban-card">
+              <div class="kanban-card-title">3 hábitos de criadores de sucesso</div>
+              <div class="kanban-card-id">#ORD-0044</div>
+              <div class="kanban-card-footer">
+                <span class="kanban-card-time">Gabriel · Reel</span>
+                <span class="s-badge s-done" style="font-size:.6rem">Pronto</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Aprovado -->
+        <div class="kanban-col">
+          <div class="kanban-head">
+            <span class="kanban-title">Aprovado</span>
+            <span class="kanban-count">3</span>
+          </div>
+          <div class="kanban-cards">
+            <div class="kanban-card">
+              <div class="kanban-card-title">Produtividade extrema — vlog</div>
+              <div class="kanban-card-id">#ORD-0040</div>
+              <div class="kanban-card-footer">
+                <span class="kanban-card-time">Enrico · YouTube</span>
+                <span class="vbadge vb-viral" style="font-size:.6rem">Viral</span>
+              </div>
+            </div>
+            <div class="kanban-card">
+              <div class="kanban-card-title">Como fazer R$10k no digital</div>
+              <div class="kanban-card-id">#ORD-0041</div>
+              <div class="kanban-card-footer">
+                <span class="kanban-card-time">Leo · YouTube</span>
+                <span class="vbadge vb-quente" style="font-size:.6rem">Quente</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ENTREGUES ══ -->
+    <div class="screen" id="screen-entregues">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Clipes entregues</div>
+          <div class="page-sub">Seu histórico de produção</div>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Total entregues</div>
+          <div class="stat-value">48</div>
+          <div class="stat-sub">em 30 dias</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Taxa viral</div>
+          <div class="stat-value">14%</div>
+          <div class="stat-sub">6 virais de 48</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Aprovados 1ª vez</div>
+          <div class="stat-value">91%</div>
+          <div class="stat-sub">sem revisão</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Tempo médio</div>
+          <div class="stat-value">31h</div>
+          <div class="stat-sub">por entrega</div>
+        </div>
+      </div>
+      <div class="delivered-grid">
+        <div class="delivered-card">
+          <div class="dc-thumb">🔥</div>
+          <div class="dc-info">
+            <div class="dc-title">Como vender todos os dias — Corte #1</div>
+            <div class="dc-meta">
+              <span>Raiam Santos</span>
+              <span>·</span>
+              <span>há 2h</span>
+            </div>
+          </div>
+          <div class="dc-right">
+            <span class="vbadge vb-viral">🔥 Viral</span>
+            <span style="font-size:.72rem;color:var(--muted)">847k views</span>
+          </div>
+        </div>
+        <div class="delivered-card">
+          <div class="dc-thumb">▶</div>
+          <div class="dc-info">
+            <div class="dc-title">Por que seu conteúdo não cresce — Corte #2</div>
+            <div class="dc-meta"><span>Enrico Beltrão</span><span>·</span><span>há 1 dia</span></div>
+          </div>
+          <div class="dc-right">
+            <span class="vbadge vb-quente">Quente</span>
+            <span style="font-size:.72rem;color:var(--muted)">312k views</span>
+          </div>
+        </div>
+        <div class="delivered-card">
+          <div class="dc-thumb">▶</div>
+          <div class="dc-info">
+            <div class="dc-title">Rotina matinal completa — Corte #3</div>
+            <div class="dc-meta"><span>Leo Bettanin</span><span>·</span><span>há 2 dias</span></div>
+          </div>
+          <div class="dc-right">
+            <span class="vbadge vb-morno">Morno</span>
+            <span style="font-size:.72rem;color:var(--muted)">89k views</span>
+          </div>
+        </div>
+        <div class="delivered-card">
+          <div class="dc-thumb">▶</div>
+          <div class="dc-info">
+            <div class="dc-title">Os 5 erros que matam seu Instagram — Corte #1</div>
+            <div class="dc-meta"><span>Morgana Politze</span><span>·</span><span>há 3 dias</span></div>
+          </div>
+          <div class="dc-right">
+            <span class="vbadge vb-frio">Frio</span>
+            <span style="font-size:.72rem;color:var(--muted)">12k views</span>
+          </div>
+        </div>
+        <div class="delivered-card">
+          <div class="dc-thumb">🔥</div>
+          <div class="dc-info">
+            <div class="dc-title">Como sair das dívidas em 12 meses — Corte #2</div>
+            <div class="dc-meta"><span>Gabriel Finance</span><span>·</span><span>há 4 dias</span></div>
+          </div>
+          <div class="dc-right">
+            <span class="vbadge vb-viral">🔥 Viral</span>
+            <span style="font-size:.72rem;color:var(--muted)">1.2M views</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PERFIL ══ -->
+    <div class="screen" id="screen-perfil">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Meu perfil</div>
+          <div class="page-sub">Suas informações e métricas de produção</div>
+        </div>
+      </div>
+      <div class="profile-card">
+        <div class="profile-av-lg">M</div>
+        <div class="profile-field">
+          <label class="field-label">Nome completo</label>
+          <input type="text" value="Marcos Edits">
+        </div>
+        <div class="profile-field">
+          <label class="field-label">E-mail</label>
+          <input type="text" value="marcos@upfyclipes.com.br">
+        </div>
+        <div class="profile-field">
+          <label class="field-label">Especialidade</label>
+          <input type="text" value="YouTube, Podcasts, Longos">
+        </div>
+        <div class="profile-stat-row">
+          <div class="profile-stat">
+            <div class="profile-stat-val">48</div>
+            <div class="profile-stat-lbl">Clipes entregues</div>
+          </div>
+          <div class="profile-stat">
+            <div class="profile-stat-val">91%</div>
+            <div class="profile-stat-lbl">Aprovação 1ª vez</div>
+          </div>
+          <div class="profile-stat">
+            <div class="profile-stat-val">14%</div>
+            <div class="profile-stat-lbl">Taxa viral</div>
+          </div>
+        </div>
+        <div style="margin-top:20px">
+          <button class="btn btn-primary">Salvar alterações</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ NOTIFICAÇÕES ══ -->
+    <div class="screen" id="screen-notif">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Notificações</div>
+          <div class="page-sub">Atualizações de pedidos e revisões</div>
+        </div>
+        <button class="btn btn-ghost btn-sm">Marcar todas como lidas</button>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:6px 18px">
+        <div class="notif-item">
+          <div class="notif-dot-item"></div>
+          <div>
+            <div class="notif-text"><strong>Revisão solicitada</strong> — Cliente Raiam Santos pediu ajuste no Corte #1 do pedido #ORD-0047. Prazo: 24h.</div>
+            <div class="notif-time">há 12 minutos</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-dot-item"></div>
+          <div>
+            <div class="notif-text"><strong>Novo pedido atribuído</strong> — Pedido #ORD-0051 (Morgana Politze · Reel) está na sua fila.</div>
+            <div class="notif-time">há 45 minutos</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-dot-item" style="opacity:.35"></div>
+          <div>
+            <div class="notif-text"><strong>Clipe aprovado</strong> — "Como sair das dívidas" (#ORD-0045) foi aprovado pelo admin com grau Viral.</div>
+            <div class="notif-time">há 2 horas</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-dot-item" style="opacity:.35"></div>
+          <div>
+            <div class="notif-text"><strong>Prazo se aproximando</strong> — Pedido #ORD-0049 vence em 4 horas.</div>
+            <div class="notif-time">há 3 horas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+function showScreen(id, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+
+  const titles = {
+    fila: 'Fila de produção',
+    kanban: 'Kanban',
+    entregues: 'Clipes entregues',
+    perfil: 'Meu perfil',
+    notif: 'Notificações',
+  };
+  document.getElementById('topbar-title').textContent = titles[id] || id;
+}
+
+function selectOrder(card, id, cliente, titulo, tipo, status) {
+  document.querySelectorAll('.queue-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+
+  document.getElementById('dp-title').textContent = titulo;
+  document.getElementById('dp-id').textContent = id + ' · ' + cliente;
+
+  const typeLabel = {
+    youtube_video: 'YouTube',
+    short_video: 'Reel avulso',
+    recorded_video: 'Gravado',
+  };
+  document.getElementById('dp-type').textContent = typeLabel[tipo] || tipo;
+
+  const statusMap = {
+    queued:   '<span class="s-badge s-queued">Na fila</span>',
+    assigned: '<span class="s-badge s-assigned">Atribuído</span>',
+    editing:  '<span class="s-badge s-editing">Editando</span>',
+    review:   '<span class="s-badge s-review">Revisão admin</span>',
+  };
+  document.getElementById('dp-status').innerHTML = statusMap[status] || status;
+}
+
+let selectedVirality = 'viral';
+function selectVirality(grade) {
+  ['frio','morno','quente','viral'].forEach(g => {
+    const el = document.getElementById('vp-' + g);
+    el.className = 'vp-btn' + (g === grade ? ' active-' + g : '');
+  });
+  selectedVirality = grade;
+}
+
+function handleFile(file) {
+  if (!file) return;
+  const area = document.getElementById('upload-area');
+  area.innerHTML = `
+    <div class="upload-done">
+      <div class="upload-done-icon">✅</div>
+      <div>
+        <div class="upload-done-name">${file.name}</div>
+        <div class="upload-done-size">${(file.size/1024/1024).toFixed(1)} MB · Pronto para envio</div>
+      </div>
+    </div>`;
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-area').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+}
+
+function submitClip() {
+  const btn = event.target.closest('button');
+  btn.textContent = '✓ Enviado para revisão!';
+  btn.style.background = '#15803D';
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.textContent = 'Enviar para revisão';
+    btn.style.background = '';
+    btn.disabled = false;
+  }, 3000);
+}
+</script>
+</body>
+</html>

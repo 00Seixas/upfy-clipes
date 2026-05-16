@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UPFY Clipes — Clipes editados, prontos pra viralizar</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #000000;
+  --dark:    #030304;
+  --surface: #08080A;
+  --surface2:#0E0E11;
+  --surface3:#141418;
+  --border:  #1A1A1F;
+  --border2: #252530;
+  --fg:      #F0F0F2;
+  --muted:   #4A4A54;
+  --muted2:  #7A7A8A;
+  --radius:  12px;
+  /* virality — única exceção de cor */
+  --v-frio:  #3B82F6;
+  --v-morno: #8B5CF6;
+  --v-quente:#F97316;
+  --v-viral: #EF4444;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 5%;
+  background: rgba(0,0,0,.9);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo { font-size: 1.05rem; font-weight: 800; letter-spacing: -.02em; color: var(--fg); }
+.nav-links { display: flex; gap: 28px; list-style: none; }
+.nav-links a { color: var(--muted2); font-size: .83rem; text-decoration: none; transition: color .15s; }
+.nav-links a:hover { color: var(--fg); }
+.nav-right { display: flex; gap: 8px; }
+
+/* ── BOTÕES ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 18px; border-radius: 8px;
+  font-size: .83rem; font-weight: 600;
+  cursor: pointer; text-decoration: none; border: none;
+  transition: all .15s; font-family: inherit;
+}
+.btn-primary { background: var(--fg); color: #000; }
+.btn-primary:hover { background: #d5d5d8; }
+.btn-outline { background: transparent; border: 1px solid var(--border2); color: var(--muted2); }
+.btn-outline:hover { border-color: rgba(255,255,255,.25); color: var(--fg); }
+.btn-ghost { background: transparent; color: var(--muted2); }
+.btn-ghost:hover { background: var(--surface2); color: var(--fg); }
+.btn-lg { padding: 13px 28px; font-size: .92rem; border-radius: 10px; }
+.btn-xl { padding: 16px 36px; font-size: 1rem; border-radius: 12px; }
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  padding: 120px 5% 80px;
+  position: relative;
+}
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid var(--border2);
+  border-radius: 99px;
+  padding: 5px 14px;
+  font-size: .75rem; font-weight: 600; color: var(--muted2);
+  margin-bottom: 28px;
+}
+.hero-eyebrow .dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--fg); opacity: .6;
+  animation: blink 2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:.6} 50%{opacity:.15} }
+
+h1 {
+  font-size: clamp(2.8rem, 7vw, 5.5rem);
+  font-weight: 900;
+  letter-spacing: -.05em;
+  line-height: 1.05;
+  max-width: 860px;
+  margin-bottom: 24px;
+}
+.text-muted { color: var(--muted2); }
+
+.hero-sub {
+  font-size: clamp(.95rem, 2vw, 1.15rem);
+  color: var(--muted2);
+  max-width: 520px;
+  margin-bottom: 40px;
+  line-height: 1.7;
+}
+.hero-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 56px; }
+
+.social-proof {
+  display: flex; align-items: center; gap: 10px;
+  font-size: .78rem; color: var(--muted);
+}
+.avatars { display: flex; }
+.avatars span {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 2px solid var(--bg);
+  background: var(--surface3);
+  color: var(--muted2);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: .6rem; font-weight: 700;
+  margin-left: -7px;
+}
+.avatars span:first-child { margin-left: 0; }
+.sep { color: var(--border2); }
+
+/* ── MOCKUP ── */
+.mockup-wrap {
+  width: 100%; max-width: 860px;
+  margin-top: 64px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  box-shadow: 0 40px 80px rgba(0,0,0,.7), 0 0 0 1px var(--border);
+  background: var(--surface);
+}
+.browser-bar {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 14px;
+  display: flex; align-items: center; gap: 7px;
+}
+.bdot { width: 9px; height: 9px; border-radius: 50%; }
+.burl {
+  flex: 1; background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 4px 10px; font-size: .7rem; color: var(--muted);
+  margin: 0 10px;
+}
+.dash-grid { display: grid; grid-template-columns: 200px 1fr; }
+.dash-sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 14px;
+}
+.dash-logo { font-size: .85rem; font-weight: 800; color: var(--fg); margin-bottom: 18px; padding: 2px 6px; }
+.dash-nav-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 9px; border-radius: 7px;
+  font-size: .72rem; color: var(--muted2);
+  margin-bottom: 2px;
+}
+.dash-nav-item.on { background: rgba(255,255,255,.06); color: var(--fg); }
+.dash-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.dash-content { padding: 18px; }
+.dash-section-label {
+  font-size: .6rem; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em;
+  margin-bottom: 12px;
+}
+.dash-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 14px; }
+.dash-stat {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px; padding: 11px;
+}
+.dash-stat-val { font-size: 1rem; font-weight: 800; color: var(--fg); }
+.dash-stat-lbl { font-size: .58rem; color: var(--muted); margin-top: 2px; }
+.dash-clips { display: flex; flex-direction: column; gap: 5px; }
+.dash-clip {
+  display: flex; align-items: center; gap: 9px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 9px 11px;
+}
+.dash-clip-icon {
+  width: 28px; height: 28px; border-radius: 6px;
+  background: var(--surface3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .75rem; flex-shrink: 0;
+}
+.dash-clip-info { flex: 1; }
+.dash-clip-title { font-size: .68rem; font-weight: 600; margin-bottom: 1px; }
+.dash-clip-sub { font-size: .58rem; color: var(--muted); }
+/* virality badges — única exceção de cor */
+.vbadge {
+  font-size: .6rem; font-weight: 700;
+  padding: 2px 7px; border-radius: 99px;
+}
+.vb-viral  { background: rgba(239,68,68,.15);  color: #f87171; border:1px solid rgba(239,68,68,.3);
+             animation: pulse-viral 1.8s ease-in-out infinite; }
+.vb-quente { background: rgba(249,115,22,.12); color: #fb923c; border:1px solid rgba(249,115,22,.25); }
+.vb-morno  { background: rgba(139,92,246,.12); color: #a78bfa; border:1px solid rgba(139,92,246,.25); }
+@keyframes pulse-viral {
+  0%,100%{ box-shadow:0 0 5px rgba(239,68,68,.3); }
+  50%{ box-shadow:0 0 14px rgba(239,68,68,.6); }
+}
+
+/* ── COUNTERS ── */
+.counters {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--surface);
+  width: 100%; max-width: 800px;
+  margin-top: 48px;
+}
+.counter {
+  padding: 26px 20px; text-align: center;
+  border-right: 1px solid var(--border);
+}
+.counter:last-child { border-right: none; }
+.counter-num {
+  font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -.04em;
+  color: var(--fg);
+  display: block;
+}
+.counter-lbl { font-size: .72rem; color: var(--muted); margin-top: 4px; }
+
+/* ── DIVISOR ── */
+.divider {
+  border: none; border-top: 1px solid var(--border);
+  margin: 0;
+}
+
+/* ── TICKER ── */
+.ticker { padding: 18px 0; overflow: hidden; }
+.ticker-track {
+  display: flex; gap: 40px;
+  animation: ticker-scroll 22s linear infinite;
+  width: max-content;
+}
+@keyframes ticker-scroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+.ticker-item { font-size: .78rem; color: var(--muted); font-weight: 600; white-space: nowrap; }
+.ticker-sep { color: var(--border2); }
+
+/* ── SEÇÃO GENÉRICA ── */
+section { padding: 96px 5%; }
+section.alt { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+
+.tag {
+  display: inline-block;
+  border: 1px solid var(--border2);
+  border-radius: 99px;
+  padding: 4px 12px;
+  font-size: .7rem; font-weight: 700; color: var(--muted2);
+  letter-spacing: .08em; text-transform: uppercase;
+  margin-bottom: 14px;
+}
+h2 {
+  font-size: clamp(1.7rem, 4vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: -.04em;
+  line-height: 1.1;
+  margin-bottom: 14px;
+}
+.sub {
+  font-size: .95rem; color: var(--muted2); line-height: 1.7;
+  max-width: 500px; margin-bottom: 52px;
+}
+.centered { text-align: center; }
+.centered .sub { margin-left: auto; margin-right: auto; }
+
+/* ── CLIENTES ── */
+.clients-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+.client-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  transition: border-color .2s;
+}
+.client-card:hover { border-color: var(--border2); }
+.client-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.client-avatar {
+  width: 42px; height: 42px; border-radius: 50%;
+  background: var(--surface3);
+  color: var(--muted2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; font-weight: 800; flex-shrink: 0;
+}
+.client-name { font-size: .88rem; font-weight: 700; }
+.client-handle { font-size: .72rem; color: var(--muted); }
+.client-quote {
+  font-size: .83rem; color: var(--muted2); line-height: 1.65;
+  border-left: 2px solid var(--border2);
+  padding-left: 12px;
+  font-style: italic;
+  margin-bottom: 16px;
+}
+.client-metrics { display: flex; gap: 0; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; }
+.client-metric { flex: 1; padding: 10px 12px; text-align: center; border-right: 1px solid var(--border); }
+.client-metric:last-child { border-right: none; }
+.client-metric-val { font-size: .95rem; font-weight: 800; }
+.client-metric-lbl { font-size: .62rem; color: var(--muted); margin-top: 1px; }
+
+/* ── PASSOS ── */
+.steps { max-width: 680px; margin: 0 auto; }
+.step { display: flex; gap: 20px; padding: 28px 0; border-bottom: 1px solid var(--border); }
+.step:last-child { border-bottom: none; }
+.step-num {
+  width: 38px; height: 38px; border-radius: 10px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .82rem; font-weight: 800; color: var(--fg);
+  flex-shrink: 0;
+}
+.step-title { font-size: 1rem; font-weight: 700; margin-bottom: 7px; }
+.step-desc { font-size: .87rem; color: var(--muted2); line-height: 1.65; }
+.step-pill {
+  display: inline-block; margin-top: 10px;
+  border: 1px solid var(--border2);
+  border-radius: 99px; padding: 3px 10px;
+  font-size: .7rem; color: var(--muted2); font-weight: 600;
+}
+
+/* ── POR QUE FUNCIONA ── */
+.why-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px,1fr)); gap: 12px; }
+.why-card {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 22px;
+  transition: border-color .2s;
+}
+.why-card:hover { border-color: var(--border2); }
+.why-icon {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: var(--surface3); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; margin-bottom: 12px;
+}
+.why-title { font-size: .88rem; font-weight: 700; margin-bottom: 7px; }
+.why-desc { font-size: .82rem; color: var(--muted2); line-height: 1.6; }
+
+/* ── HISTÓRIA ── */
+.story-box {
+  max-width: 780px; margin: 0 auto;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 48px 52px;
+}
+.story-box p {
+  font-size: .95rem; color: var(--muted2);
+  line-height: 1.8; margin-bottom: 18px;
+}
+.story-box p:last-of-type { margin-bottom: 0; }
+.story-box strong { color: var(--fg); }
+.story-author {
+  display: flex; align-items: center; gap: 12px;
+  margin-top: 32px; padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+.story-av {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--surface3); border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; color: var(--muted2);
+}
+.story-name { font-size: .85rem; font-weight: 700; }
+.story-role { font-size: .75rem; color: var(--muted); }
+
+/* ── DEPOIMENTOS ── */
+.testi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap: 14px; }
+.testi {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 22px;
+  transition: border-color .2s;
+}
+.testi:hover { border-color: var(--border2); }
+.testi-stars { font-size: .7rem; margin-bottom: 12px; letter-spacing: 2px; }
+.testi-text { font-size: .85rem; color: var(--muted2); line-height: 1.65; margin-bottom: 18px; font-style: italic; }
+.testi-author { display: flex; align-items: center; gap: 10px; }
+.testi-av {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--surface3); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .75rem; font-weight: 800; color: var(--muted2); flex-shrink: 0;
+}
+.testi-name { font-size: .82rem; font-weight: 700; }
+.testi-handle { font-size: .72rem; color: var(--muted); }
+
+/* ── PLANOS ── */
+.plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px,1fr));
+  gap: 14px;
+  max-width: 940px;
+  margin: 0 auto;
+}
+.plan-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 26px;
+  display: flex; flex-direction: column;
+  position: relative;
+  transition: border-color .2s;
+}
+.plan-card:hover { border-color: var(--border2); }
+.plan-card.featured {
+  border-color: rgba(255,255,255,.2);
+  background: var(--surface3);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 20px 40px rgba(0,0,0,.4);
+}
+.plan-badge {
+  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  background: var(--fg); color: #000;
+  font-size: .65rem; font-weight: 800;
+  padding: 3px 12px; border-radius: 99px;
+  white-space: nowrap; letter-spacing: .05em;
+}
+.plan-name { font-size: .7rem; font-weight: 700; color: var(--muted2); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 9px; }
+.plan-price { font-size: 2.2rem; font-weight: 900; letter-spacing: -.05em; margin-bottom: 3px; }
+.plan-price span { font-size: .9rem; color: var(--muted); font-weight: 400; }
+.plan-clips { font-size: .82rem; color: var(--muted2); margin-bottom: 20px; }
+.plan-features { list-style: none; display: flex; flex-direction: column; gap: 9px; flex: 1; margin-bottom: 22px; }
+.plan-feature { display: flex; align-items: flex-start; gap: 8px; font-size: .82rem; color: var(--muted2); }
+.plan-check { color: var(--fg); font-size: .75rem; flex-shrink: 0; margin-top: 2px; }
+.plan-btn {
+  display: block; text-align: center;
+  padding: 12px; border-radius: 9px;
+  font-size: .85rem; font-weight: 700;
+  cursor: pointer; text-decoration: none;
+  transition: all .15s; border: none; font-family: inherit;
+}
+.plan-btn-default { background: var(--surface); border: 1px solid var(--border2); color: var(--fg); }
+.plan-btn-default:hover { background: var(--surface3); border-color: rgba(255,255,255,.18); }
+.plan-btn-featured { background: var(--fg); color: #000; }
+.plan-btn-featured:hover { background: #d5d5d8; }
+
+/* ── CTA FINAL ── */
+.cta-wrap {
+  padding: 96px 5%;
+  text-align: center;
+}
+.cta-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 64px 5%;
+  max-width: 680px;
+  margin: 0 auto;
+}
+.cta-box h2 { font-size: clamp(1.7rem, 4vw, 2.6rem); margin-bottom: 14px; }
+.cta-box p { font-size: .95rem; color: var(--muted2); margin-bottom: 32px; }
+.cta-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.guarantee { margin-top: 18px; font-size: .75rem; color: var(--muted); }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 28px 5%;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 14px;
+}
+footer p { font-size: .78rem; color: var(--muted); }
+.foot-links { display: flex; gap: 20px; }
+.foot-links a { font-size: .78rem; color: var(--muted); text-decoration: none; }
+.foot-links a:hover { color: var(--fg); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .nav-links, .nav-right .btn-outline { display: none; }
+  .counters { grid-template-columns: repeat(2,1fr); }
+  .counter { border-bottom: 1px solid var(--border); }
+  .counter:nth-child(2n) { border-right: none; }
+  .counter:nth-last-child(-n+2) { border-bottom: none; }
+  .dash-grid { grid-template-columns: 1fr; }
+  .dash-sidebar { display: none; }
+  .story-box { padding: 28px 22px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">UPFY Clipes</div>
+  <ul class="nav-links">
+    <li><a href="#como-funciona">Como funciona</a></li>
+    <li><a href="#resultados">Resultados</a></li>
+    <li><a href="#historia">História</a></li>
+    <li><a href="#planos">Planos</a></li>
+  </ul>
+  <div class="nav-right">
+    <a href="/login" class="btn btn-outline">Entrar</a>
+    <a href="#planos" class="btn btn-primary">Começar →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">
+    <span class="dot"></span>
+    +200 criadores ativos · 100M+ views geradas
+  </div>
+
+  <h1>Você grava.<br><span class="text-muted">A gente viraliza.</span></h1>
+
+  <p class="hero-sub">
+    Mande seu vídeo. A equipe UPFY edita, legenda e entrega clipes prontos pra postar no Instagram e TikTok — em até 48h.
+  </p>
+
+  <div class="hero-actions">
+    <a href="#planos" class="btn btn-primary btn-xl">Quero meus clipes →</a>
+    <a href="#como-funciona" class="btn btn-outline btn-lg">Como funciona</a>
+  </div>
+
+  <div class="social-proof">
+    <div class="avatars">
+      <span>R</span><span>E</span><span>L</span><span>M</span><span>P</span>
+    </div>
+    <span>+200 criadores ativos</span>
+    <span class="sep">·</span>
+    <span>4.9/5 avaliação média</span>
+  </div>
+
+  <!-- mockup -->
+  <div class="mockup-wrap">
+    <div class="browser-bar">
+      <div class="bdot" style="background:#3a3a3a"></div>
+      <div class="bdot" style="background:#3a3a3a"></div>
+      <div class="bdot" style="background:#3a3a3a"></div>
+      <div class="burl">app.upfyclipes.com.br/clipes</div>
+    </div>
+    <div class="dash-grid">
+      <div class="dash-sidebar">
+        <div class="dash-logo">UPFY Clipes</div>
+        <div class="dash-nav-item on"><span class="dash-dot"></span> Meus Clipes</div>
+        <div class="dash-nav-item"><span class="dash-dot"></span> Enviar Vídeo</div>
+        <div class="dash-nav-item"><span class="dash-dot"></span> Performance</div>
+        <div class="dash-nav-item"><span class="dash-dot"></span> Agenda</div>
+        <div class="dash-nav-item"><span class="dash-dot"></span> YouTube</div>
+      </div>
+      <div class="dash-content">
+        <div class="dash-section-label">Esta semana</div>
+        <div class="dash-stats">
+          <div class="dash-stat">
+            <div class="dash-stat-val">12</div>
+            <div class="dash-stat-lbl">Clipes entregues</div>
+          </div>
+          <div class="dash-stat">
+            <div class="dash-stat-val">2.4M</div>
+            <div class="dash-stat-lbl">Views geradas</div>
+          </div>
+          <div class="dash-stat">
+            <div class="dash-stat-val">3 🔥</div>
+            <div class="dash-stat-lbl">Virais</div>
+          </div>
+          <div class="dash-stat">
+            <div class="dash-stat-val">38h</div>
+            <div class="dash-stat-lbl">Tempo médio</div>
+          </div>
+        </div>
+        <div class="dash-clips">
+          <div class="dash-clip">
+            <div class="dash-clip-icon">🔥</div>
+            <div class="dash-clip-info">
+              <div class="dash-clip-title">Por que seu conteúdo não cresce — Corte #2</div>
+              <div class="dash-clip-sub">847k views · Instagram + TikTok</div>
+            </div>
+            <span class="vbadge vb-viral">🔥 Viral</span>
+          </div>
+          <div class="dash-clip">
+            <div class="dash-clip-icon">▶</div>
+            <div class="dash-clip-info">
+              <div class="dash-clip-title">Como vender todos os dias — Corte #1</div>
+              <div class="dash-clip-sub">312k views · Instagram</div>
+            </div>
+            <span class="vbadge vb-quente">Quente</span>
+          </div>
+          <div class="dash-clip">
+            <div class="dash-clip-icon">▶</div>
+            <div class="dash-clip-info">
+              <div class="dash-clip-title">Rotina matinal completa — Corte #3</div>
+              <div class="dash-clip-sub">89k views · TikTok</div>
+            </div>
+            <span class="vbadge vb-morno">Morno</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- counters -->
+  <div class="counters">
+    <div class="counter">
+      <span class="counter-num" id="c1">—</span>
+      <div class="counter-lbl">Clipes entregues</div>
+    </div>
+    <div class="counter">
+      <span class="counter-num" id="c2">—</span>
+      <div class="counter-lbl">Views geradas</div>
+    </div>
+    <div class="counter">
+      <span class="counter-num" id="c3">—</span>
+      <div class="counter-lbl">Criadores atendidos</div>
+    </div>
+    <div class="counter">
+      <span class="counter-num" id="c4">—</span>
+      <div class="counter-lbl">Horas de edição</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-track">
+    <span class="ticker-item">@raiam.santos</span><span class="ticker-sep">·</span>
+    <span class="ticker-item">@enricobeltrao</span><span class="ticker-sep">·</span>
+    <span class="ticker-item">@lucasneto</span><span class="ticker-sep">·</span>
+    <span class="ticker-item">@morganapolitze</span><span class="ticker-sep">·</span>
+    <span class="ticker-item">@leobettanin</span><span class="ticker-sep">·</span>
+    <span class="ticker-item">@camilaloures</span><span class="ticker-sep">·</span>
+    <span class="ticker-item">@gabrielfinance</span><span class="ticker-sep">·</span>
+    <span class="ticker-item">@julianaanjos</span><span class="ticker-sep">·</span>
+    <span class="ticker-item">@pedrovicente</span><span class="ticker-sep">·</span>
+    <span class="ticker-item">@matheusmazzafera</span><span class="ticker-sep">·</span>
+    <!-- duplicado pra loop -->
+    <span class="ticker-item">@raiam.santos</span><span class="ticker-sep">·</span>
+    <span class="ticker-item">@enricobeltrao</span><span class="ticker-sep">·</span>
+    <span class="ticker-item">@lucasneto</span><span class="ticker-sep">·</span>
+    <span class="ticker-item">@morganapolitze</span><span class="ticker-sep">·</span>
+    <span class="ticker-item">@leobettanin</span><span class="ticker-sep">·</span>
+    <span class="ticker-item">@camilaloures</span><span class="ticker-sep">·</span>
+    <span class="ticker-item">@gabrielfinance</span><span class="ticker-sep">·</span>
+    <span class="ticker-item">@julianaanjos</span><span class="ticker-sep">·</span>
+    <span class="ticker-item">@pedrovicente</span><span class="ticker-sep">·</span>
+    <span class="ticker-item">@matheusmazzafera</span><span class="ticker-sep">·</span>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- COMO FUNCIONA -->
+<section id="como-funciona">
+  <div class="centered">
+    <div class="tag">Processo</div>
+    <h2>Do vídeo ao clipe viral<br>em 3 passos</h2>
+    <p class="sub">Sem edição, sem stress. Você grava — a UPFY faz o resto.</p>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-title">Você envia o vídeo</div>
+        <div class="step-desc">Upload pela plataforma ou conecta seu canal do YouTube. Qualquer formato — gravação de câmera, vídeo longo, podcast, live, story.</div>
+        <span class="step-pill">Menos de 2 minutos</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-title">A equipe UPFY edita</div>
+        <div class="step-desc">Nossos editores identificam os melhores momentos, cortam, legendam e entregam clipes otimizados para Reels e TikTok — com feedback de especialista em cada clipe.</div>
+        <span class="step-pill">Em até 48h</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-title">Você aprova e posta</div>
+        <div class="step-desc">Recebe os clipes, aprova e posta — ou ativa o piloto automático e a UPFY posta no horário ideal pra você. Um clique e pronto.</div>
+        <span class="step-pill">1 clique</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTADOS -->
+<section id="resultados" class="alt">
+  <div class="centered">
+    <div class="tag">Resultados</div>
+    <h2>Quem usa a UPFY<br>cresce de verdade</h2>
+    <p class="sub">Criadores que confiam na UPFY para escalar sua presença digital.</p>
+  </div>
+  <div class="clients-grid">
+    <div class="client-card">
+      <div class="client-header">
+        <div class="client-avatar">R</div>
+        <div>
+          <div class="client-name">Raiam Santos</div>
+          <div class="client-handle">@raiam.santos · 2.1M seguidores</div>
+        </div>
+      </div>
+      <div class="client-quote">"A UPFY transformou como eu produzo conteúdo. Antes eu ficava travado na edição — hoje recebo clipes prontos que performam melhor do que quando eu editava."</div>
+      <div class="client-metrics">
+        <div class="client-metric">
+          <div class="client-metric-val">48M</div>
+          <div class="client-metric-lbl">Views geradas</div>
+        </div>
+        <div class="client-metric">
+          <div class="client-metric-val">+340%</div>
+          <div class="client-metric-lbl">Crescimento</div>
+        </div>
+        <div class="client-metric">
+          <div class="client-metric-val">230</div>
+          <div class="client-metric-lbl">Clipes</div>
+        </div>
+      </div>
+    </div>
+    <div class="client-card">
+      <div class="client-header">
+        <div class="client-avatar">E</div>
+        <div>
+          <div class="client-name">Enrico Beltrão</div>
+          <div class="client-handle">@enricobeltrao · 890k seguidores</div>
+        </div>
+      </div>
+      <div class="client-quote">"Eu precisava de consistência. Postar todo dia é impossível sem equipe. A UPFY me deu isso — três clipes por dia, todo dia, sem precisar pensar em edição."</div>
+      <div class="client-metrics">
+        <div class="client-metric">
+          <div class="client-metric-val">12M</div>
+          <div class="client-metric-lbl">Views geradas</div>
+        </div>
+        <div class="client-metric">
+          <div class="client-metric-val">+180%</div>
+          <div class="client-metric-lbl">Crescimento</div>
+        </div>
+        <div class="client-metric">
+          <div class="client-metric-val">156</div>
+          <div class="client-metric-lbl">Clipes</div>
+        </div>
+      </div>
+    </div>
+    <div class="client-card">
+      <div class="client-header">
+        <div class="client-avatar">L</div>
+        <div>
+          <div class="client-name">Leo Bettanin</div>
+          <div class="client-handle">@leobettanin · 1.4M seguidores</div>
+        </div>
+      </div>
+      <div class="client-quote">"Em 3 meses com a UPFY meu canal do YouTube virou máquina de clipes. Cada vídeo rende 6 a 8 recortes que ficam circulando por semanas no TikTok e Reels."</div>
+      <div class="client-metrics">
+        <div class="client-metric">
+          <div class="client-metric-val">27M</div>
+          <div class="client-metric-lbl">Views geradas</div>
+        </div>
+        <div class="client-metric">
+          <div class="client-metric-val">+520%</div>
+          <div class="client-metric-lbl">Crescimento</div>
+        </div>
+        <div class="client-metric">
+          <div class="client-metric-val">312</div>
+          <div class="client-metric-lbl">Clipes</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DEPOIMENTOS -->
+<section>
+  <div class="centered">
+    <div class="tag">Depoimentos</div>
+    <h2>O que nossos criadores dizem</h2>
+    <p class="sub">Mais de 200 criadores já usam a UPFY pra viralizar com consistência.</p>
+  </div>
+  <div class="testi-grid">
+    <div class="testi">
+      <div class="testi-stars">★★★★★</div>
+      <div class="testi-text">"Eu sempre soube que tinha conteúdo bom, mas edição me travava. Com a UPFY postei todo dia por 2 meses e fui de 30k pra 200k seguidores."</div>
+      <div class="testi-author">
+        <div class="testi-av">M</div>
+        <div>
+          <div class="testi-name">Morgana Politze</div>
+          <div class="testi-handle">@morganapolitze · Marketing Digital</div>
+        </div>
+      </div>
+    </div>
+    <div class="testi">
+      <div class="testi-stars">★★★★★</div>
+      <div class="testi-text">"O feedback de viralização que vem com cada clipe é diferencial. Aprendi mais sobre o que funciona em 1 mês do que em 2 anos postando aleatório."</div>
+      <div class="testi-author">
+        <div class="testi-av">G</div>
+        <div>
+          <div class="testi-name">Gabriel Finance</div>
+          <div class="testi-handle">@gabrielfinance · Finanças</div>
+        </div>
+      </div>
+    </div>
+    <div class="testi">
+      <div class="testi-stars">★★★★★</div>
+      <div class="testi-text">"Ativei o piloto automático e a UPFY posta nos melhores horários por mim. Acordei com 1 clipe viral que gerou 400k views enquanto eu dormia."</div>
+      <div class="testi-author">
+        <div class="testi-av">J</div>
+        <div>
+          <div class="testi-name">Juliana Anjos</div>
+          <div class="testi-handle">@julianaanjos · Lifestyle</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- POR QUE FUNCIONA -->
+<section class="alt">
+  <div class="centered">
+    <div class="tag">Por que funciona</div>
+    <h2>Não é sorte.<br>É sistema.</h2>
+    <p class="sub">A UPFY não é IA — é uma equipe de especialistas com um método testado em centenas de criadores.</p>
+  </div>
+  <div class="why-grid">
+    <div class="why-card">
+      <div class="why-icon">🧠</div>
+      <div class="why-title">Especialistas em viralização</div>
+      <div class="why-desc">Nossos editores estudam tendências diariamente e sabem o que prende atenção nos primeiros 3 segundos — o que decide se um clipe vai longe ou não.</div>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">🔥</div>
+      <div class="why-title">Grau de viralização por clipe</div>
+      <div class="why-desc">Cada clipe vem com nota de potencial: Frio, Morno, Quente ou Viral — com explicação do por que aquele corte tem esse potencial.</div>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">📅</div>
+      <div class="why-title">Consistência automática</div>
+      <div class="why-desc">O piloto automático posta nos melhores horários pra você. O algoritmo te favorece quando você posta todo dia, sem falhar.</div>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">📊</div>
+      <div class="why-title">Cofre de Views</div>
+      <div class="why-desc">Analisamos seus vídeos do YouTube e identificamos os momentos com maior potencial viral — antes de você pedir o clipe.</div>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">⚡</div>
+      <div class="why-title">Entrega em 48h garantida</div>
+      <div class="why-desc">Prazo real, não estimativa. Seu clipe fica pronto em até 48h — porque consistência exige pontualidade.</div>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">🔄</div>
+      <div class="why-title">1 revisão incluída</div>
+      <div class="why-desc">Não gostou? Você tem 48h pra pedir uma revisão gratuita. A gente só fica satisfeito quando você também fica.</div>
+    </div>
+  </div>
+</section>
+
+<!-- HISTÓRIA -->
+<section id="historia">
+  <div class="centered" style="margin-bottom:48px">
+    <div class="tag">Nossa história</div>
+    <h2>Por que a UPFY existe</h2>
+  </div>
+  <div class="story-box">
+    <p>
+      <strong>Em 2023, a gente viu um problema enorme no mercado de criadores:</strong> todo mundo sabia que conteúdo curto era o futuro — Reels, TikTok, Shorts — mas 90% dos criadores não postavam por falta de tempo para editar.
+    </p>
+    <p>
+      Os criadores que mais cresciam não eram os mais talentosos. Eram os mais <strong>consistentes</strong>. E consistência exige uma coisa que a maioria não tem: uma equipe.
+    </p>
+    <p>
+      A UPFY nasceu pra resolver exatamente isso. <strong>A gente democratizou o acesso a uma equipe de edição profissional.</strong> Qualquer criador pode ter clipes editados, legendados e prontos para viralizar sem aprender edição, contratar freelancer ou depender de IA genérica.
+    </p>
+    <p>
+      Hoje, atendemos mais de 200 criadores, geramos <strong>mais de 100 milhões de views</strong> e entregamos mais de 3.000 clipes. A missão é simples: <strong>você cria, a gente viraliza.</strong>
+    </p>
+    <div class="story-author">
+      <div class="story-av">P</div>
+      <div>
+        <div class="story-name">Pedro Seixas</div>
+        <div class="story-role">Fundador, UPFY Clipes</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PLANOS -->
+<section id="planos" class="alt">
+  <div class="centered">
+    <div class="tag">Planos</div>
+    <h2>Escolha sua frequência<br>de postagem</h2>
+    <p class="sub">Quanto mais você posta, mais você cresce. Escolha o plano que combina com sua rotina.</p>
+  </div>
+  <div class="plans-grid">
+    <div class="plan-card">
+      <div class="plan-name">Presença</div>
+      <div class="plan-price">R$997 <span>/mês</span></div>
+      <div class="plan-clips">1 clipe por dia · 30 clipes/mês</div>
+      <ul class="plan-features">
+        <li class="plan-feature"><span class="plan-check">✓</span> 1 clipe editado por dia</li>
+        <li class="plan-feature"><span class="plan-check">✓</span> Legendas em PT-BR</li>
+        <li class="plan-feature"><span class="plan-check">✓</span> Grau de viralização</li>
+        <li class="plan-feature"><span class="plan-check">✓</span> Formato 9:16</li>
+        <li class="plan-feature"><span class="plan-check">✓</span> 1 revisão por clipe</li>
+        <li class="plan-feature"><span class="plan-check">✓</span> Entrega em até 48h</li>
+      </ul>
+      <a href="/register" class="plan-btn plan-btn-default">Começar com Presença</a>
+    </div>
+    <div class="plan-card featured">
+      <div class="plan-badge">⚡ Mais recomendado</div>
+      <div class="plan-name">Constância</div>
+      <div class="plan-price">R$1.997 <span>/mês</span></div>
+      <div class="plan-clips">2 clipes por dia · 60 clipes/mês</div>
+      <ul class="plan-features">
+        <li class="plan-feature"><span class="plan-check">✓</span> 2 clipes editados por dia</li>
+        <li class="plan-feature"><span class="plan-check">✓</span> Legendas em PT-BR</li>
+        <li class="plan-feature"><span class="plan-check">✓</span> Grau + feedback do editor</li>
+        <li class="plan-feature"><span class="plan-check">✓</span> Piloto automático</li>
+        <li class="plan-feature"><span class="plan-check">✓</span> Cofre de Views</li>
+        <li class="plan-feature"><span class="plan-check">✓</span> 1 revisão por clipe</li>
+        <li class="plan-feature"><span class="plan-check">✓</span> Suporte via WhatsApp</li>
+      </ul>
+      <a href="/register" class="plan-btn plan-btn-featured">Começar minha constância →</a>
+    </div>
+    <div class="plan-card">
+      <div class="plan-name">Domínio</div>
+      <div class="plan-price">R$2.997 <span>/mês</span></div>
+      <div class="plan-clips">3 clipes por dia · 90 clipes/mês</div>
+      <ul class="plan-features">
+        <li class="plan-feature"><span class="plan-check">✓</span> 3 clipes editados por dia</li>
+        <li class="plan-feature"><span class="plan-check">✓</span> Legendas em PT-BR</li>
+        <li class="plan-feature"><span class="plan-check">✓</span> Grau + feedback do editor</li>
+        <li class="plan-feature"><span class="plan-check">✓</span> Piloto automático</li>
+        <li class="plan-feature"><span class="plan-check">✓</span> Cofre de Views</li>
+        <li class="plan-feature"><span class="plan-check">✓</span> Relatório mensal</li>
+        <li class="plan-feature"><span class="plan-check">✓</span> Editor dedicado</li>
+        <li class="plan-feature"><span class="plan-check">✓</span> Suporte VIP 24h</li>
+      </ul>
+      <a href="/register" class="plan-btn plan-btn-default">Dominar meu nicho</a>
+    </div>
+  </div>
+  <p style="text-align:center;margin-top:28px;font-size:.78rem;color:var(--muted)">
+    🔒 Garantia de 7 dias · Cancele quando quiser · Sem fidelidade
+  </p>
+</section>
+
+<!-- CTA FINAL -->
+<div class="cta-wrap">
+  <div class="cta-box">
+    <h2>Pronto pra parar de<br>perder views?</h2>
+    <p>Mais de 200 criadores já viralizando com a UPFY. Primeiro clipe entregue em até 48h.</p>
+    <div class="cta-actions">
+      <a href="/register" class="btn btn-primary btn-xl">Começar agora →</a>
+      <a href="https://wa.me/5511999999999" class="btn btn-outline btn-lg">Falar com a equipe</a>
+    </div>
+    <div class="guarantee">🔒 Garantia de 7 dias · Sem risco</div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div style="font-size:.9rem;font-weight:800;color:var(--fg)">UPFY Clipes</div>
+  <p>© 2025 UPFY Clipes. Todos os direitos reservados.</p>
+  <div class="foot-links">
+    <a href="/termos">Termos</a>
+    <a href="/privacidade">Privacidade</a>
+    <a href="/login">Entrar</a>
+  </div>
+</footer>
+
+<script>
+function animCount(el, target, fmt) {
+  const dur = 1800, start = performance.now();
+  function tick(now) {
+    const p = Math.min(1, (now - start) / dur);
+    const ease = 1 - Math.pow(1 - p, 4);
+    const v = Math.floor(ease * target);
+    if (fmt === 'M') el.textContent = (v / 1000000).toFixed(0) + 'M+';
+    else if (fmt === 'k') el.textContent = (v / 1000).toFixed(0) + 'k+';
+    else el.textContent = v + '+';
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+const io = new IntersectionObserver(entries => {
+  if (entries[0].isIntersecting) {
+    animCount(document.getElementById('c1'), 3200, 'k');
+    animCount(document.getElementById('c2'), 100, 'M');
+    animCount(document.getElementById('c3'), 200, '');
+    animCount(document.getElementById('c4'), 8400, 'k');
+    io.disconnect();
+  }
+}, { threshold: 0.3 });
+io.observe(document.getElementById('c1'));
+
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const t = document.querySelector(a.getAttribute('href'));
+    if (t) { e.preventDefault(); t.scrollIntoView({ behavior: 'smooth' }); }
+  });
+});
+</script>
+</body>
+</html>
