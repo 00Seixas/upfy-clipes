@@ -14,10 +14,10 @@ export async function POST(req: NextRequest) {
 
   const key = `uploads/${user.id}/${randomUUID()}/${filename}`
 
+  // Sem ContentType na assinatura — aceita qualquer formato
   const command = new PutObjectCommand({
     Bucket: R2_BUCKET,
     Key: key,
-    ContentType: contentType,
   })
 
   const signedUrl = await getSignedUrl(r2Client, command, { expiresIn: 3600 })

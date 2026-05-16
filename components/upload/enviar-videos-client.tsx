@@ -86,7 +86,6 @@ export default function EnviarVideosClient() {
         await new Promise<void>((resolve, reject) => {
           const xhr = new XMLHttpRequest()
           xhr.open('PUT', json.signedUrl as string, true)
-          xhr.setRequestHeader('Content-Type', video.file.type || 'video/mp4')
           xhr.onload = () => {
             if (xhr.status >= 200 && xhr.status < 300) resolve()
             else reject(new Error(`R2 erro ${xhr.status}: ${xhr.responseText}`))

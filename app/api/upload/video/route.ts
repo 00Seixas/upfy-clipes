@@ -12,14 +12,14 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { filename, contentType } = await req.json()
+  const { filename } = await req.json()
 
   const key = `uploads/${user.id}/${randomUUID()}/${filename}`
 
+  // Sem ContentType na assinatura — aceita qualquer formato (mp4, mov, avi)
   const command = new PutObjectCommand({
     Bucket: R2_BUCKET,
     Key: key,
-    ContentType: contentType,
   })
 
   const signedUrl = await getSignedUrl(r2Client, command, { expiresIn: 3600 })

@@ -79,7 +79,6 @@ export default function EmAndamentoClient({ order, editorId }: { order: Order | 
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest()
         xhr.open('PUT', signedUrl, true)
-        xhr.setRequestHeader('Content-Type', clipFile.type || 'video/mp4')
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) resolve()
           else reject(new Error(`R2 erro ${xhr.status}`))
