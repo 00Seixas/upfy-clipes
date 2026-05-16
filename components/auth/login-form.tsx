@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 
 function formatLoginIdentifier(input: string): string {
   const digitsOnly = input.replace(/\D/g, '')
-  if (digitsOnly.length >= 10 && digitsOnly === input.replace(/[\s\-\(\)]/g, '')) {
+  if (digitsOnly.length >= 10) {
     return `${digitsOnly}@clientes.upfy.internal`
   }
   return input
@@ -28,24 +28,7 @@ export default function LoginForm() {
     setLoading(true)
     setError('')
 
-    // DEMO MODE: aceita credenciais fixas sem Supabase
-    const DEMO_USERS: Record<string, { password: string; redirect: string }> = {
-      '14996134733': { password: 'Pedr@400', redirect: '/dashboard' },
-      '14996134733@clientes.upfy.internal': { password: 'Pedr@400', redirect: '/dashboard' },
-    }
     const identifierTrimmed = identifier.trim()
-    const demo = DEMO_USERS[identifierTrimmed] ?? DEMO_USERS[formatLoginIdentifier(identifierTrimmed)]
-    if (demo) {
-      if (password === demo.password) {
-        router.push(demo.redirect)
-        return
-      } else {
-        setError('Senha incorreta.')
-        setLoading(false)
-        return
-      }
-    }
-
     const email = formatLoginIdentifier(identifierTrimmed)
 
     const { error: authError } = await supabase.auth.signInWithPassword({ email, password })

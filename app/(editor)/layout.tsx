@@ -18,8 +18,8 @@ export default async function EditorLayout({ children }: { children: React.React
     return (
       <div className="min-h-screen bg-[#0A0A0B]">
         <SidebarEditor userName={profile.name} />
-        <main className="ml-56 min-h-screen">
-          <div className="max-w-5xl mx-auto p-8">{children}</div>
+        <main className="md:ml-56 min-h-screen pt-14 md:pt-0">
+          <div className="max-w-5xl mx-auto p-4 md:p-8">{children}</div>
         </main>
       </div>
     )
