@@ -85,7 +85,7 @@ export default function EnviarVideosClient() {
         // 2. Upload direto do browser pro R2 via XHR (mais compatível com Safari)
         await new Promise<void>((resolve, reject) => {
           const xhr = new XMLHttpRequest()
-          xhr.open('PUT', json.signedUrl, true)
+          xhr.open('PUT', json.signedUrl as string, true)
           xhr.setRequestHeader('Content-Type', video.file.type || 'video/mp4')
           xhr.onload = () => {
             if (xhr.status >= 200 && xhr.status < 300) resolve()

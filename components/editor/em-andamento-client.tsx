@@ -66,30 +66,41 @@ export default function EmAndamentoClient({ order, editorId }: { order: Order | 
     setError('')
 
     try {
-      // Upload clip to R2
-      const { signedUrl, key } = await fetch('/api/upload/init', {
+      // 1. Pede presigned URL ao servidor
+      const initRes = await fetch('/api/upload/init', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filename: clipFile.name, contentType: clipFile.type, size: clipFile.size }),
-      }).then(r => r.json())
+      })
+      const { signedUrl, key } = await initRes.json()
+      if (!signedUrl) throw new Error('Erro ao gerar URL de upload')
 
-      await fetch(signedUrl, {
-        method: 'PUT',
-        body: clipFile,
-        headers: { 'Content-Type': clipFile.type },
+      // 2. Upload direto pro R2 via XHR (evita CORS issues e limite do Vercel)
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+        xhr.open('PUT', signedUrl, true)
+        xhr.setRequestHeader('Content-Type', clipFile.type || 'video/mp4')
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) resolve()
+          else reject(new Error(`R2 erro ${xhr.status}`))
+        }
+        xhr.onerror = () => reject(new Error('Falha na conexão com R2'))
+        xhr.ontimeout = () => reject(new Error('Timeout no upload'))
+        xhr.send(clipFile)
       })
 
-      // Submit for approval
-      await fetch(`/api/orders/${order.id}/submit`, {
+      // 3. Submete para aprovação
+      const submitRes = await fetch(`/api/orders/${order.id}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ r2Key: key, filename: clipFile.name, viralityGrade, feedback }),
       })
+      if (!submitRes.ok) throw new Error('Erro ao submeter pedido')
 
-      router.push('/editor/entregues')
+      router.push('/entregues')
       router.refresh()
-    } catch {
-      setError('Erro ao enviar. Tente novamente.')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erro ao enviar. Tente novamente.')
       setUploading(false)
     }
   }
