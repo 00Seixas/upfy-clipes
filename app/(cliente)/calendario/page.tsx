@@ -12,7 +12,7 @@ export default async function CalendarioPage() {
   const { data: deliverables } = await supabase
     .from('deliverables')
     .select('id, clip_number, delivered_at, orders!inner(client_id)')
-    .eq('orders.client_id', user.id)
+    .eq('orders.client_id', user?.id ?? '')
     .not('approved_at', 'is', null)
     .order('delivered_at')
 
