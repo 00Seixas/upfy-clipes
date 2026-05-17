@@ -9,12 +9,25 @@ export default async function CalendarioPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user && !process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('placeholder')) redirect('/login')
 
-  const { data: deliverables } = await supabase
-    .from('deliverables')
-    .select('id, clip_number, delivered_at, orders!inner(client_id)')
-    .eq('orders.client_id', user?.id ?? '')
-    .not('approved_at', 'is', null)
-    .order('delivered_at')
+  const userId = user?.id ?? ''
+
+  // 1. Get client's order IDs
+  const { data: clientOrders } = await supabase
+    .from('orders')
+    .select('id')
+    .eq('client_id', userId)
+
+  const orderIds = (clientOrders ?? []).map((o: { id: string }) => o.id)
+
+  // 2. Get approved deliverables for those orders
+  const { data: deliverables } = orderIds.length
+    ? await supabase
+        .from('deliverables')
+        .select('id, clip_number, delivered_at')
+        .in('order_id', orderIds)
+        .not('approved_at', 'is', null)
+        .order('delivered_at')
+    : { data: [] }
 
   return (
     <div>

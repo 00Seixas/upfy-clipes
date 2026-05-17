@@ -1,8 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Upload, Film, Calendar, LogOut, Menu, X } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { LayoutDashboard, Upload, Film, Calendar, LogOut, Menu, X, Zap } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
@@ -16,12 +15,12 @@ const navItems = [
 export default function SidebarCliente({ userName }: { userName: string }) {
   const pathname = usePathname()
   const router = useRouter()
-  const supabase = createClient()
   const [open, setOpen] = useState(false)
 
   async function logout() {
-    await supabase.auth.signOut()
+    await fetch('/api/auth/logout', { method: 'POST' })
     router.push('/login')
+    router.refresh()
   }
 
   const NavLinks = () => (
@@ -44,7 +43,15 @@ export default function SidebarCliente({ userName }: { userName: string }) {
       {/* Desktop sidebar */}
       <aside className="hidden md:flex fixed left-0 top-0 h-full w-56 bg-[#111113] border-r border-zinc-800 flex-col z-20">
         <div className="p-4 border-b border-zinc-800">
-          <img src="/logo.png" alt="UPFY" className="h-7" />
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center shrink-0">
+              <Zap className="w-4 h-4 text-white" />
+            </div>
+            <div className="leading-none">
+              <span className="text-white font-bold text-sm tracking-tight">UPFY</span>
+              <span className="text-violet-400 font-bold text-sm tracking-tight"> CLIPES</span>
+            </div>
+          </div>
         </div>
         <nav className="flex-1 p-3 space-y-0.5">
           <NavLinks />
@@ -64,7 +71,12 @@ export default function SidebarCliente({ userName }: { userName: string }) {
 
       {/* Mobile header */}
       <header className="md:hidden fixed top-0 left-0 right-0 h-14 bg-[#111113] border-b border-zinc-800 flex items-center justify-between px-4 z-20">
-        <img src="/logo.png" alt="UPFY" className="h-6" />
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded bg-violet-600 flex items-center justify-center">
+            <Zap className="w-3.5 h-3.5 text-white" />
+          </div>
+          <span className="text-white font-bold text-sm tracking-tight">UPFY<span className="text-violet-400"> CLIPES</span></span>
+        </div>
         <button onClick={() => setOpen(!open)} className="text-zinc-400 hover:text-white">
           {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
