@@ -1,88 +1,148 @@
 export const dynamic = 'force-dynamic'
 
-import { createServiceClient } from '@/lib/supabase/server'
-import DashboardClient from '@/components/admin/dashboard-client'
-
-const DEMO = process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('placeholder')
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import DashboardMaster from '@/components/admin/dashboard-master'
 
 export default async function AdminDashboardPage() {
-  if (DEMO) return (
-    <div>
-      <h1 className="text-xl font-semibold text-white mb-1">Dashboard</h1>
-      <p className="text-zinc-400 text-sm mb-8">Visão geral da operação.</p>
-      <DashboardClient metrics={{ totalAtivos: 0, totalEncerrando: 0, totalAguardando: 0, totalEncerrados: 0, emProducao: 0, clipesMes: 0, editoresAtivos: 0 }} alerts={{ encerrando: [], semRenovacao: [], semEditor: [] }} />
-    </div>
-  )
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
-  const supabase = createServiceClient()
-  const now = new Date()
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-  const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString()
-  const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString()
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'admin') redirect('/login')
+
+  const svc = createServiceClient()
+
+  const TERMINAL = ['entregue', 'publicado', 'cancelado', 'falhou']
+  const EDITING   = ['em_edicao', 'atribuido']
+  const REVIEW    = ['revisao_interna', 'revisao_solicitada', 'aprovacao']
 
   const [
-    { count: totalAtivos },
-    { count: totalEncerrando },
-    { count: totalAguardando },
-    { count: totalEncerrados },
-    { count: emProducao },
-    { count: clipesMes },
-    { count: editoresAtivos },
-    { data: encerrandoAlerts },
-    { data: semRenovacaoAlerts },
-    { data: semEditorAlerts },
+    activeRes,
+    editingRes,
+    reviewRes,
+    revisionRes,
+    deliveredTodayRes,
+    clientsRes,
+    editorsRes,
+    onlineEditorsRes,
+    recentLogsRes,
   ] = await Promise.all([
-    supabase.from('client_contracts').select('*', { count: 'exact', head: true }).eq('status', 'ativo'),
-    supabase.from('client_contracts').select('*', { count: 'exact', head: true }).eq('status', 'encerrando'),
-    supabase.from('client_contracts').select('*', { count: 'exact', head: true }).eq('status', 'aguardando_renovacao'),
-    supabase.from('client_contracts').select('*', { count: 'exact', head: true }).eq('status', 'encerrado'),
-    supabase.from('orders').select('*', { count: 'exact', head: true }).in('status', ['aguardando', 'em_edicao', 'aprovacao']),
-    supabase.from('deliverables').select('*', { count: 'exact', head: true }).gte('delivered_at', startOfMonth),
-    supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'editor'),
-    supabase.from('client_contracts')
-      .select('user_id, end_date, profiles!inner(name)')
-      .eq('status', 'encerrando')
-      .lte('end_date', threeDaysFromNow),
-    supabase.from('client_contracts')
-      .select('user_id, end_date, profiles!inner(name)')
-      .eq('status', 'aguardando_renovacao')
-      .lte('end_date', twoDaysAgo),
-    supabase.from('orders')
-      .select('id, created_at, profiles!orders_client_id_fkey(name)')
-      .eq('status', 'aguardando')
-      .lte('created_at', twelveHoursAgo),
+    svc.from('orders').select('id', { count: 'exact', head: true }).not('status', 'in', `(${TERMINAL.join(',')})`),
+    svc.from('orders').select('id', { count: 'exact', head: true }).in('status', EDITING),
+    svc.from('orders').select('id', { count: 'exact', head: true }).in('status', REVIEW),
+    svc.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'revisao_solicitada'),
+    svc.from('orders').select('id', { count: 'exact', head: true })
+      .eq('status', 'entregue')
+      .gte('updated_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString()),
+    svc.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'cliente'),
+    svc.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'editor'),
+    svc.from('orders').select('editor_id').in('status', EDITING),
+    svc.from('operational_logs')
+      .select('id, action, entity_type, actor_name, actor_role, created_at')
+      .order('created_at', { ascending: false })
+      .limit(10),
   ])
 
+  // Avg delivery hours (last 30 days)
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86_400_000).toISOString()
+  const { data: deliveredOrders } = await svc
+    .from('orders')
+    .select('created_at, updated_at')
+    .eq('status', 'entregue')
+    .gte('updated_at', thirtyDaysAgo)
+
+  let avgDeliveryHours = 0
+  if (deliveredOrders && deliveredOrders.length > 0) {
+    const totalH = (deliveredOrders as { created_at: string; updated_at: string }[]).reduce((s, o) =>
+      s + (new Date(o.updated_at).getTime() - new Date(o.created_at).getTime()) / 3_600_000, 0)
+    avgDeliveryHours = Math.round(totalH / deliveredOrders.length)
+  }
+
+  const onlineSet = new Set(
+    ((onlineEditorsRes.data ?? []) as { editor_id: string | null }[])
+      .map((o) => o.editor_id).filter(Boolean)
+  )
+
+  // Overdue count
+  const now = Date.now()
+  const { data: allOrders } = await svc
+    .from('orders').select('status, created_at, sla_hours').not('status', 'in', `(${TERMINAL.join(',')})`)
+
+  const overdueCount = ((allOrders ?? []) as { status: string; created_at: string; sla_hours: number }[]).filter((o) =>
+    now > new Date(o.created_at).getTime() + (o.sla_hours ?? 48) * 3_600_000
+  ).length
+
+  // Critical orders
+  const { data: criticalRaw } = await svc
+    .from('orders')
+    .select('id, status, is_urgent, is_vip, priority, created_at, sla_hours, profiles:profiles!client_id(name), editor:profiles!editor_id(name)')
+    .not('status', 'in', `(${TERMINAL.join(',')})`)
+    .or('is_urgent.eq.true,status.eq.revisao_solicitada,priority.eq.critical')
+    .order('created_at', { ascending: true })
+    .limit(10)
+
+  const STATUS_LABELS: Record<string, string> = {
+    aguardando: 'Aguardando', em_analise: 'Em Análise', na_fila: 'Na Fila',
+    atribuido: 'Atribuído', em_edicao: 'Em Edição', revisao_interna: 'Revisão Interna',
+    pronto: 'Pronto', revisao_solicitada: 'Revisão Solicitada', aprovacao: 'Aprovação',
+    entregue: 'Entregue', publicado: 'Publicado', cancelado: 'Cancelado', falhou: 'Falhou', pausado: 'Pausado',
+  }
+
+  type RawOrder = {
+    id: string; status: string; is_urgent: boolean; is_vip: boolean
+    priority: string; created_at: string; sla_hours: number
+    profiles: { name: string } | null; editor: { name: string } | null
+  }
+
+  const criticalOrders = ((criticalRaw ?? []) as unknown as RawOrder[]).map((o) => {
+    const slaH = o.sla_hours ?? 48
+    const hoursWaiting   = Math.round((now - new Date(o.created_at).getTime()) / 3_600_000)
+    const hoursRemaining = Math.round((new Date(o.created_at).getTime() + slaH * 3_600_000 - now) / 3_600_000)
+    const isOverdue = hoursRemaining < 0
+    let slaLabel: string, slaColor: string
+    if (isOverdue) { slaLabel = `${Math.abs(hoursRemaining)}h atrasado`; slaColor = 'text-red-400' }
+    else if (hoursRemaining < 4)  { slaLabel = `${hoursRemaining}h`; slaColor = 'text-red-400'    }
+    else if (hoursRemaining < 12) { slaLabel = `${hoursRemaining}h`; slaColor = 'text-orange-400' }
+    else { slaLabel = `${Math.floor(hoursRemaining / 24)}d`; slaColor = 'text-zinc-400' }
+    return {
+      id: o.id,
+      clientName:  (o.profiles as { name: string } | null)?.name ?? 'Cliente',
+      editorName:  (o.editor  as { name: string } | null)?.name ?? null,
+      status:      o.status,
+      statusLabel: STATUS_LABELS[o.status] ?? o.status,
+      priority:    o.priority ?? 'normal',
+      isUrgent:    o.is_urgent,
+      isVip:       o.is_vip,
+      hoursWaiting,
+      slaStatus:   slaLabel,
+      slaColor,
+      isOverdue,
+    }
+  })
+
+  type RawLog = { id: string; action: string; entity_type: string; actor_name: string | null; actor_role: string | null; created_at: string }
+
   return (
-    <div>
-      <h1 className="text-xl font-semibold text-white mb-1">Dashboard</h1>
-      <p className="text-zinc-400 text-sm mb-8">Visão geral da operação.</p>
-      <DashboardClient
-        metrics={{
-          totalAtivos: totalAtivos ?? 0,
-          totalEncerrando: totalEncerrando ?? 0,
-          totalAguardando: totalAguardando ?? 0,
-          totalEncerrados: totalEncerrados ?? 0,
-          emProducao: emProducao ?? 0,
-          clipesMes: clipesMes ?? 0,
-          editoresAtivos: editoresAtivos ?? 0,
-        }}
-        alerts={{
-          encerrando: (encerrandoAlerts ?? []).map(a => ({
-            ...a,
-            profiles: Array.isArray(a.profiles) ? a.profiles[0] : a.profiles,
-          })) as any,
-          semRenovacao: (semRenovacaoAlerts ?? []).map(a => ({
-            ...a,
-            profiles: Array.isArray(a.profiles) ? a.profiles[0] : a.profiles,
-          })) as any,
-          semEditor: (semEditorAlerts ?? []).map(a => ({
-            ...a,
-            profiles: Array.isArray(a.profiles) ? a.profiles[0] : a.profiles,
-          })) as any,
-        }}
-      />
-    </div>
+    <DashboardMaster
+      metrics={{
+        activeOrders:     activeRes.count     ?? 0,
+        overdueOrders:    overdueCount,
+        inEditing:        editingRes.count    ?? 0,
+        inReview:         reviewRes.count     ?? 0,
+        deliveredToday:   deliveredTodayRes.count ?? 0,
+        avgDeliveryHours,
+        pendingRevisions: revisionRes.count   ?? 0,
+        activeClients:    clientsRes.count    ?? 0,
+        totalEditors:     editorsRes.count    ?? 0,
+        editorsOnline:    onlineSet.size,
+      }}
+      criticalOrders={criticalOrders}
+      recentActivity={((recentLogsRes.data ?? []) as RawLog[]).map((l) => ({
+        id: l.id, action: l.action, entityType: l.entity_type,
+        actorName: l.actor_name, actorRole: l.actor_role, createdAt: l.created_at,
+      }))}
+    />
   )
 }

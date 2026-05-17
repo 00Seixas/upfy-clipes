@@ -23,11 +23,24 @@ function isClientePath(pathname: string): boolean {
 }
 
 function isEditorPath(pathname: string): boolean {
-  return pathname.startsWith('/fila') || pathname.startsWith('/em-andamento') || pathname.startsWith('/entregues')
+  return (
+    pathname.startsWith('/fila') ||
+    pathname.startsWith('/em-andamento') ||
+    pathname.startsWith('/entregues') ||
+    pathname.startsWith('/carteira')
+  )
 }
 
 function isAdminPath(pathname: string): boolean {
-  return pathname.startsWith('/dashboard') || pathname.startsWith('/kanban') || pathname.startsWith('/clientes') || pathname.startsWith('/editores')
+  return (
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/kanban') ||
+    pathname.startsWith('/clientes') ||
+    pathname.startsWith('/editores') ||
+    pathname.startsWith('/logs') ||
+    pathname.startsWith('/financeiro') ||
+    pathname.startsWith('/configuracoes')
+  )
 }
 
 export async function middleware(req: NextRequest) {
