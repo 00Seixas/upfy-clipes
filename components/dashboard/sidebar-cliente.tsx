@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Plus, Film, Archive, Clapperboard,
   CalendarDays, BarChart2, TrendingUp, Lightbulb,
   Library, CreditCard, Bell, Settings, LogOut,
-  Menu, X, Zap, ChevronRight, Sparkles,
+  Menu, X, Zap, ChevronRight, Sparkles, Youtube,
 } from 'lucide-react'
 
 const SECTIONS = [
@@ -22,6 +22,7 @@ const SECTIONS = [
     items: [
       { href: '/producao',      icon: Clapperboard,    label: 'Produção'      },
       { href: '/meus-clipes',   icon: Film,            label: 'Meus Clipes'   },
+      { href: '/meu-youtube',   icon: Youtube,         label: 'Meu YouTube'   },
       { href: '/cofre',         icon: Archive,         label: 'Cofre de Views', badge: '✦' },
     ],
   },

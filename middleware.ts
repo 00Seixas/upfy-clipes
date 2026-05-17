@@ -22,7 +22,8 @@ function isClientePath(pathname: string): boolean {
     pathname.startsWith('/producao') ||
     pathname.startsWith('/cofre') ||
     pathname.startsWith('/analytics') ||
-    pathname.startsWith('/ideias')
+    pathname.startsWith('/ideias') ||
+    pathname.startsWith('/meu-youtube')
   )
 }
 
