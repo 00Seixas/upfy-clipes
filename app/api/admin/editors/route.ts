@@ -51,9 +51,9 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const supabase = createServiceClient()
-  const { name, email } = await req.json()
+  const { name, email, password: customPassword } = await req.json()
 
-  const password = generatePassword()
+  const password = customPassword?.trim() || generatePassword()
 
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
     email,
