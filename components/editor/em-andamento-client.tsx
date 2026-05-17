@@ -1,7 +1,7 @@
 'use client'
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Download, Upload, Film } from 'lucide-react'
+import { Download, Upload, Film, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 
@@ -104,8 +104,31 @@ export default function EmAndamentoClient({ order, editorId }: { order: Order | 
     }
   }
 
+  const revisionNotes = (briefing as Record<string, string>)._revision_notes
+  const revisionAt    = (briefing as Record<string, string>)._revision_at
+
   return (
     <div className="space-y-6">
+      {/* Revision notes banner — shown when admin requested changes */}
+      {revisionNotes && (
+        <div className="bg-amber-950/30 border border-amber-700/50 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-amber-900/50 flex items-center justify-center shrink-0 mt-0.5">
+              <RotateCcw className="w-4 h-4 text-amber-400" />
+            </div>
+            <div>
+              <p className="text-amber-300 font-semibold text-sm mb-1">⚠️ Revisão Solicitada pelo Admin</p>
+              <p className="text-amber-200/80 text-sm leading-relaxed">{revisionNotes}</p>
+              {revisionAt && (
+                <p className="text-amber-600 text-xs mt-2">
+                  Solicitada em {new Date(revisionAt).toLocaleString('pt-BR')}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Client + briefing */}
       <div className="bg-[#111113] border border-zinc-800 rounded-xl p-5">
         <h2 className="text-white font-medium mb-4">{order.profiles?.name}</h2>

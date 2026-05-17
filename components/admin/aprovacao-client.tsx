@@ -1,6 +1,6 @@
 'use client'
 import { useState, useRef } from 'react'
-import { CheckCircle, RotateCcw, Play, Pause, Loader2, Video, Clock, User, MessageSquare } from 'lucide-react'
+import { CheckCircle, RotateCcw, Play, Pause, Loader2, Video, Clock, User, MessageSquare, X } from 'lucide-react'
 
 type Deliverable = {
   id: string
@@ -34,11 +34,14 @@ function timeAgo(iso: string) {
 }
 
 function DeliverableCard({ d, onRemove }: { d: Deliverable; onRemove: (id: string) => void }) {
-  const [streamUrl, setStreamUrl]     = useState<string | null>(null)
+  const [streamUrl, setStreamUrl]         = useState<string | null>(null)
   const [loadingStream, setLoadingStream] = useState(false)
-  const [approving, setApproving]     = useState(false)
-  const [rejecting, setRejecting]     = useState(false)
-  const [showVideo, setShowVideo]     = useState(false)
+  const [approving, setApproving]         = useState(false)
+  const [rejecting, setRejecting]         = useState(false)
+  const [showVideo, setShowVideo]         = useState(false)
+  const [revisionModal, setRevisionModal] = useState(false)
+  const [revisionNotes, setRevisionNotes] = useState('')
+  const [error, setError]                 = useState<string | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const v = VIRALITY[d.viralityGrade] ?? VIRALITY.frio
 
@@ -57,26 +60,41 @@ function DeliverableCard({ d, onRemove }: { d: Deliverable; onRemove: (id: strin
 
   async function approve() {
     setApproving(true)
+    setError(null)
     try {
-      await fetch(`/api/admin/orders/${d.orderId}/approve`, {
+      const res = await fetch(`/api/admin/orders/${d.orderId}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ viralityGrade: d.viralityGrade, feedback: d.feedback }),
       })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        setError(body.error ?? 'Erro ao aprovar clipe')
+        return
+      }
       onRemove(d.id)
     } finally {
       setApproving(false)
     }
   }
 
-  async function requestRevision() {
+  async function submitRevision() {
+    if (!revisionNotes.trim()) return
     setRejecting(true)
+    setError(null)
     try {
-      await fetch(`/api/admin/orders/${d.orderId}/action`, {
+      const res = await fetch(`/api/admin/orders/${d.orderId}/revision`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'set_status', data: { status: 'revisao_solicitada' } }),
+        body: JSON.stringify({ notes: revisionNotes }),
       })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        setError(body.error ?? 'Erro ao solicitar revisão')
+        return
+      }
+      setRevisionModal(false)
+      setRevisionNotes('')
       onRemove(d.id)
     } finally {
       setRejecting(false)
@@ -104,13 +122,7 @@ function DeliverableCard({ d, onRemove }: { d: Deliverable; onRemove: (id: strin
       {/* Video preview */}
       {showVideo && streamUrl && (
         <div className="bg-black aspect-video">
-          <video
-            ref={videoRef}
-            src={streamUrl}
-            controls
-            autoPlay
-            className="w-full h-full"
-          />
+          <video ref={videoRef} src={streamUrl} controls autoPlay className="w-full h-full" />
         </div>
       )}
 
@@ -123,7 +135,7 @@ function DeliverableCard({ d, onRemove }: { d: Deliverable; onRemove: (id: strin
           <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {timeAgo(d.deliveredAt)}</span>
         </div>
 
-        {/* Feedback */}
+        {/* Editor feedback */}
         {d.feedback && (
           <div className="bg-zinc-900/60 border border-zinc-800/40 rounded-lg p-3">
             <p className="text-[10px] uppercase tracking-wider text-zinc-600 mb-1 flex items-center gap-1">
@@ -133,42 +145,90 @@ function DeliverableCard({ d, onRemove }: { d: Deliverable; onRemove: (id: strin
           </div>
         )}
 
-        {/* Actions */}
-        <div className="flex gap-2 pt-1">
-          <button
-            onClick={loadStream}
-            disabled={loadingStream}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800/80 hover:bg-zinc-700/80 text-zinc-300 text-xs font-medium transition-colors disabled:opacity-50"
-          >
-            {loadingStream
-              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              : showVideo
-                ? <Pause className="w-3.5 h-3.5" />
-                : <Play className="w-3.5 h-3.5" />
-            }
-            {showVideo ? 'Esconder' : 'Preview'}
-          </button>
+        {/* Error message */}
+        {error && (
+          <div className="bg-red-950/40 border border-red-800/40 rounded-lg px-3 py-2">
+            <p className="text-red-400 text-xs">{error}</p>
+          </div>
+        )}
 
-          <div className="flex-1" />
+        {/* Revision modal inline */}
+        {revisionModal && (
+          <div className="bg-zinc-900 border border-zinc-700/60 rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-white text-sm font-semibold">O que precisa ser corrigido?</p>
+              <button
+                onClick={() => { setRevisionModal(false); setRevisionNotes('') }}
+                className="text-zinc-500 hover:text-zinc-300 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <textarea
+              value={revisionNotes}
+              onChange={(e) => setRevisionNotes(e.target.value)}
+              placeholder="Descreva o que o editor precisa ajustar no clipe..."
+              rows={3}
+              className="w-full bg-zinc-800/60 border border-zinc-700/60 rounded-lg px-3 py-2 text-zinc-200 text-sm placeholder:text-zinc-600 resize-none focus:outline-none focus:border-violet-500/60"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setRevisionModal(false); setRevisionNotes('') }}
+                className="flex-1 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-xs font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={submitRevision}
+                disabled={rejecting || !revisionNotes.trim()}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-amber-950/60 border border-amber-800/40 hover:bg-amber-900/60 text-amber-400 text-xs font-medium transition-colors disabled:opacity-50"
+              >
+                {rejecting
+                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  : <RotateCcw className="w-3.5 h-3.5" />
+                }
+                Enviar para Revisão
+              </button>
+            </div>
+          </div>
+        )}
 
-          <button
-            onClick={requestRevision}
-            disabled={rejecting || approving}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-950/40 border border-amber-800/40 hover:bg-amber-900/40 text-amber-400 text-xs font-medium transition-colors disabled:opacity-50"
-          >
-            {rejecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
-            Pedir Revisão
-          </button>
+        {/* Action buttons — hidden while revision modal is open */}
+        {!revisionModal && (
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={loadStream}
+              disabled={loadingStream}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800/80 hover:bg-zinc-700/80 text-zinc-300 text-xs font-medium transition-colors disabled:opacity-50"
+            >
+              {loadingStream
+                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                : showVideo ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />
+              }
+              {showVideo ? 'Esconder' : 'Preview'}
+            </button>
 
-          <button
-            onClick={approve}
-            disabled={approving || rejecting}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-800/40 hover:bg-emerald-900/40 text-emerald-400 text-xs font-medium transition-colors disabled:opacity-50"
-          >
-            {approving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
-            Aprovar
-          </button>
-        </div>
+            <div className="flex-1" />
+
+            <button
+              onClick={() => { setError(null); setRevisionModal(true) }}
+              disabled={approving}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-950/40 border border-amber-800/40 hover:bg-amber-900/40 text-amber-400 text-xs font-medium transition-colors disabled:opacity-50"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              Pedir Revisão
+            </button>
+
+            <button
+              onClick={approve}
+              disabled={approving || rejecting}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-800/40 hover:bg-emerald-900/40 text-emerald-400 text-xs font-medium transition-colors disabled:opacity-50"
+            >
+              {approving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
+              Aprovar
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -183,12 +243,13 @@ export default function AprovacaoClient({ deliverables: initial }: { deliverable
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-white text-xl font-bold">Aprovação de Clipes</h1>
           <p className="text-zinc-500 text-sm mt-0.5">
-            {items.length === 0 ? 'Nenhum clipe aguardando' : `${items.length} clipe${items.length > 1 ? 's' : ''} aguardando revisão`}
+            {items.length === 0
+              ? 'Nenhum clipe aguardando'
+              : `${items.length} clipe${items.length > 1 ? 's' : ''} aguardando revisão`}
           </p>
         </div>
         {items.length > 0 && (
@@ -198,7 +259,6 @@ export default function AprovacaoClient({ deliverables: initial }: { deliverable
         )}
       </div>
 
-      {/* Empty state */}
       {items.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="w-16 h-16 rounded-2xl bg-emerald-950/40 border border-emerald-800/40 flex items-center justify-center mb-4">
@@ -209,7 +269,6 @@ export default function AprovacaoClient({ deliverables: initial }: { deliverable
         </div>
       )}
 
-      {/* Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
         {items.map((d) => (
           <DeliverableCard key={d.id} d={d} onRemove={remove} />
