@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Kanban, ScrollText, Users, Users2,
-  DollarSign, Settings, Menu, X, LogOut, Zap, ChevronRight,
+  DollarSign, Settings, Menu, X, LogOut, Zap, ChevronRight, CheckCircle,
 } from 'lucide-react'
 
 interface NavItem {
@@ -24,6 +24,7 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard'        },
       { href: '/kanban',    icon: Kanban,           label: 'Fila Operacional' },
+      { href: '/aprovacao', icon: CheckCircle,      label: 'Aprovação'        },
       { href: '/logs',      icon: ScrollText,        label: 'Logs'             },
     ],
   },
