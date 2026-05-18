@@ -52,10 +52,8 @@ function getPlatformDominance(clips: { virality_grade: string }[], score: number
   const quente = clips.filter(c => c.virality_grade === 'quente').length
   const base   = Math.min(55, clips.length * 3 + score * 0.25)
   return [
-    { name: 'TikTok',         score: Math.min(96, Math.round(base + viral * 7 + quente * 2.5)) },
-    { name: 'YouTube Shorts', score: Math.min(91, Math.round(base * 0.92 + quente * 4))        },
-    { name: 'Instagram',      score: Math.min(88, Math.round(base * 0.84 + viral * 4))         },
-    { name: 'Facebook',       score: Math.min(72, Math.round(base * 0.62))                      },
+    { name: 'TikTok',    score: Math.min(96, Math.round(base + viral * 7 + quente * 2.5)) },
+    { name: 'Instagram', score: Math.min(88, Math.round(base * 0.84 + viral * 4))         },
   ]
 }
 
