@@ -3,7 +3,8 @@ export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Film, Plus, ArrowRight } from 'lucide-react'
+import { Plus, ArrowRight } from 'lucide-react'
+import CofreClient, { type CofreClip } from '@/components/clips/cofre-client'
 
 const VIRAL_SYSTEM = {
   frio:   { label: 'FRIO',   segments: 3,  color: '#1d4ed8', gradient: false, glow: null,                     textColor: '#3b82f6', potencial: 25000,   views: 8000   },
@@ -63,15 +64,21 @@ export default async function CofrePage() {
   const orderIds = (clientOrders ?? []).map((o: { id: string }) => o.id)
 
   const { data: clips } = orderIds.length
-    ? await supabase.from('deliverables').select('id, clip_number, virality_grade, feedback, delivered_at').in('order_id', orderIds).not('approved_at', 'is', null).order('delivered_at', { ascending: false })
+    ? await supabase
+        .from('deliverables')
+        .select('id, clip_number, virality_grade, feedback, delivered_at')
+        .in('order_id', orderIds)
+        .not('client_approved_at', 'is', null)
+        .order('delivered_at', { ascending: false })
     : { data: [] }
 
-  const allClips = clips ?? []
-  const totalPotencial = allClips.reduce((sum: number, c: { virality_grade: string }) => {
+  const allClips: CofreClip[] = clips ?? []
+
+  const totalPotencial = allClips.reduce((sum, c) => {
     return sum + (VIRAL_SYSTEM[c.virality_grade as VGrade]?.potencial ?? 25000)
   }, 0)
-  const oportunidades = allClips.filter((c: { virality_grade: string }) => ['quente','viral'].includes(c.virality_grade)).length
-  const dist = Object.fromEntries(Object.keys(VIRAL_SYSTEM).map(k => [k, allClips.filter((c: { virality_grade: string }) => c.virality_grade === k).length]))
+  const oportunidades = allClips.filter(c => ['quente', 'viral'].includes(c.virality_grade)).length
+  const dist = Object.fromEntries(Object.keys(VIRAL_SYSTEM).map(k => [k, allClips.filter(c => c.virality_grade === k).length]))
 
   return (
     <div className="space-y-8 pb-16">
@@ -127,57 +134,8 @@ export default async function CofrePage() {
         </div>
       </div>
 
-      {/* CLIPS */}
-      {allClips.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-white/[0.06] flex items-center justify-center mx-auto mb-5">
-            <Film className="w-7 h-7 text-zinc-700" />
-          </div>
-          <p className="text-zinc-400 font-semibold mb-2">Cofre ainda vazio</p>
-          <p className="text-zinc-700 text-sm max-w-xs mx-auto leading-relaxed mb-6">Envie vídeos e seus clipes aparecem aqui com o potencial de views calculado.</p>
-          <Link href="/enviar-videos" className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black font-bold text-sm rounded-xl hover:bg-zinc-100 transition-colors">
-            <Plus className="w-4 h-4" /> Pedir primeiro clipe
-          </Link>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          <p className="text-zinc-700 text-[9px] uppercase tracking-[0.15em] font-bold">Seus ativos — {allClips.length} clipes</p>
-          {allClips.map((clip: { id: string; clip_number: number; virality_grade: string; feedback: string; delivered_at: string }) => {
-            const grade = (clip.virality_grade in VIRAL_SYSTEM ? clip.virality_grade : 'frio') as VGrade
-            const cfg = VIRAL_SYSTEM[grade]
-            return (
-              <div key={clip.id} className="bg-[#080809] border border-white/[0.06] hover:border-white/[0.1] rounded-xl p-5 transition-all duration-200"
-                style={cfg.glow ? { boxShadow: `0 0 40px rgba(${grade === 'viral' ? '124,58,237' : grade === 'quente' ? '220,38,38' : grade === 'morno' ? '217,119,6' : '29,78,216'},0.04)` } : {}}>
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-white/[0.05] flex items-center justify-center shrink-0">
-                    <Film className="w-4 h-4 text-zinc-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-4 mb-3">
-                      <span className="text-zinc-200 text-sm font-semibold">Clipe #{clip.clip_number}</span>
-                      <span className="text-zinc-700 text-xs">{new Date(clip.delivered_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                    </div>
-                    <div className="mb-3"><EnergyBar grade={grade} /></div>
-                    {clip.feedback && <p className="text-zinc-600 text-xs leading-relaxed line-clamp-2 mb-3">{clip.feedback}</p>}
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-xl font-black tracking-tight" style={{ color: cfg.textColor }}>{fmtViews(cfg.potencial)}</span>
-                        <span className="text-zinc-700 text-xs ml-1.5">views potenciais</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <a href={`/api/clips/${clip.id}/download`} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-zinc-100 text-black text-xs font-semibold rounded-lg transition-colors">Baixar</a>
-                        <Link href="/enviar-videos" className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-white/[0.08] hover:border-white/[0.15] text-zinc-500 hover:text-zinc-300 text-xs font-semibold rounded-lg transition-colors">
-                          <Plus className="w-3 h-3" /> Similar
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
+      {/* CLIPS — Client Component handles social posting */}
+      <CofreClient clips={allClips} />
     </div>
   )
 }

@@ -32,7 +32,8 @@ function isEditorPath(pathname: string): boolean {
     pathname.startsWith('/fila') ||
     pathname.startsWith('/em-andamento') ||
     pathname.startsWith('/entregues') ||
-    pathname.startsWith('/carteira')
+    pathname.startsWith('/carteira') ||
+    pathname.startsWith('/meu-desempenho')
   )
 }
 

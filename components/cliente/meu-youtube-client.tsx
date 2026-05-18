@@ -17,6 +17,12 @@ type YTChannel = {
   subscriberCount: number; videoCount: number
 }
 
+type ClipTimestamp = {
+  start: string
+  end: string
+  reason: string
+}
+
 type ClipAnalysis = {
   estimatedClips: number
   viralPotential: 'frio' | 'morno' | 'quente' | 'viral'
@@ -24,6 +30,8 @@ type ClipAnalysis = {
   suggestedAngles: string[]
   bestMomentTypes: string[]
   hookSuggestion: string
+  clipTimestamps?: ClipTimestamp[]
+  transcriptAnalyzed?: boolean
   demo?: boolean
 }
 
@@ -73,6 +81,7 @@ function VideoCard({ video }: { video: YTVideo }) {
           durationSeconds: video.durationSeconds,
           viewCount:       video.viewCount,
           likeCount:       video.likeCount,
+          videoId:         video.id,
         }),
       })
       setAnalysis(await res.json())
@@ -183,6 +192,38 @@ function VideoCard({ video }: { video: YTVideo }) {
                 ))}
               </div>
             </div>
+
+            {/* Clip timestamps */}
+            {analysis.clipTimestamps && analysis.clipTimestamps.length > 0 && (
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-[#4A4A54] font-bold mb-2">
+                  📍 Momentos para Clipar
+                </p>
+                <div className="space-y-2">
+                  {analysis.clipTimestamps.map((ts, i) => (
+                    <div
+                      key={i}
+                      className="bg-white/[0.03] border border-white/[0.05] rounded-lg px-3 py-2"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-mono text-white text-xs font-semibold mb-0.5">
+                            {ts.start} → {ts.end}
+                          </p>
+                          <p className="text-zinc-500 text-xs leading-snug truncate">{ts.reason}</p>
+                        </div>
+                        <a
+                          href="/enviar-videos"
+                          className="shrink-0 text-[10px] px-2 py-1 bg-[#F0F0F2] hover:bg-white text-black font-bold rounded transition-colors whitespace-nowrap"
+                        >
+                          Pedir este clipe
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

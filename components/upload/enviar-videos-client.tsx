@@ -1,10 +1,10 @@
 'use client'
 import { useState, useCallback } from 'react'
-import { Upload, X, Film } from 'lucide-react'
+import { Upload, X, Film, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import type { ContentTone, CTA, Briefing } from '@/types'
+import type { ContentTone, CTA, Briefing, TargetPlatform } from '@/types'
 
 interface VideoItem {
   id: string
@@ -19,12 +19,68 @@ const defaultBriefing: Briefing = {
   cta: 'nenhum',
   editingStyle: '',
   notes: '',
+  openingHook: '',
+  platforms: [],
+}
+
+const HOOK_EXAMPLES = [
+  'Isso vai mudar como você pensa sobre [tema]',
+  'A maioria das pessoas faz isso errado',
+  'Ninguém fala sobre isso, mas deveria',
+  'Eu perdi [X] por não saber disso antes',
+]
+
+function getRandomHooks(): string[] {
+  const shuffled = [...HOOK_EXAMPLES].sort(() => Math.random() - 0.5)
+  return shuffled.slice(0, 4)
 }
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
+
+// ─── Hook Suggestion Section ─────────────────────────────────────────────────
+
+interface HookSuggestionProps {
+  videoId: string
+  currentHook: string
+  onSelect: (hook: string) => void
+}
+
+function HookSuggestion({ videoId: _videoId, currentHook: _currentHook, onSelect }: HookSuggestionProps) {
+  const [open, setOpen] = useState(false)
+  const [hooks] = useState<string[]>(getRandomHooks)
+
+  return (
+    <div className="col-span-2">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-2 text-xs text-zinc-500 hover:text-zinc-300 transition-colors mb-2"
+      >
+        {open ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+        💡 Precisa de inspiração?
+      </button>
+      {open && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {hooks.map(hook => (
+            <button
+              key={hook}
+              type="button"
+              onClick={() => onSelect(hook)}
+              className="text-left text-xs text-zinc-400 hover:text-zinc-200 bg-zinc-900/80 border border-white/[0.06] hover:border-white/[0.12] rounded-lg px-3 py-2 transition-all leading-relaxed"
+            >
+              {hook}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function EnviarVideosClient() {
   const [videos, setVideos] = useState<VideoItem[]>([])
@@ -38,7 +94,7 @@ export default function EnviarVideosClient() {
       id: Math.random().toString(36).slice(2),
       file,
       preview: URL.createObjectURL(file),
-      briefing: { ...defaultBriefing },
+      briefing: { ...defaultBriefing, platforms: [] },
     }))
     setVideos(prev => [...prev, ...newVideos])
   }, [])
@@ -47,13 +103,25 @@ export default function EnviarVideosClient() {
     setVideos(prev => prev.filter(v => v.id !== id))
   }
 
-  const updateBriefing = (id: string, field: keyof Briefing, value: string) => {
+  const updateBriefing = (id: string, field: keyof Briefing, value: Briefing[keyof Briefing]) => {
     setVideos(prev => prev.map(v => {
       if (sameForAll) {
         return { ...v, briefing: { ...v.briefing, [field]: value } }
       }
       if (v.id === id) return { ...v, briefing: { ...v.briefing, [field]: value } }
       return v
+    }))
+  }
+
+  const togglePlatform = (id: string, platform: TargetPlatform) => {
+    setVideos(prev => prev.map(v => {
+      const target = sameForAll ? true : v.id === id
+      if (!target) return v
+      const current = v.briefing.platforms ?? []
+      const next = current.includes(platform)
+        ? current.filter(p => p !== platform)
+        : [...current, platform]
+      return { ...v, briefing: { ...v.briefing, platforms: next } }
     }))
   }
 
@@ -194,6 +262,31 @@ export default function EnviarVideosClient() {
 
                 {(!sameForAll || index === 0) && (
                   <div className="grid grid-cols-2 gap-4">
+                    {/* Plataformas alvo */}
+                    <div className="col-span-2 space-y-2">
+                      <Label className="text-zinc-400 text-xs">Plataformas alvo</Label>
+                      <div className="flex gap-3">
+                        {(['tiktok', 'instagram'] as TargetPlatform[]).map(platform => {
+                          const active = (video.briefing.platforms ?? []).includes(platform)
+                          return (
+                            <button
+                              key={platform}
+                              type="button"
+                              onClick={() => togglePlatform(video.id, platform)}
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors capitalize ${
+                                active
+                                  ? 'bg-white text-black border-white'
+                                  : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:text-white'
+                              }`}
+                            >
+                              <span>{platform === 'tiktok' ? '🎵' : '📷'}</span>
+                              {platform === 'tiktok' ? 'TikTok' : 'Instagram'}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+
                     {/* Tom */}
                     <div className="space-y-2">
                       <Label className="text-zinc-400 text-xs">Tom do conteúdo</Label>
@@ -227,7 +320,7 @@ export default function EnviarVideosClient() {
                           <button
                             key={value}
                             type="button"
-                            onClick={() => updateBriefing(video.id, 'cta', value)}
+                            onClick={() => updateBriefing(video.id, 'cta', value as CTA)}
                             className={`w-full px-2 py-1.5 rounded text-xs text-left transition-colors ${
                               video.briefing.cta === value
                                 ? 'bg-white text-black font-medium'
@@ -261,6 +354,24 @@ export default function EnviarVideosClient() {
                         className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600 text-sm h-8"
                       />
                     </div>
+
+                    {/* Hook de abertura */}
+                    <div className="col-span-2 space-y-2">
+                      <Label className="text-zinc-400 text-xs">Gancho de abertura (primeiros 3s)</Label>
+                      <Input
+                        value={video.briefing.openingHook ?? ''}
+                        onChange={e => updateBriefing(video.id, 'openingHook', e.target.value)}
+                        placeholder="Ex: Isso vai mudar como você pensa sobre..."
+                        className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600 text-sm h-8"
+                      />
+                    </div>
+
+                    {/* Hook suggestions */}
+                    <HookSuggestion
+                      videoId={video.id}
+                      currentHook={video.briefing.openingHook ?? ''}
+                      onSelect={hook => updateBriefing(video.id, 'openingHook', hook)}
+                    />
 
                     {/* Notes */}
                     <div className="col-span-2 space-y-2">

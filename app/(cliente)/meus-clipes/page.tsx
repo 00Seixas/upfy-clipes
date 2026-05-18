@@ -18,20 +18,35 @@ export default async function MeusClipesPage() {
 
   const orderIds = clientOrders?.map(o => o.id) ?? []
 
-  const { data: deliverables } = orderIds.length
-    ? await supabase
-        .from('deliverables')
-        .select('id, clip_number, virality_grade, feedback, delivered_at, r2_key, filename')
-        .in('order_id', orderIds)
-        .not('approved_at', 'is', null)
-        .order('delivered_at', { ascending: true })
-    : { data: [] }
+  const [deliverableResult, pendingResult] = await Promise.all([
+    orderIds.length
+      ? supabase
+          .from('deliverables')
+          .select('id, clip_number, virality_grade, feedback, delivered_at, r2_key, filename, client_rating')
+          .in('order_id', orderIds)
+          .not('client_approved_at', 'is', null)
+          .order('delivered_at', { ascending: true })
+      : Promise.resolve({ data: [] }),
+    orderIds.length
+      ? supabase
+          .from('deliverables')
+          .select('id, clip_number, virality_grade, feedback, delivered_at, r2_key, filename')
+          .in('order_id', orderIds)
+          .not('approved_at', 'is', null)
+          .is('client_approved_at', null)
+          .is('revision_requested_at', null)
+          .order('delivered_at', { ascending: false })
+      : Promise.resolve({ data: [] }),
+  ])
 
   return (
     <div>
       <h1 className="text-xl font-semibold text-white mb-1">Meus Clipes</h1>
       <p className="text-zinc-400 text-sm mb-8">Todos os clipes entregues organizados por data.</p>
-      <MeusClipesClient deliverables={deliverables ?? []} />
+      <MeusClipesClient
+        deliverables={deliverableResult.data ?? []}
+        pendingApproval={pendingResult.data ?? []}
+      />
     </div>
   )
 }

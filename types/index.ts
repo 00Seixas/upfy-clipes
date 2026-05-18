@@ -10,12 +10,16 @@ export type ContentTone = 'engraçado' | 'educativo' | 'inspiracional' | 'polêm
 
 export type CTA = 'segue_la' | 'link_na_bio' | 'nenhum'
 
+export type TargetPlatform = 'tiktok' | 'instagram'
+
 export interface Briefing {
   tone: ContentTone
   music?: string
   cta: CTA
   editingStyle?: string
   notes?: string
+  openingHook?: string
+  platforms?: TargetPlatform[]
 }
 
 export interface User {

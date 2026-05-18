@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { analyzeVideoForClips } from '@/lib/claude/analyzer'
+import { fetchTranscript, transcriptToText } from '@/lib/youtube/transcript'
 
 const DEMO_MODE = !process.env.ANTHROPIC_API_KEY
 
@@ -10,7 +11,7 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { title, description, durationSeconds, viewCount, likeCount } = await req.json()
+  const { title, description, durationSeconds, viewCount, likeCount, videoId } = await req.json()
 
   if (!title) return NextResponse.json({ error: 'title required' }, { status: 400 })
 
@@ -31,7 +32,20 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const analysis = await analyzeVideoForClips({ title, description, durationSeconds, viewCount, likeCount })
+    // Attempt to fetch transcript when a videoId is provided
+    let transcriptText: string | null = null
+    if (videoId) {
+      const segments = await fetchTranscript(videoId as string)
+      if (segments) {
+        transcriptText = transcriptToText(segments)
+      }
+    }
+
+    const analysis = await analyzeVideoForClips(
+      { title, description, durationSeconds, viewCount, likeCount },
+      transcriptText
+    )
+
     return NextResponse.json(analysis)
   } catch (err) {
     return NextResponse.json(

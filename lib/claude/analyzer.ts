@@ -13,22 +13,90 @@ export type ClipAnalysis = {
   hookSuggestion: string
 }
 
+export type VideoAnalysis = ClipAnalysis & {
+  clipTimestamps?: { start: string; end: string; reason: string }[]
+  transcriptAnalyzed?: boolean
+}
+
 /**
  * Uses Claude to analyze a YouTube video and estimate how many clips
  * can be extracted and their viral potential.
+ * Optionally accepts a full transcript for timestamp-level clip suggestions.
  */
-export async function analyzeVideoForClips(video: {
-  title: string
-  description: string
-  durationSeconds: number
-  viewCount: number
-  likeCount: number
-}): Promise<ClipAnalysis> {
+export async function analyzeVideoForClips(
+  video: {
+    title: string
+    description: string
+    durationSeconds: number
+    viewCount: number
+    likeCount: number
+  },
+  transcript?: string | null
+): Promise<VideoAnalysis> {
   const durationMin = Math.round(video.durationSeconds / 60)
   const engagementRate = video.viewCount > 0
     ? ((video.likeCount / video.viewCount) * 100).toFixed(2)
     : '0'
 
+  // ── Transcript-aware prompt ────────────────────────────────────────────────
+  if (transcript) {
+    const prompt = `Você é um especialista em viralidade de conteúdo de vídeo curto. Analise esta transcrição e:
+
+1. Avalie o potencial viral geral (frio/morno/quente/viral)
+2. Identifique os 3-5 melhores momentos para clipar com timestamps
+3. Para cada clipe sugerido, explique o motivo (hook, surpresa, emoção, etc.)
+
+Critérios de viralidade que uso:
+- Hook forte nos primeiros 3s (faz o viewer parar o scroll)
+- Fator surpresa (info inesperada, posição contrária, dado chocante)
+- Ressonância emocional (luta, vitória, transformação)
+- Citabilidade (algo que alguém compartilharia como screenshot)
+- Autonomia do segmento (faz sentido sem contexto)
+
+Metadados do vídeo:
+Título: ${video.title}
+Duração: ${durationMin} minutos
+Views: ${video.viewCount.toLocaleString()}
+Likes: ${video.likeCount.toLocaleString()}
+Engajamento: ${engagementRate}%
+
+Transcrição:
+${transcript.slice(0, 8000)}
+
+Responda APENAS com um JSON válido neste formato exato:
+{
+  "estimatedClips": <número inteiro de 1 a 15>,
+  "viralPotential": "frio"|"morno"|"quente"|"viral",
+  "reason": "<análise em 1-2 frases>",
+  "suggestedAngles": ["<ângulo 1>", "<ângulo 2>", "<ângulo 3>"],
+  "bestMomentTypes": ["<tipo 1>", "<tipo 2>"],
+  "hookSuggestion": "<sugestão de hook de abertura para o clipe mais forte>",
+  "clipTimestamps": [
+    { "start": "0:32", "end": "1:15", "reason": "Hook forte + dado surpreendente" }
+  ],
+  "transcriptAnalyzed": true
+}`
+
+    try {
+      const message = await client.messages.create({
+        model: 'claude-3-haiku-20240307',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }],
+      })
+
+      const text = (message.content[0] as { text: string }).text.trim()
+      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      if (!jsonMatch) throw new Error('No JSON in response')
+
+      const result = JSON.parse(jsonMatch[0]) as VideoAnalysis
+      if (!result.estimatedClips || !result.viralPotential) throw new Error('Invalid response')
+      return result
+    } catch {
+      // Fall through to metadata-only analysis
+    }
+  }
+
+  // ── Metadata-only prompt ───────────────────────────────────────────────────
   const prompt = `Você é um especialista em criação de conteúdo para redes sociais e corte de vídeos longos em clipes virais.
 
 Analise este vídeo do YouTube e estime o potencial de clipes:
@@ -70,12 +138,10 @@ Critérios para viralPotential:
     })
 
     const text = (message.content[0] as { text: string }).text.trim()
-    // Extract JSON even if wrapped in markdown
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) throw new Error('No JSON in response')
 
-    const result = JSON.parse(jsonMatch[0]) as ClipAnalysis
-    // Validate required fields
+    const result = JSON.parse(jsonMatch[0]) as VideoAnalysis
     if (!result.estimatedClips || !result.viralPotential) throw new Error('Invalid response')
     return result
   } catch {
@@ -92,3 +158,6 @@ Critérios para viralPotential:
     }
   }
 }
+
+// Keep backward-compat export alias
+export { analyzeVideoForClips as analyzeVideo }

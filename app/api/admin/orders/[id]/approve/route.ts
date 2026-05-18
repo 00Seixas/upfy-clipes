@@ -47,7 +47,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   if (clientProfile?.whatsapp) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL
     const clipLink = `${appUrl}/meus-clipes`
-    const message = `Olá ${clientProfile.name}! Seu Clipe ${deliverable?.clip_number} tá pronto 🎬\nAcessa aqui pra visualizar e baixar:\n${clipLink}`
+    const message = `🎬 *Seu clipe está pronto!*\n\nO Clipe #${deliverable?.clip_number} foi aprovado pela nossa equipe e está aguardando sua aprovação final.\n\nAcesse a plataforma para assistir, aprovar ou solicitar revisão:\n${clipLink}`
 
     try {
       await sendWhatsappMessage(clientProfile.whatsapp, message)

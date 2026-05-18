@@ -2,7 +2,24 @@ export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import CalendarioClient from '@/components/calendario/calendario-client'
+import CalendarioClient from '@/components/cliente/calendario-client'
+
+interface ScheduledPost {
+  id: string
+  platform: 'tiktok' | 'instagram'
+  scheduled_at: string
+  caption: string | null
+  status: 'pending' | 'posted' | 'failed'
+  posted_at: string | null
+  deliverable_id: string | null
+  deliverables: { clip_number: number } | null
+}
+
+interface ApprovedClip {
+  id: string
+  clip_number: number
+  delivered_at: string
+}
 
 export default async function CalendarioPage() {
   const supabase = createClient()
@@ -11,7 +28,7 @@ export default async function CalendarioPage() {
 
   const userId = user?.id ?? ''
 
-  // 1. Get client's order IDs
+  // Get client's order IDs
   const { data: clientOrders } = await supabase
     .from('orders')
     .select('id')
@@ -19,21 +36,41 @@ export default async function CalendarioPage() {
 
   const orderIds = (clientOrders ?? []).map((o: { id: string }) => o.id)
 
-  // 2. Get approved deliverables for those orders
-  const { data: deliverables } = orderIds.length
-    ? await supabase
-        .from('deliverables')
-        .select('id, clip_number, delivered_at')
-        .in('order_id', orderIds)
-        .not('approved_at', 'is', null)
-        .order('delivered_at')
-    : { data: [] }
+  // Fetch scheduled posts and approved clips in parallel
+  const [scheduledResult, clipsResult] = await Promise.all([
+    supabase
+      .from('scheduled_posts')
+      .select(`
+        id,
+        platform,
+        scheduled_at,
+        caption,
+        status,
+        posted_at,
+        deliverable_id,
+        deliverables(clip_number)
+      `)
+      .eq('user_id', userId)
+      .order('scheduled_at', { ascending: true }),
+
+    orderIds.length
+      ? supabase
+          .from('deliverables')
+          .select('id, clip_number, delivered_at')
+          .in('order_id', orderIds)
+          .not('client_approved_at', 'is', null)
+          .order('delivered_at', { ascending: false })
+      : Promise.resolve({ data: [] }),
+  ])
+
+  const scheduledPosts = (scheduledResult.data ?? []) as unknown as ScheduledPost[]
+  const approvedClips = (clipsResult.data ?? []) as ApprovedClip[]
 
   return (
     <div>
       <h1 className="text-xl font-semibold text-white mb-1">Calendário</h1>
-      <p className="text-zinc-400 text-sm mb-8">Visualize seus dias de entrega.</p>
-      <CalendarioClient deliverables={deliverables ?? []} />
+      <p className="text-zinc-400 text-sm mb-8">Agende e visualize suas postagens.</p>
+      <CalendarioClient scheduledPosts={scheduledPosts} approvedClips={approvedClips} />
     </div>
   )
 }

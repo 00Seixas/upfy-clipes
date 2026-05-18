@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { ChevronRight, FolderOpen, Film, Download, ArrowLeft, Loader2, Play, CheckCircle2, XCircle } from 'lucide-react'
+import { ChevronRight, FolderOpen, Film, Download, ArrowLeft, Loader2, Play, CheckCircle2, XCircle, Check, RotateCcw } from 'lucide-react'
 import type { ViralityGrade } from '@/types'
 
 interface Deliverable {
@@ -11,6 +11,7 @@ interface Deliverable {
   delivered_at: string
   r2_key: string
   filename: string
+  client_rating?: number | null
 }
 
 interface SocialPlatformStatus {
@@ -34,6 +35,13 @@ const VIRALITY_CONFIG: Record<ViralityGrade, { label: string; color: string }> =
   viral:  { label: '🚀 Viral',  color: 'bg-green-950/40 text-green-300 border-green-800' },
 }
 
+const HASHTAG_GROUPS = [
+  '#shorts #viral',
+  '#marketing #negócios',
+  '#fitness #saúde',
+  '#motivação',
+]
+
 function groupByMonth(deliverables: Deliverable[]) {
   const months: Record<string, Deliverable[]> = {}
   for (const d of deliverables) {
@@ -48,7 +56,70 @@ function defaultCaption(clipNumber: number) {
   return `Clipe #${clipNumber} 🎬\n\n#shorts #viral #conteudo`
 }
 
-// Simple TikTok icon using SVG path
+// ─── Star Rating ──────────────────────────────────────────────────────────────
+
+interface StarRatingProps {
+  clipId: string
+  initialRating?: number | null
+}
+
+function StarRating({ clipId, initialRating }: StarRatingProps) {
+  const [rating, setRating] = useState<number>(initialRating ?? 0)
+  const [hover, setHover] = useState<number>(0)
+  const [saving, setSaving] = useState(false)
+  const [rated, setRated] = useState(!!initialRating)
+
+  async function handleRate(star: number) {
+    if (saving) return
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/clips/${clipId}/rate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating: star }),
+      })
+      const data = await res.json() as { success?: boolean; error?: string }
+      if (res.ok && data.success) {
+        setRating(star)
+        setRated(true)
+      }
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const display = hover || rating
+
+  return (
+    <div className="mb-4 flex items-center gap-3">
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map(star => (
+          <button
+            key={star}
+            type="button"
+            onClick={() => handleRate(star)}
+            onMouseEnter={() => setHover(star)}
+            onMouseLeave={() => setHover(0)}
+            disabled={saving}
+            className="text-xl leading-none transition-transform hover:scale-110 disabled:cursor-not-allowed"
+            aria-label={`Avaliar ${star} estrela${star > 1 ? 's' : ''}`}
+          >
+            <span className={star <= display ? 'text-amber-400' : 'text-zinc-700'}>
+              {star <= display ? '★' : '☆'}
+            </span>
+          </button>
+        ))}
+      </div>
+      {rated && (
+        <span className="text-xs text-amber-400/80 font-medium">Avaliado ✓</span>
+      )}
+      {saving && <Loader2 className="w-3.5 h-3.5 text-zinc-500 animate-spin" />}
+    </div>
+  )
+}
+
+// ─── Social Icons ─────────────────────────────────────────────────────────────
+
 function TikTokIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -57,7 +128,6 @@ function TikTokIcon({ className }: { className?: string }) {
   )
 }
 
-// Simple Instagram icon
 function InstagramIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" xmlns="http://www.w3.org/2000/svg">
@@ -67,6 +137,8 @@ function InstagramIcon({ className }: { className?: string }) {
     </svg>
   )
 }
+
+// ─── Social Panel ─────────────────────────────────────────────────────────────
 
 interface SocialPanelProps {
   clip: Deliverable
@@ -103,6 +175,13 @@ function SocialPanel({ clip, socialStatus, loadingSocial }: SocialPanelProps) {
     } finally {
       setPosting(p => ({ ...p, [platform]: false }))
     }
+  }
+
+  function appendHashtags(platform: 'tiktok' | 'instagram', tags: string) {
+    setCaptions(c => ({
+      ...c,
+      [platform]: c[platform].trimEnd() + '\n' + tags,
+    }))
   }
 
   if (loadingSocial) {
@@ -163,6 +242,20 @@ function SocialPanel({ clip, socialStatus, loadingSocial }: SocialPanelProps) {
                         placeholder="Legenda..."
                         disabled={isPosting}
                       />
+                      {/* Hashtag chips */}
+                      <div className="flex flex-wrap gap-1.5">
+                        {HASHTAG_GROUPS.map(group => (
+                          <button
+                            key={group}
+                            type="button"
+                            onClick={() => appendHashtags(key, group)}
+                            disabled={isPosting}
+                            className="text-[10px] text-zinc-600 border border-white/[0.05] px-2 py-1 rounded hover:border-white/[0.12] hover:text-zinc-400 transition-colors disabled:opacity-50"
+                          >
+                            {group}
+                          </button>
+                        ))}
+                      </div>
                       <button
                         onClick={() => handlePost(key)}
                         disabled={isPosting}
@@ -202,13 +295,201 @@ function SocialPanel({ clip, socialStatus, loadingSocial }: SocialPanelProps) {
   )
 }
 
-export default function MeusClipesClient({ deliverables }: { deliverables: Deliverable[] }) {
+// ─── Approval Actions Panel ───────────────────────────────────────────────────
+
+interface ApprovalActionsProps {
+  clip: Deliverable
+  onApproved: (id: string) => void
+  onRevision: (id: string) => void
+}
+
+function ApprovalActions({ clip, onApproved, onRevision }: ApprovalActionsProps) {
+  const [showRevision, setShowRevision] = useState(false)
+  const [revisionNotes, setRevisionNotes] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<'approved' | 'revision' | null>(null)
+
+  async function handleApprove() {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/clips/${clip.id}/client-approve`, { method: 'POST' })
+      const data = await res.json() as { success?: boolean; error?: string }
+      if (!res.ok || !data.success) {
+        setError(data.error ?? 'Erro ao aprovar')
+      } else {
+        setSuccess('approved')
+        setTimeout(() => onApproved(clip.id), 1200)
+      }
+    } catch {
+      setError('Erro de conexão')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleRevision() {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/clips/${clip.id}/revision`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: revisionNotes || null }),
+      })
+      const data = await res.json() as { success?: boolean; error?: string }
+      if (!res.ok || !data.success) {
+        setError(data.error ?? 'Erro ao solicitar revisão')
+      } else {
+        setSuccess('revision')
+        setTimeout(() => onRevision(clip.id), 1200)
+      }
+    } catch {
+      setError('Erro de conexão')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (success === 'approved') {
+    return (
+      <div className="mt-5 pt-5 border-t border-white/[0.06] flex items-center gap-2 text-green-400">
+        <CheckCircle2 className="w-4 h-4" />
+        <span className="text-sm font-medium">Clipe aprovado com sucesso!</span>
+      </div>
+    )
+  }
+
+  if (success === 'revision') {
+    return (
+      <div className="mt-5 pt-5 border-t border-white/[0.06] flex items-center gap-2 text-amber-400">
+        <RotateCcw className="w-4 h-4" />
+        <span className="text-sm font-medium">Revisão solicitada!</span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-5 pt-5 border-t border-white/[0.06]">
+      <p className="text-zinc-500 text-xs mb-4 font-medium uppercase tracking-wider">Aprovação Final</p>
+
+      {!showRevision ? (
+        <div className="flex gap-3">
+          <button
+            onClick={handleApprove}
+            disabled={loading}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-green-500/40 text-green-400 hover:bg-green-500/[0.08] hover:border-green-500/60 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+            Aprovar Clipe
+          </button>
+          <button
+            onClick={() => setShowRevision(true)}
+            disabled={loading}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-amber-500/40 text-amber-400 hover:bg-amber-500/[0.08] hover:border-amber-500/60 rounded-xl text-sm font-semibold transition-all disabled:opacity-50"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Pedir Revisão
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <textarea
+            value={revisionNotes}
+            onChange={e => setRevisionNotes(e.target.value)}
+            rows={3}
+            placeholder="Descreva o que precisa ser ajustado (opcional)..."
+            className="w-full bg-zinc-950 border border-amber-500/20 focus:border-amber-500/40 rounded-xl px-4 py-3 text-zinc-300 text-sm resize-none focus:outline-none placeholder-zinc-700 transition-colors"
+            disabled={loading}
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={() => { setShowRevision(false); setRevisionNotes('') }}
+              disabled={loading}
+              className="px-4 py-2 text-zinc-500 hover:text-zinc-300 text-sm transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleRevision}
+              disabled={loading}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-amber-500/40 text-amber-400 hover:bg-amber-500/[0.08] rounded-xl text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
+              Confirmar Revisão
+            </button>
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div className="mt-3 flex items-start gap-1.5 text-red-400 text-xs">
+          <XCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+          <span>{error}</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Pending Approval Card ────────────────────────────────────────────────────
+
+interface PendingCardProps {
+  clip: Deliverable
+  onOpen: (clip: Deliverable, mode: 'approval') => void
+}
+
+function PendingCard({ clip, onOpen }: PendingCardProps) {
+  const vConfig = VIRALITY_CONFIG[clip.virality_grade]
+  return (
+    <div className="bg-amber-500/[0.03] border border-amber-500/20 hover:border-amber-500/35 rounded-xl p-4 transition-all duration-200">
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-lg bg-amber-500/[0.08] border border-amber-500/20 flex items-center justify-center shrink-0">
+          <Film className="w-4 h-4 text-amber-400/70" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-zinc-200 text-sm font-semibold">Clipe #{clip.clip_number}</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${vConfig.color}`}>
+              {vConfig.label}
+            </span>
+          </div>
+          <p className="text-zinc-600 text-xs">
+            {new Date(clip.delivered_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+          </p>
+        </div>
+        <button
+          onClick={() => onOpen(clip, 'approval')}
+          className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/[0.12] hover:bg-amber-500/[0.2] border border-amber-500/30 hover:border-amber-500/50 text-amber-400 text-xs font-semibold rounded-lg transition-all"
+        >
+          <Play className="w-3 h-3" />
+          Assistir &amp; Aprovar
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
+type ViewMode = 'normal' | 'approval'
+
+export default function MeusClipesClient({
+  deliverables,
+  pendingApproval,
+}: {
+  deliverables: Deliverable[]
+  pendingApproval: Deliverable[]
+}) {
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null)
   const [selectedClip, setSelectedClip]   = useState<Deliverable | null>(null)
+  const [clipViewMode, setClipViewMode]   = useState<ViewMode>('normal')
   const [videoUrl, setVideoUrl]           = useState<string | null>(null)
   const [loadingVideo, setLoadingVideo]   = useState(false)
   const [socialStatus, setSocialStatus]   = useState<SocialStatus | null>(null)
   const [loadingSocial, setLoadingSocial] = useState(false)
+  const [pendingList, setPendingList]     = useState<Deliverable[]>(pendingApproval)
 
   useEffect(() => {
     if (!selectedClip) { setVideoUrl(null); return }
@@ -220,43 +501,54 @@ export default function MeusClipesClient({ deliverables }: { deliverables: Deliv
       .finally(() => setLoadingVideo(false))
   }, [selectedClip])
 
-  // Load social status when clip detail is opened
   useEffect(() => {
-    if (!selectedClip) return
+    if (!selectedClip || clipViewMode === 'approval') return
     setLoadingSocial(true)
     fetch('/api/social/status')
       .then(r => r.json())
       .then((data: SocialStatus) => setSocialStatus(data))
       .catch(() => setSocialStatus(null))
       .finally(() => setLoadingSocial(false))
-  }, [selectedClip])
+  }, [selectedClip, clipViewMode])
+
+  function openClip(clip: Deliverable, mode: ViewMode = 'normal') {
+    setSelectedClip(clip)
+    setClipViewMode(mode)
+    setSocialStatus(null)
+  }
+
+  function handleApproved(id: string) {
+    setPendingList(prev => prev.filter(c => c.id !== id))
+    setSelectedClip(null)
+  }
+
+  function handleRevision(id: string) {
+    setPendingList(prev => prev.filter(c => c.id !== id))
+    setSelectedClip(null)
+  }
 
   const grouped = groupByMonth(deliverables)
   const months  = Object.keys(grouped)
 
-  if (deliverables.length === 0) {
-    return (
-      <div className="text-center py-20">
-        <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto mb-4">
-          <Film className="w-6 h-6 text-zinc-600" />
-        </div>
-        <p className="text-zinc-400 font-medium">Nenhum clipe entregue ainda</p>
-        <p className="text-zinc-600 text-sm mt-1">Seus clipes aparecem aqui depois de aprovados.</p>
-      </div>
-    )
-  }
-
-  // Clip detail view
+  // ── Clip detail view ──
   if (selectedClip) {
     const vConfig = VIRALITY_CONFIG[selectedClip.virality_grade]
+    const isApprovalMode = clipViewMode === 'approval'
     return (
       <div>
         <button
-          onClick={() => setSelectedClip(null)}
+          onClick={() => { setSelectedClip(null); setClipViewMode('normal') }}
           className="flex items-center gap-1.5 text-zinc-400 hover:text-white text-sm mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Voltar
         </button>
+
+        {isApprovalMode && (
+          <div className="mb-4 flex items-center gap-2 px-4 py-2 bg-amber-500/[0.06] border border-amber-500/20 rounded-xl">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
+            <span className="text-amber-400 text-xs font-medium">Aguardando sua aprovação</span>
+          </div>
+        )}
 
         <div className="bg-[#111113] border border-zinc-800 rounded-xl overflow-hidden">
           {/* Video player */}
@@ -294,6 +586,11 @@ export default function MeusClipesClient({ deliverables }: { deliverables: Deliv
               </div>
             )}
 
+            {/* Star Rating — only in normal mode */}
+            {!isApprovalMode && (
+              <StarRating clipId={selectedClip.id} initialRating={selectedClip.client_rating} />
+            )}
+
             <div className="flex items-center justify-between">
               <p className="text-zinc-600 text-xs">
                 {new Date(selectedClip.delivered_at).toLocaleDateString('pt-BR', {
@@ -309,19 +606,27 @@ export default function MeusClipesClient({ deliverables }: { deliverables: Deliv
               </a>
             </div>
 
-            {/* Social posting section */}
-            <SocialPanel
-              clip={selectedClip}
-              socialStatus={socialStatus}
-              loadingSocial={loadingSocial}
-            />
+            {/* Approval actions OR social panel */}
+            {isApprovalMode ? (
+              <ApprovalActions
+                clip={selectedClip}
+                onApproved={handleApproved}
+                onRevision={handleRevision}
+              />
+            ) : (
+              <SocialPanel
+                clip={selectedClip}
+                socialStatus={socialStatus}
+                loadingSocial={loadingSocial}
+              />
+            )}
           </div>
         </div>
       </div>
     )
   }
 
-  // Month view (shows clips directly)
+  // ── Month view ──
   if (selectedMonth) {
     const clips = grouped[selectedMonth]
     return (
@@ -339,7 +644,7 @@ export default function MeusClipesClient({ deliverables }: { deliverables: Deliv
             return (
               <button
                 key={clip.id}
-                onClick={() => setSelectedClip(clip)}
+                onClick={() => openClip(clip, 'normal')}
                 className="w-full flex items-center gap-3 p-4 bg-[#111113] border border-zinc-800 rounded-xl hover:border-zinc-600 transition-colors text-left"
               >
                 <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
@@ -363,26 +668,67 @@ export default function MeusClipesClient({ deliverables }: { deliverables: Deliv
     )
   }
 
-  // Root: months
+  // ── Root: Para Aprovar + months ──
   return (
-    <div className="space-y-2">
-      {months.map(month => {
-        const count = grouped[month].length
-        return (
-          <button
-            key={month}
-            onClick={() => setSelectedMonth(month)}
-            className="w-full flex items-center gap-3 p-4 bg-[#111113] border border-zinc-800 rounded-xl hover:border-zinc-600 transition-colors text-left"
-          >
-            <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
-              <FolderOpen className="w-4 h-4 text-zinc-500" />
-            </div>
-            <span className="text-white text-sm flex-1 capitalize">{month}</span>
-            <span className="text-zinc-500 text-xs">{count} clipe{count !== 1 ? 's' : ''}</span>
-            <ChevronRight className="w-4 h-4 text-zinc-600" />
-          </button>
-        )
-      })}
+    <div className="space-y-6">
+      {/* PARA APROVAR section */}
+      {pendingList.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+            <p className="text-zinc-300 text-sm font-semibold">Para Aprovar</p>
+            <span className="text-[10px] font-bold text-amber-500/80 bg-amber-500/[0.08] border border-amber-500/20 px-1.5 py-0.5 rounded-full">
+              {pendingList.length}
+            </span>
+          </div>
+          <div className="space-y-2">
+            {pendingList.map(clip => (
+              <PendingCard key={clip.id} clip={clip} onOpen={openClip} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Divider when both sections exist */}
+      {pendingList.length > 0 && deliverables.length > 0 && (
+        <div className="border-t border-white/[0.04]" />
+      )}
+
+      {/* Month browser */}
+      {deliverables.length === 0 && pendingList.length === 0 ? (
+        <div className="text-center py-20">
+          <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto mb-4">
+            <Film className="w-6 h-6 text-zinc-600" />
+          </div>
+          <p className="text-zinc-400 font-medium">Nenhum clipe entregue ainda</p>
+          <p className="text-zinc-600 text-sm mt-1">Seus clipes aparecem aqui depois de aprovados.</p>
+        </div>
+      ) : deliverables.length > 0 ? (
+        <div>
+          {pendingList.length > 0 && (
+            <p className="text-zinc-600 text-xs uppercase tracking-[0.15em] font-bold mb-3">Aprovados</p>
+          )}
+          <div className="space-y-2">
+            {months.map(month => {
+              const count = grouped[month].length
+              return (
+                <button
+                  key={month}
+                  onClick={() => setSelectedMonth(month)}
+                  className="w-full flex items-center gap-3 p-4 bg-[#111113] border border-zinc-800 rounded-xl hover:border-zinc-600 transition-colors text-left"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                    <FolderOpen className="w-4 h-4 text-zinc-500" />
+                  </div>
+                  <span className="text-white text-sm flex-1 capitalize">{month}</span>
+                  <span className="text-zinc-500 text-xs">{count} clipe{count !== 1 ? 's' : ''}</span>
+                  <ChevronRight className="w-4 h-4 text-zinc-600" />
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

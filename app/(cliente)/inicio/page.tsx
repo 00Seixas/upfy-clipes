@@ -128,7 +128,7 @@ export default async function InicioPage() {
   const active    = (allOrders ?? []).filter((o: { status: string }) => !['entregue','publicado','cancelado'].includes(o.status))
 
   const { data: rawClips } = orderIds.length
-    ? await supabase.from('deliverables').select('id, clip_number, delivered_at, virality_grade').in('order_id', orderIds).not('approved_at', 'is', null).order('delivered_at', { ascending: false })
+    ? await supabase.from('deliverables').select('id, clip_number, delivered_at, virality_grade').in('order_id', orderIds).not('client_approved_at', 'is', null).order('delivered_at', { ascending: false })
     : { data: [] }
 
   const clips       = (rawClips ?? []) as { id: string; clip_number: number; delivered_at: string; virality_grade: string }[]

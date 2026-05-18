@@ -2,13 +2,14 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Inbox, Play, CheckCircle, Wallet, LogOut, Menu, X, Zap, ChevronRight } from 'lucide-react'
+import { Inbox, Play, CheckCircle, Wallet, LogOut, Menu, X, Zap, ChevronRight, BarChart2 } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { href: '/fila',          icon: Inbox,        label: 'Fila de Pedidos' },
-  { href: '/em-andamento',  icon: Play,         label: 'Em Andamento'    },
-  { href: '/entregues',     icon: CheckCircle,  label: 'Entregues'       },
-  { href: '/carteira',      icon: Wallet,       label: 'Carteira'        },
+  { href: '/fila',            icon: Inbox,        label: 'Fila de Pedidos'  },
+  { href: '/em-andamento',    icon: Play,         label: 'Em Andamento'     },
+  { href: '/entregues',       icon: CheckCircle,  label: 'Entregues'        },
+  { href: '/carteira',        icon: Wallet,       label: 'Carteira'         },
+  { href: '/meu-desempenho',  icon: BarChart2,    label: 'Meu Desempenho'   },
 ]
 
 function NavLink({ href, label, icon: Icon, onClick }: {

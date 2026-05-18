@@ -83,7 +83,7 @@ export default async function AnalyticsPage() {
   const orderIds = (clientOrders ?? []).map((o: { id: string }) => o.id)
 
   const { data: clips } = orderIds.length
-    ? await supabase.from('deliverables').select('id, virality_grade, delivered_at').in('order_id', orderIds).not('approved_at', 'is', null).order('delivered_at', { ascending: false })
+    ? await supabase.from('deliverables').select('id, virality_grade, delivered_at').in('order_id', orderIds).not('client_approved_at', 'is', null).order('delivered_at', { ascending: false })
     : { data: [] }
 
   const allClips = clips ?? []
