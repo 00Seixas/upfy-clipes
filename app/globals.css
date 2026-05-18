@@ -88,3 +88,30 @@
     box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
   }
 }
+
+/* ── PREMIUM ANIMATIONS ── */
+@keyframes viral-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(124,58,237,0.5), 0 0 20px rgba(236,72,153,0.25); }
+  50%       { box-shadow: 0 0 18px rgba(124,58,237,0.9), 0 0 40px rgba(236,72,153,0.5); }
+}
+@keyframes quente-pulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(220,38,38,0.4); }
+  50%       { box-shadow: 0 0 16px rgba(220,38,38,0.8), 0 0 4px rgba(251,146,60,0.4); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-viral-pulse  { animation: viral-pulse  1.8s ease-in-out infinite; }
+.animate-quente-pulse { animation: quente-pulse 1.5s ease-in-out infinite; }
+.animate-fade-up      { animation: fade-up      0.4s ease-out forwards; }
+.glass-card {
+  background: rgba(8,8,9,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.06);
+}

@@ -3,21 +3,54 @@ export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Film, Plus } from 'lucide-react'
+import { Film, Plus, ArrowRight } from 'lucide-react'
 
-const VIRALITY_CONFIG = {
-  frio:   { label: 'Frio',   cssColor: '#3B82F6', bgCss: 'rgba(59,130,246,.12)',  borderCss: 'rgba(59,130,246,.3)',  potencial: 25000,   views: 8000   },
-  morno:  { label: 'Morno',  cssColor: '#8B5CF6', bgCss: 'rgba(139,92,246,.12)', borderCss: 'rgba(139,92,246,.3)', potencial: 150000,  views: 50000  },
-  quente: { label: 'Quente', cssColor: '#F97316', bgCss: 'rgba(249,115,22,.12)', borderCss: 'rgba(249,115,22,.3)', potencial: 600000,  views: 250000 },
-  viral:  { label: 'Viral',  cssColor: '#EF4444', bgCss: 'rgba(239,68,68,.15)',  borderCss: 'rgba(239,68,68,.4)',  potencial: 2000000, views: 800000 },
+const VIRAL_SYSTEM = {
+  frio:   { label: 'FRIO',   segments: 3,  color: '#1d4ed8', gradient: false, glow: null,                     textColor: '#3b82f6', potencial: 25000,   views: 8000   },
+  morno:  { label: 'MORNO',  segments: 6,  color: '#d97706', gradient: false, glow: 'rgba(217,119,6,0.35)',    textColor: '#f59e0b', potencial: 150000,  views: 50000  },
+  quente: { label: 'QUENTE', segments: 8,  color: '#dc2626', gradient: false, glow: 'rgba(220,38,38,0.5)',     textColor: '#ef4444', potencial: 600000,  views: 250000 },
+  viral:  { label: 'VIRAL',  segments: 10, color: '',        gradient: true,  glow: 'rgba(124,58,237,0.6)',    textColor: '#a78bfa', potencial: 2000000, views: 800000 },
 } as const
 
-type VGrade = keyof typeof VIRALITY_CONFIG
+type VGrade = keyof typeof VIRAL_SYSTEM
 
 function fmtViews(n: number) {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
-  if (n >= 1_000)     return `${Math.round(n / 1000)}K`
+  if (n >= 1_000) return `${Math.round(n / 1000)}K`
   return String(n)
+}
+
+function EnergyBar({ grade, size = 'md' }: { grade: VGrade; size?: 'sm' | 'md' }) {
+  const cfg = VIRAL_SYSTEM[grade]
+  const total = 10
+  const barH = size === 'sm' ? 10 : 14
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex gap-[3px] items-end">
+        {Array.from({ length: total }).map((_, i) => {
+          const active = i < cfg.segments
+          const h = size === 'sm' ? barH : barH + i * 1
+          return (
+            <div
+              key={i}
+              className={`w-[5px] rounded-sm ${cfg.glow && active && grade === 'quente' ? 'animate-quente-pulse' : ''} ${cfg.glow && active && grade === 'viral' ? 'animate-viral-pulse' : ''}`}
+              style={{
+                height: `${h}px`,
+                background: active
+                  ? cfg.gradient ? 'linear-gradient(to top, #7c3aed, #ec4899)' : cfg.color
+                  : 'rgba(255,255,255,0.04)',
+                boxShadow: active && cfg.glow ? `0 0 6px ${cfg.glow}` : 'none',
+              }}
+            />
+          )
+        })}
+      </div>
+      <span className="text-[10px] font-black tracking-[0.15em]" style={{ color: cfg.textColor }}>
+        {cfg.label}
+      </span>
+    </div>
+  )
 }
 
 export default async function CofrePage() {
@@ -30,167 +63,115 @@ export default async function CofrePage() {
   const orderIds = (clientOrders ?? []).map((o: { id: string }) => o.id)
 
   const { data: clips } = orderIds.length
-    ? await supabase.from('deliverables')
-        .select('id, clip_number, virality_grade, feedback, delivered_at, filename')
-        .in('order_id', orderIds)
-        .not('approved_at', 'is', null)
-        .order('delivered_at', { ascending: false })
+    ? await supabase.from('deliverables').select('id, clip_number, virality_grade, feedback, delivered_at').in('order_id', orderIds).not('approved_at', 'is', null).order('delivered_at', { ascending: false })
     : { data: [] }
 
   const allClips = clips ?? []
-
   const totalPotencial = allClips.reduce((sum: number, c: { virality_grade: string }) => {
-    const cfg = VIRALITY_CONFIG[c.virality_grade as VGrade] ?? VIRALITY_CONFIG.frio
-    return sum + cfg.potencial
+    return sum + (VIRAL_SYSTEM[c.virality_grade as VGrade]?.potencial ?? 25000)
   }, 0)
-
-  const oportunidades = allClips.filter((c: { virality_grade: string }) =>
-    ['quente', 'viral'].includes(c.virality_grade)
-  ).length
-
-  const dist = Object.fromEntries(
-    Object.keys(VIRALITY_CONFIG).map(k => [
-      k, allClips.filter((c: { virality_grade: string }) => c.virality_grade === k).length
-    ])
-  )
+  const oportunidades = allClips.filter((c: { virality_grade: string }) => ['quente','viral'].includes(c.virality_grade)).length
+  const dist = Object.fromEntries(Object.keys(VIRAL_SYSTEM).map(k => [k, allClips.filter((c: { virality_grade: string }) => c.virality_grade === k).length]))
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-8 pb-16">
 
-      {/* Vault CTA */}
-      <div className="relative bg-[#08080A] border border-[#252530] rounded-xl p-7 overflow-hidden">
-        <div className="absolute top-[-60px] right-[-60px] w-[220px] h-[220px] rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(255,255,255,.025) 0%, transparent 70%)' }}
-        />
-        <div className="relative">
-          <p className="text-[.68rem] font-bold uppercase tracking-[.12em] text-[#7A7A8A] mb-4 flex items-center gap-2">
-            <span className="inline-block w-4 h-px bg-[#4A4A54]" />
-            Cofre de Views
+      {/* CINEMATIC HERO */}
+      <div className="relative overflow-hidden rounded-2xl">
+        <div className="absolute inset-0 bg-[#080809]" />
+        <div className="absolute inset-0 opacity-40" style={{ background: 'radial-gradient(ellipse at 15% 50%, rgba(124,58,237,0.18) 0%, transparent 55%), radial-gradient(ellipse at 85% 50%, rgba(59,130,246,0.1) 0%, transparent 55%)' }} />
+        <div className="absolute inset-0 border border-white/[0.06] rounded-2xl" />
+        <div className="relative px-8 py-12">
+          <p className="text-zinc-600 text-[10px] uppercase tracking-[0.2em] mb-8 flex items-center gap-3">
+            <span className="inline-block w-6 h-px bg-zinc-800" />
+            Scanner de Oportunidades Virais
           </p>
-          <h1 className="text-4xl font-black text-[#F0F0F2] mb-2 tracking-tight leading-none">
-            {fmtViews(totalPotencial)}
-          </h1>
-          <p className="text-[#7A7A8A] text-sm mb-1">views potenciais identificadas</p>
-          <p className="text-[#4A4A54] text-xs mb-6">
-            {allClips.length} clipes analisados · {oportunidades} oportunidades de alto impacto
-          </p>
-
-          {/* Metrics row */}
-          <div className="flex gap-0 mb-6 border border-[#1A1A1F] rounded-lg overflow-hidden w-fit">
-            {(Object.entries(VIRALITY_CONFIG) as [VGrade, typeof VIRALITY_CONFIG[VGrade]][]).map(([key, cfg]) => (
-              <div key={key} className="px-5 py-3 border-r border-[#1A1A1F] last:border-r-0 text-center">
-                <span className="block text-lg font-black mb-0.5" style={{ color: cfg.cssColor }}>
-                  {dist[key] ?? 0}
-                </span>
-                <span className="text-[.65rem] text-[#4A4A54] font-semibold uppercase tracking-[.06em]">{cfg.label}</span>
+          <div className="flex items-end justify-between gap-8 mb-8">
+            <div>
+              <div className="text-6xl md:text-8xl font-black tracking-tight leading-none text-white mb-3" style={{ textShadow: '0 0 80px rgba(255,255,255,0.08)' }}>
+                {fmtViews(totalPotencial)}
               </div>
-            ))}
+              <p className="text-zinc-400 text-lg font-medium">views identificadas nos seus clipes</p>
+              <p className="text-zinc-700 text-sm mt-1.5">{allClips.length} clipes analisados · {oportunidades} de alto impacto</p>
+            </div>
+            <div className="hidden md:flex flex-col gap-3 shrink-0">
+              {(Object.entries(VIRAL_SYSTEM) as [VGrade, typeof VIRAL_SYSTEM[VGrade]][]).map(([key]) => (
+                <div key={key} className="flex items-center gap-3">
+                  <span className="text-zinc-700 text-xs w-5 text-right font-mono">{dist[key] ?? 0}</span>
+                  <EnergyBar grade={key} />
+                </div>
+              ))}
+            </div>
           </div>
-
           <div className="flex items-center gap-3">
-            <Link
-              href="/enviar-videos"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#F0F0F2] hover:bg-white text-black font-semibold rounded-lg transition-colors text-sm"
-            >
-              <Plus className="w-4 h-4" /> Pedir novo clipe
+            <Link href="/enviar-videos" className="inline-flex items-center gap-2 px-6 py-3 bg-white hover:bg-zinc-100 text-black font-bold text-sm rounded-xl transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+              <Plus className="w-4 h-4" /> CLIPE AGORA
             </Link>
-            <Link
-              href="/meu-youtube"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-transparent border border-[#252530] hover:border-[rgba(255,255,255,.2)] text-[#7A7A8A] hover:text-[#F0F0F2] font-semibold rounded-lg transition-colors text-sm"
-            >
-              Ver Meu YouTube
+            <Link href="/meu-youtube" className="inline-flex items-center gap-2 px-5 py-3 border border-white/[0.1] hover:border-white/[0.2] text-zinc-400 hover:text-zinc-200 text-sm font-medium rounded-xl transition-all">
+              Meu YouTube <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Clips list */}
+      {/* MOBILE ENERGY BARS */}
+      <div className="md:hidden bg-[#080809] border border-white/[0.06] rounded-xl p-5">
+        <p className="text-zinc-700 text-[9px] uppercase tracking-[0.15em] font-bold mb-4">Energia viral</p>
+        <div className="grid grid-cols-2 gap-4">
+          {(Object.entries(VIRAL_SYSTEM) as [VGrade, typeof VIRAL_SYSTEM[VGrade]][]).map(([key]) => (
+            <div key={key} className="flex flex-col gap-2">
+              <span className="text-zinc-400 text-sm font-bold">{dist[key] ?? 0} clipes</span>
+              <EnergyBar grade={key} size="sm" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* CLIPS */}
       {allClips.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-12 h-12 rounded-xl bg-[#0E0E11] border border-[#1A1A1F] flex items-center justify-center mx-auto mb-4">
-            <Film className="w-5 h-5 text-[#4A4A54]" />
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-white/[0.06] flex items-center justify-center mx-auto mb-5">
+            <Film className="w-7 h-7 text-zinc-700" />
           </div>
-          <p className="text-[#7A7A8A] font-semibold text-sm">Cofre ainda vazio</p>
-          <p className="text-[#4A4A54] text-xs mt-1 mb-6 max-w-xs leading-relaxed">
-            Envie vídeos e seus clipes aparecem aqui com o potencial de views calculado.
-          </p>
-          <Link
-            href="/enviar-videos"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#F0F0F2] hover:bg-white text-black text-sm font-semibold rounded-lg transition-colors"
-          >
+          <p className="text-zinc-400 font-semibold mb-2">Cofre ainda vazio</p>
+          <p className="text-zinc-700 text-sm max-w-xs mx-auto leading-relaxed mb-6">Envie vídeos e seus clipes aparecem aqui com o potencial de views calculado.</p>
+          <Link href="/enviar-videos" className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black font-bold text-sm rounded-xl hover:bg-zinc-100 transition-colors">
             <Plus className="w-4 h-4" /> Pedir primeiro clipe
           </Link>
         </div>
       ) : (
         <div className="space-y-3">
-          <p className="text-[.7rem] font-bold text-[#4A4A54] uppercase tracking-widest">Seus clipes — potencial de views</p>
-
-          {allClips.map((clip: { id: string; clip_number: number; virality_grade: string; feedback: string; delivered_at: string; filename: string }) => {
-            const cfg = VIRALITY_CONFIG[clip.virality_grade as VGrade] ?? VIRALITY_CONFIG.frio
-            const barWidth = clip.virality_grade === 'viral' ? '90%' : clip.virality_grade === 'quente' ? '70%' : clip.virality_grade === 'morno' ? '45%' : '20%'
-
+          <p className="text-zinc-700 text-[9px] uppercase tracking-[0.15em] font-bold">Seus ativos — {allClips.length} clipes</p>
+          {allClips.map((clip: { id: string; clip_number: number; virality_grade: string; feedback: string; delivered_at: string }) => {
+            const grade = (clip.virality_grade in VIRAL_SYSTEM ? clip.virality_grade : 'frio') as VGrade
+            const cfg = VIRAL_SYSTEM[grade]
             return (
-              <div key={clip.id} className="bg-[#08080A] border border-[#1A1A1F] rounded-xl p-5 hover:border-[#252530] transition-colors">
+              <div key={clip.id} className="bg-[#080809] border border-white/[0.06] hover:border-white/[0.1] rounded-xl p-5 transition-all duration-200"
+                style={cfg.glow ? { boxShadow: `0 0 40px rgba(${grade === 'viral' ? '124,58,237' : grade === 'quente' ? '220,38,38' : grade === 'morno' ? '217,119,6' : '29,78,216'},0.04)` } : {}}>
                 <div className="flex items-start gap-4">
-                  {/* Icon */}
-                  <div className="w-9 h-9 rounded-lg bg-[#0E0E11] border border-[#1A1A1F] flex items-center justify-center shrink-0 mt-0.5">
-                    <Film className="w-4 h-4 text-[#4A4A54]" />
+                  <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-white/[0.05] flex items-center justify-center shrink-0">
+                    <Film className="w-4 h-4 text-zinc-600" />
                   </div>
-
-                  {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[#F0F0F2] text-sm font-semibold">Clipe #{clip.clip_number}</span>
-                      <span
-                        className="text-xs px-2.5 py-0.5 rounded-full font-bold border"
-                        style={{ color: cfg.cssColor, background: cfg.bgCss, borderColor: cfg.borderCss }}
-                      >
-                        {cfg.label}
-                      </span>
+                    <div className="flex items-center justify-between gap-4 mb-3">
+                      <span className="text-zinc-200 text-sm font-semibold">Clipe #{clip.clip_number}</span>
+                      <span className="text-zinc-700 text-xs">{new Date(clip.delivered_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                     </div>
-                    {clip.feedback && (
-                      <p className="text-[#4A4A54] text-xs leading-relaxed line-clamp-2">{clip.feedback}</p>
-                    )}
-                    <p className="text-[#252530] text-xs mt-1">
-                      {new Date(clip.delivered_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
-                    </p>
+                    <div className="mb-3"><EnergyBar grade={grade} /></div>
+                    {clip.feedback && <p className="text-zinc-600 text-xs leading-relaxed line-clamp-2 mb-3">{clip.feedback}</p>}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-xl font-black tracking-tight" style={{ color: cfg.textColor }}>{fmtViews(cfg.potencial)}</span>
+                        <span className="text-zinc-700 text-xs ml-1.5">views potenciais</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <a href={`/api/clips/${clip.id}/download`} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-zinc-100 text-black text-xs font-semibold rounded-lg transition-colors">Baixar</a>
+                        <Link href="/enviar-videos" className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-white/[0.08] hover:border-white/[0.15] text-zinc-500 hover:text-zinc-300 text-xs font-semibold rounded-lg transition-colors">
+                          <Plus className="w-3 h-3" /> Similar
+                        </Link>
+                      </div>
+                    </div>
                   </div>
-
-                  {/* Potential */}
-                  <div className="text-right shrink-0">
-                    <p className="text-lg font-black" style={{ color: cfg.cssColor }}>{fmtViews(cfg.potencial)}</p>
-                    <p className="text-[#4A4A54] text-xs">views potenciais</p>
-                  </div>
-                </div>
-
-                {/* Bar */}
-                <div className="mt-4">
-                  <div className="flex justify-between text-xs text-[#4A4A54] mb-1.5">
-                    <span>Estimativa de alcance</span>
-                    <span>{fmtViews(cfg.views)} – {fmtViews(cfg.potencial)}</span>
-                  </div>
-                  <div className="w-full bg-[#0E0E11] rounded-full h-1">
-                    <div
-                      className="h-1 rounded-full transition-all"
-                      style={{ width: barWidth, background: cfg.cssColor, opacity: 0.6 }}
-                    />
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="mt-4 flex gap-2">
-                  <a
-                    href={`/api/clips/${clip.id}/download`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#F0F0F2] hover:bg-white text-black text-xs font-semibold rounded-lg transition-colors"
-                  >
-                    Baixar clipe
-                  </a>
-                  <Link
-                    href="/enviar-videos"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-[#252530] hover:border-[rgba(255,255,255,.2)] text-[#7A7A8A] hover:text-[#F0F0F2] text-xs font-semibold rounded-lg transition-colors"
-                  >
-                    <Plus className="w-3 h-3" /> Criar similar
-                  </Link>
                 </div>
               </div>
             )
