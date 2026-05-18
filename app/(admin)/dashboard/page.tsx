@@ -28,6 +28,7 @@ export default async function AdminDashboardPage() {
     editorsRes,
     onlineEditorsRes,
     recentLogsRes,
+    clipsAwaitingClientRes,
   ] = await Promise.all([
     svc.from('orders').select('id', { count: 'exact', head: true }).not('status', 'in', `(${TERMINAL.join(',')})`),
     svc.from('orders').select('id', { count: 'exact', head: true }).in('status', EDITING),
@@ -43,6 +44,11 @@ export default async function AdminDashboardPage() {
       .select('id, action, entity_type, actor_name, actor_role, created_at')
       .order('created_at', { ascending: false })
       .limit(10),
+    svc.from('deliverables')
+      .select('id', { count: 'exact', head: true })
+      .not('approved_at', 'is', null)
+      .is('client_approved_at', null)
+      .is('revision_requested_at', null),
   ])
 
   // Avg delivery hours (last 30 days)
@@ -127,16 +133,17 @@ export default async function AdminDashboardPage() {
   return (
     <DashboardMaster
       metrics={{
-        activeOrders:     activeRes.count     ?? 0,
-        overdueOrders:    overdueCount,
-        inEditing:        editingRes.count    ?? 0,
-        inReview:         reviewRes.count     ?? 0,
-        deliveredToday:   deliveredTodayRes.count ?? 0,
+        activeOrders:        activeRes.count         ?? 0,
+        overdueOrders:       overdueCount,
+        inEditing:           editingRes.count        ?? 0,
+        inReview:            reviewRes.count         ?? 0,
+        deliveredToday:      deliveredTodayRes.count ?? 0,
         avgDeliveryHours,
-        pendingRevisions: revisionRes.count   ?? 0,
-        activeClients:    clientsRes.count    ?? 0,
-        totalEditors:     editorsRes.count    ?? 0,
-        editorsOnline:    onlineSet.size,
+        pendingRevisions:    revisionRes.count       ?? 0,
+        activeClients:       clientsRes.count        ?? 0,
+        totalEditors:        editorsRes.count        ?? 0,
+        editorsOnline:       onlineSet.size,
+        clipsAwaitingClient: clipsAwaitingClientRes.count ?? 0,
       }}
       criticalOrders={criticalOrders}
       recentActivity={((recentLogsRes.data ?? []) as RawLog[]).map((l) => ({

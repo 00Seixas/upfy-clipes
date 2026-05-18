@@ -1,11 +1,14 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   Activity, AlertTriangle, CheckCircle2, Clock, Film,
   TrendingUp, Users, Zap, RefreshCw, ArrowRight,
-  Timer, Eye, AlertCircle,
+  Timer, Eye, AlertCircle, Radio,
 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 
 interface CriticalOrder {
   id:          string
@@ -32,22 +35,37 @@ interface RecentActivity {
 }
 
 interface DashboardMetrics {
-  activeOrders:     number
-  overdueOrders:    number
-  inEditing:        number
-  inReview:         number
-  deliveredToday:   number
-  avgDeliveryHours: number
-  pendingRevisions: number
-  activeClients:    number
-  totalEditors:     number
-  editorsOnline:    number
+  activeOrders:        number
+  overdueOrders:       number
+  inEditing:           number
+  inReview:            number
+  deliveredToday:      number
+  avgDeliveryHours:    number
+  pendingRevisions:    number
+  activeClients:       number
+  totalEditors:        number
+  editorsOnline:       number
+  clipsAwaitingClient: number
 }
 
 interface DashboardMasterProps {
   metrics:        DashboardMetrics
   criticalOrders: CriticalOrder[]
   recentActivity: RecentActivity[]
+}
+
+interface OnlineEditor {
+  userId:   string
+  userName: string
+  onlineAt: string
+}
+
+interface LiveEvent {
+  id:         string
+  eventType:  'INSERT' | 'UPDATE' | string
+  table:      string
+  payload:    Record<string, unknown>
+  receivedAt: Date
 }
 
 const ACTION_LABELS: Record<string, string> = {
@@ -75,15 +93,32 @@ const PRIORITY_LABELS: Record<string, string> = {
   low: 'Baixa', normal: 'Normal', high: 'Alta', critical: 'Crítica',
 }
 
-function timeAgo(date: string): string {
+function timeAgo(date: string | Date): string {
   const diff  = Date.now() - new Date(date).getTime()
   const mins  = Math.floor(diff / 60_000)
   const hours = Math.floor(diff / 3_600_000)
   const days  = Math.floor(diff / 86_400_000)
   if (days  > 0) return `${days}d atrás`
   if (hours > 0) return `${hours}h atrás`
-  if (mins  > 0) return `${mins}min atrás`
+  if (mins  > 0) return `${mins}min`
   return 'agora'
+}
+
+function eventLabel(table: string, eventType: string): string {
+  if (table === 'orders') {
+    return eventType === 'INSERT' ? 'Nova ordem' : 'Status atualizado'
+  }
+  if (table === 'deliverables') {
+    return eventType === 'INSERT' ? 'Clipe entregue' : 'Clipe atualizado'
+  }
+  return eventType === 'INSERT' ? 'Novo registro' : 'Registro atualizado'
+}
+
+function onlineForLabel(onlineAt: string): string {
+  const diff = Date.now() - new Date(onlineAt).getTime()
+  const mins = Math.floor(diff / 60_000)
+  if (mins < 1) return 'online agora'
+  return `online há ${mins}min`
 }
 
 function MetricCard({
@@ -131,11 +166,83 @@ export default function DashboardMaster({
   criticalOrders: initialCritical,
   recentActivity: initialActivity,
 }: DashboardMasterProps) {
+  const router = useRouter()
   const [metrics,        setMetrics]        = useState(initialMetrics)
   const [criticalOrders, setCriticalOrders] = useState(initialCritical)
   const [recentActivity, setRecentActivity] = useState(initialActivity)
   const [refreshing,     setRefreshing]     = useState(false)
   const [lastUpdated,    setLastUpdated]    = useState(new Date())
+  const [isLive,         setIsLive]         = useState(false)
+  const [liveEvents,     setLiveEvents]     = useState<LiveEvent[]>([])
+  const [newEventCount,  setNewEventCount]  = useState(0)
+  const [onlineEditors,  setOnlineEditors]  = useState<OnlineEditor[]>([])
+
+  const addLiveEvent = useCallback((
+    table: string,
+    payload: RealtimePostgresChangesPayload<Record<string, unknown>>,
+  ) => {
+    const event: LiveEvent = {
+      id:         `${table}-${Date.now()}-${Math.random()}`,
+      eventType:  payload.eventType,
+      table,
+      payload:    (payload.new ?? payload.old ?? {}) as Record<string, unknown>,
+      receivedAt: new Date(),
+    }
+    setLiveEvents((prev) => [event, ...prev].slice(0, 20))
+    setNewEventCount((prev) => prev + 1)
+  }, [])
+
+  // Supabase Realtime subscriptions
+  useEffect(() => {
+    const supabase = createClient()
+
+    const dbChannel = supabase
+      .channel('dashboard-db-changes')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'orders' },
+        (payload) => addLiveEvent('orders', payload),
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'orders' },
+        (payload) => addLiveEvent('orders', payload),
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'deliverables' },
+        (payload) => addLiveEvent('deliverables', payload),
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'deliverables' },
+        (payload) => addLiveEvent('deliverables', payload),
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') setIsLive(true)
+        if (status === 'CLOSED' || status === 'CHANNEL_ERROR') setIsLive(false)
+      })
+
+    const presenceChannel = supabase
+      .channel('editor-presence')
+      .on('presence', { event: 'sync' }, () => {
+        const state = presenceChannel.presenceState() as Record<string, { userId: string; userName: string; onlineAt: string }[]>
+        const editors: OnlineEditor[] = Object.values(state).flatMap((presences) =>
+          presences.map((p) => ({
+            userId:   p.userId,
+            userName: p.userName,
+            onlineAt: p.onlineAt,
+          }))
+        )
+        setOnlineEditors(editors)
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(dbChannel)
+      supabase.removeChannel(presenceChannel)
+    }
+  }, [addLiveEvent])
 
   async function refresh() {
     setRefreshing(true)
@@ -151,11 +258,19 @@ export default function DashboardMaster({
     }
   }
 
+  function handleServerRefresh() {
+    router.refresh()
+    setLastUpdated(new Date())
+    setNewEventCount(0)
+  }
+
   // Auto-refresh every 60 seconds
   useEffect(() => {
     const t = setInterval(refresh, 60_000)
     return () => clearInterval(t)
   }, [])
+
+  const visibleEvents = liveEvents.slice(0, 10)
 
   return (
     <div className="space-y-8">
@@ -167,14 +282,26 @@ export default function DashboardMaster({
             Central de controle — atualizado {lastUpdated.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
           </p>
         </div>
-        <button
-          onClick={refresh}
-          disabled={refreshing}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800/60 border border-zinc-700/60 text-zinc-400 hover:text-white hover:border-zinc-600 transition-all text-sm disabled:opacity-50"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-          Atualizar
-        </button>
+        <div className="flex items-center gap-3">
+          {/* LIVE indicator */}
+          {isLive && (
+            <div className="flex items-center gap-1.5">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+              </span>
+              <span className="text-green-400 text-xs font-semibold tracking-wide">AO VIVO</span>
+            </div>
+          )}
+          {/* Refresh (server data) */}
+          <button
+            onClick={handleServerRefresh}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800/60 border border-zinc-700/60 text-zinc-400 hover:text-white hover:border-zinc-600 transition-all text-sm"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Atualizar
+          </button>
+        </div>
       </div>
 
       {/* Metrics Grid */}
@@ -230,6 +357,14 @@ export default function DashboardMaster({
           sub="online / total"
           icon={Zap}
           color="violet"
+        />
+        <MetricCard
+          label="Aguard. Cliente"
+          value={metrics.clipsAwaitingClient}
+          sub="aprovação pendente"
+          icon={Clock}
+          color={metrics.clipsAwaitingClient > 0 ? 'amber' : 'zinc'}
+          alert={metrics.clipsAwaitingClient > 0}
         />
       </div>
 
@@ -322,9 +457,16 @@ export default function DashboardMaster({
 
         {/* Recent Activity */}
         <div>
-          <div className="flex items-center gap-2 mb-4">
-            <Clock className="w-4 h-4 text-zinc-500" />
-            <h2 className="text-white font-semibold text-sm">Atividade Recente</h2>
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-zinc-500" />
+              <h2 className="text-white font-semibold text-sm">Atividade Recente</h2>
+            </div>
+            {newEventCount > 0 && (
+              <span className="text-xs px-1.5 py-0.5 rounded bg-green-950/40 border border-green-800/50 text-green-400 animate-pulse">
+                {newEventCount} novo{newEventCount !== 1 ? 's' : ''} evento{newEventCount !== 1 ? 's' : ''}
+              </span>
+            )}
           </div>
 
           {recentActivity.length === 0 ? (
@@ -375,6 +517,88 @@ export default function DashboardMaster({
               <p className="text-zinc-500 text-xs">Editores</p>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Online Editors + Live Events — bottom row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Online Editors */}
+        <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/30 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Users className="w-4 h-4 text-zinc-500" />
+            <h2 className="text-white font-semibold text-sm">Editores Online</h2>
+            {onlineEditors.length > 0 && (
+              <span className="text-xs px-1.5 py-0.5 rounded bg-green-950/40 border border-green-800/50 text-green-400">
+                {onlineEditors.length}
+              </span>
+            )}
+          </div>
+
+          {onlineEditors.length === 0 ? (
+            <p className="text-zinc-500 text-xs">Nenhum editor online agora</p>
+          ) : (
+            <div className="space-y-2.5">
+              {onlineEditors.map((editor) => (
+                <div key={editor.userId} className="flex items-center gap-2.5">
+                  <span className="relative flex h-2 w-2 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                  </span>
+                  <span className="text-zinc-300 text-sm font-medium">{editor.userName}</span>
+                  <span className="text-zinc-600 text-xs">—</span>
+                  <span className="text-zinc-500 text-xs">{onlineForLabel(editor.onlineAt)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Live Events Feed */}
+        <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/30 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Radio className="w-4 h-4 text-zinc-500" />
+              <h2 className="text-white font-semibold text-sm">Pulso em Tempo Real</h2>
+            </div>
+            {liveEvents.length > 0 && (
+              <span className="text-zinc-500 text-xs">
+                {liveEvents.length} evento{liveEvents.length !== 1 ? 's' : ''} capturado{liveEvents.length !== 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+
+          {visibleEvents.length === 0 ? (
+            <p className="text-zinc-600 text-xs">
+              {isLive ? 'Aguardando eventos...' : 'Conectando ao Realtime...'}
+            </p>
+          ) : (
+            <div className="space-y-1.5">
+              {visibleEvents.map((event) => (
+                <div
+                  key={event.id}
+                  className="flex items-start gap-3 px-3 py-2 rounded-lg bg-zinc-800/20 animate-in fade-in duration-300"
+                >
+                  <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${
+                    event.eventType === 'INSERT' ? 'bg-green-500' : 'bg-zinc-500'
+                  }`} />
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-xs font-medium leading-snug ${
+                      event.eventType === 'INSERT' ? 'text-green-400' : 'text-zinc-400'
+                    }`}>
+                      {eventLabel(event.table, event.eventType)}
+                    </p>
+                    <p className="text-zinc-600 text-[11px] mt-0.5 truncate">
+                      tabela: {event.table}
+                      {typeof event.payload.id === 'string' && ` · ${event.payload.id.slice(0, 8)}…`}
+                    </p>
+                  </div>
+                  <span className="text-zinc-600 text-[11px] shrink-0 mt-0.5 tabular-nums">
+                    {timeAgo(event.receivedAt)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
