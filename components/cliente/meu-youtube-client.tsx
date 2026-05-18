@@ -1,7 +1,7 @@
 'use client'
 import { useState, useRef } from 'react'
 import {
-  Youtube, Search, Loader2, Play, Download, Plus, Zap,
+  Youtube, Search, Loader2, Play, Plus,
   Eye, ThumbsUp, Clock, ChevronDown, ChevronUp,
   Sparkles, X, CheckCircle, ExternalLink,
 } from 'lucide-react'
@@ -28,10 +28,10 @@ type ClipAnalysis = {
 }
 
 const VIRAL_CONFIG = {
-  frio:   { label: '❄️ Frio',   color: 'text-zinc-400',   bg: 'bg-zinc-800/60 border-zinc-700/40'   },
-  morno:  { label: '🌤 Morno',  color: 'text-amber-400',  bg: 'bg-amber-950/40 border-amber-800/30' },
-  quente: { label: '🔥 Quente', color: 'text-orange-400', bg: 'bg-orange-950/40 border-orange-700/30'},
-  viral:  { label: '🚀 Viral',  color: 'text-green-400',  bg: 'bg-green-950/40 border-green-700/30' },
+  frio:   { label: 'Frio',   cssColor: '#3B82F6', bgCss: 'rgba(59,130,246,.12)',  borderCss: 'rgba(59,130,246,.3)'  },
+  morno:  { label: 'Morno',  cssColor: '#8B5CF6', bgCss: 'rgba(139,92,246,.12)', borderCss: 'rgba(139,92,246,.3)' },
+  quente: { label: 'Quente', cssColor: '#F97316', bgCss: 'rgba(249,115,22,.12)', borderCss: 'rgba(249,115,22,.3)' },
+  viral:  { label: 'Viral',  cssColor: '#EF4444', bgCss: 'rgba(239,68,68,.15)',  borderCss: 'rgba(239,68,68,.4)'  },
 }
 
 function fmtCount(n: number) {
@@ -53,7 +53,7 @@ function timeAgo(iso: string) {
   return `${mo} ${mo===1?'mês':'meses'} atrás`
 }
 
-function VideoCard({ video, onRequestClips }: { video: YTVideo; onRequestClips: (v: YTVideo) => void }) {
+function VideoCard({ video }: { video: YTVideo }) {
   const [analysis, setAnalysis]   = useState<ClipAnalysis | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [expanded, setExpanded]   = useState(false)
@@ -115,30 +115,32 @@ function VideoCard({ video, onRequestClips }: { video: YTVideo; onRequestClips: 
   const vCfg = analysis ? VIRAL_CONFIG[analysis.viralPotential] : null
 
   return (
-    <div className="bg-[#111113] border border-zinc-800/60 rounded-xl overflow-hidden hover:border-zinc-700/60 transition-colors">
+    <div className="bg-[#0E0E11] border border-[#1A1A1F] rounded-xl overflow-hidden hover:border-[#252530] transition-colors">
       {/* Thumbnail */}
-      <div className="relative aspect-video bg-zinc-900">
-        {video.thumbnail
-          ? <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />
-          : <div className="w-full h-full flex items-center justify-center"><Play className="w-8 h-8 text-zinc-700" /></div>
-        }
-        <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-mono">
+      <div className="relative" style={{ aspectRatio: '16/9' }}>
+        <div className="w-full h-full bg-[#141418] flex items-center justify-center">
+          {video.thumbnail
+            ? <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />
+            : <Play className="w-8 h-8 text-[#252530]" />
+          }
+        </div>
+        <div className="absolute bottom-2 right-2 bg-black/80 text-[#F0F0F2] text-xs px-1.5 py-0.5 rounded font-mono">
           {fmtDur(video.durationSeconds)}
         </div>
         <a
           href={video.url} target="_blank" rel="noopener noreferrer"
-          className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/40 transition-opacity"
+          className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/50 transition-opacity"
         >
-          <div className="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center">
-            <Play className="w-5 h-5 text-white fill-white" />
+          <div className="w-11 h-11 rounded-full bg-[#F0F0F2] flex items-center justify-center">
+            <Play className="w-5 h-5 text-black fill-black ml-0.5" />
           </div>
         </a>
       </div>
 
       {/* Info */}
       <div className="p-4">
-        <h3 className="text-white text-sm font-semibold line-clamp-2 mb-2">{video.title}</h3>
-        <div className="flex items-center gap-3 text-xs text-zinc-500 mb-3">
+        <h3 className="text-[#F0F0F2] text-sm font-semibold line-clamp-2 mb-2 leading-snug">{video.title}</h3>
+        <div className="flex items-center gap-3 text-xs text-[#4A4A54] mb-3">
           <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{fmtCount(video.viewCount)}</span>
           <span className="flex items-center gap-1"><ThumbsUp className="w-3 h-3" />{fmtCount(video.likeCount)}</span>
           <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{timeAgo(video.publishedAt)}</span>
@@ -146,28 +148,36 @@ function VideoCard({ video, onRequestClips }: { video: YTVideo; onRequestClips: 
 
         {/* Analysis result */}
         {analysis && expanded && (
-          <div className="mb-3 space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className={`text-xs px-2 py-0.5 rounded-full border ${vCfg?.bg} ${vCfg?.color}`}>
-                  {vCfg?.label}
-                </span>
-                <span className="text-white font-bold text-sm">{analysis.estimatedClips} clipes</span>
-              </div>
-              {analysis.demo && <span className="text-zinc-700 text-[10px]">demo</span>}
-            </div>
-            <p className="text-zinc-500 text-xs leading-relaxed">{analysis.reason}</p>
-
-            <div className="bg-zinc-900/60 border border-zinc-800/40 rounded-lg p-3 space-y-2">
-              <p className="text-[10px] uppercase tracking-wider text-zinc-600">Hook sugerido</p>
-              <p className="text-zinc-300 text-xs italic">"{analysis.hookSuggestion}"</p>
+          <div className="mb-3 space-y-2.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span
+                className="text-xs px-2.5 py-0.5 rounded-full font-bold border"
+                style={{ color: vCfg?.cssColor, background: vCfg?.bgCss, borderColor: vCfg?.borderCss }}
+              >
+                {vCfg?.label}
+              </span>
+              <span className="text-[#F0F0F2] font-bold text-sm">{analysis.estimatedClips} clipes estimados</span>
+              {analysis.demo && <span className="text-[#252530] text-[10px]">demo</span>}
             </div>
 
+            <p className="text-[#4A4A54] text-xs leading-relaxed">{analysis.reason}</p>
+
+            {/* Hook */}
+            <div className="bg-[#08080A] border-l-[3px] border-[#252530] rounded-r-lg p-3">
+              <p className="text-[10px] uppercase tracking-widest text-[#4A4A54] font-bold mb-1.5">Hook sugerido</p>
+              <p className="text-[#7A7A8A] text-xs italic leading-relaxed">"{analysis.hookSuggestion}"</p>
+            </div>
+
+            {/* Angles */}
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-zinc-600 mb-1.5">Ângulos identificados</p>
+              <p className="text-[10px] uppercase tracking-widest text-[#4A4A54] font-bold mb-1.5">Ângulos identificados</p>
               <div className="flex flex-wrap gap-1.5">
                 {analysis.suggestedAngles.map((a, i) => (
-                  <span key={i} className="text-xs bg-zinc-800/60 text-zinc-400 px-2 py-0.5 rounded-full border border-zinc-700/40">
+                  <span
+                    key={i}
+                    className="text-xs px-2 py-0.5 rounded-full border text-[#7A7A8A]"
+                    style={{ background: '#141418', borderColor: '#252530' }}
+                  >
                     {a}
                   </span>
                 ))}
@@ -176,11 +186,11 @@ function VideoCard({ video, onRequestClips }: { video: YTVideo; onRequestClips: 
           </div>
         )}
 
-        {/* Analyzing state */}
+        {/* Analyzing */}
         {analyzing && (
-          <div className="mb-3 flex items-center gap-2 text-violet-400 text-xs">
+          <div className="mb-3 flex items-center gap-2 text-[#7A7A8A] text-xs">
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            <span>Claude analisando o vídeo...</span>
+            <span>Analisando o vídeo...</span>
           </div>
         )}
 
@@ -189,7 +199,7 @@ function VideoCard({ video, onRequestClips }: { video: YTVideo; onRequestClips: 
           {!analysis && !analyzing && (
             <button
               onClick={analyze}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-violet-900/40 hover:bg-violet-800/40 border border-violet-700/30 text-violet-300 text-xs font-medium rounded-lg transition-colors"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-[#141418] hover:bg-[#1A1A1F] border border-[#252530] hover:border-[rgba(255,255,255,.15)] text-[#7A7A8A] hover:text-[#F0F0F2] text-xs font-semibold rounded-lg transition-colors"
             >
               <Sparkles className="w-3.5 h-3.5" /> Analisar com IA
             </button>
@@ -199,18 +209,18 @@ function VideoCard({ video, onRequestClips }: { video: YTVideo; onRequestClips: 
             <button
               onClick={requestClips}
               disabled={ordering}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-[#F0F0F2] hover:bg-white text-black text-xs font-bold rounded-lg transition-colors disabled:opacity-40"
             >
               {ordering
                 ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                : <Zap className="w-3.5 h-3.5" />
+                : <Plus className="w-3.5 h-3.5" />
               }
               Pedir {analysis.estimatedClips} clipes
             </button>
           )}
 
           {ordered && (
-            <div className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-emerald-950/40 border border-emerald-700/30 text-emerald-400 text-xs font-medium rounded-lg">
+            <div className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-[#0E0E11] border border-[#252530] text-[#7A7A8A] text-xs font-semibold rounded-lg">
               <CheckCircle className="w-3.5 h-3.5" /> Pedido enviado!
             </div>
           )}
@@ -218,7 +228,7 @@ function VideoCard({ video, onRequestClips }: { video: YTVideo; onRequestClips: 
           {analysis && (
             <button
               onClick={() => setExpanded(e => !e)}
-              className="px-2.5 py-2 bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-400 rounded-lg transition-colors"
+              className="px-2.5 py-2 bg-[#141418] hover:bg-[#1A1A1F] border border-[#252530] text-[#4A4A54] hover:text-[#7A7A8A] rounded-lg transition-colors"
             >
               {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </button>
@@ -226,7 +236,7 @@ function VideoCard({ video, onRequestClips }: { video: YTVideo; onRequestClips: 
 
           <a
             href={video.url} target="_blank" rel="noopener noreferrer"
-            className="px-2.5 py-2 bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-400 rounded-lg transition-colors"
+            className="px-2.5 py-2 bg-[#141418] hover:bg-[#1A1A1F] border border-[#252530] text-[#4A4A54] hover:text-[#7A7A8A] rounded-lg transition-colors"
           >
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
@@ -241,12 +251,12 @@ export default function MeuYouTubeClient({
 }: {
   savedChannel: { id: string; handle: string; title: string } | null
 }) {
-  const [input, setInput]       = useState(savedChannel?.handle ?? '')
-  const [loading, setLoading]   = useState(false)
-  const [error, setError]       = useState<string | null>(null)
-  const [channel, setChannel]   = useState<YTChannel | null>(null)
-  const [videos, setVideos]     = useState<YTVideo[]>([])
-  const [isDemo, setIsDemo]     = useState(false)
+  const [input, setInput]     = useState(savedChannel?.handle ?? '')
+  const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState<string | null>(null)
+  const [channel, setChannel] = useState<YTChannel | null>(null)
+  const [videos, setVideos]   = useState<YTVideo[]>([])
+  const [isDemo, setIsDemo]   = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   async function connect() {
@@ -261,7 +271,6 @@ export default function MeuYouTubeClient({
       setVideos(data.videos)
       setIsDemo(!!data.demo)
 
-      // Save to profile (silently)
       if (!data.demo) {
         fetch('/api/youtube/channel', {
           method: 'POST',
@@ -287,54 +296,69 @@ export default function MeuYouTubeClient({
     setError(null)
   }
 
-  // Connected view
+  // ── Connected ──────────────────────────────────────────────────────────────
   if (channel) {
     return (
       <div className="space-y-6 pb-12">
+
         {/* Channel header */}
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            {channel.thumbnail
-              ? <img src={channel.thumbnail} alt={channel.title} className="w-10 h-10 rounded-full border border-zinc-700" />
-              : <div className="w-10 h-10 rounded-full bg-red-900/40 border border-red-800/30 flex items-center justify-center"><Youtube className="w-5 h-5 text-red-500" /></div>
-            }
-            <div>
-              <h1 className="text-white font-bold text-lg">{channel.title}</h1>
-              <div className="flex items-center gap-3 text-xs text-zinc-500">
-                <span>{channel.handle}</span>
-                <span>{fmtCount(channel.subscriberCount)} inscritos</span>
-                <span>{channel.videoCount} vídeos</span>
-                {isDemo && <span className="text-violet-500 bg-violet-950/40 px-2 py-0.5 rounded-full border border-violet-800/30">modo demo</span>}
+        <div className="bg-[#08080A] border border-[#1A1A1F] rounded-xl p-5">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              {channel.thumbnail
+                ? <img src={channel.thumbnail} alt={channel.title} className="w-11 h-11 rounded-full border border-[#252530]" />
+                : (
+                  <div className="w-11 h-11 rounded-full bg-[#0E0E11] border border-[#1A1A1F] flex items-center justify-center">
+                    <Youtube className="w-5 h-5 text-[#4A4A54]" />
+                  </div>
+                )
+              }
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-[#F0F0F2] font-bold text-base">{channel.title}</h1>
+                  {isDemo && (
+                    <span className="text-[10px] text-[#4A4A54] bg-[#0E0E11] border border-[#1A1A1F] px-2 py-0.5 rounded font-semibold">demo</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-3 text-xs text-[#4A4A54] mt-0.5">
+                  <span>{channel.handle}</span>
+                  <span className="text-[#252530]">·</span>
+                  <span>{fmtCount(channel.subscriberCount)} inscritos</span>
+                  <span className="text-[#252530]">·</span>
+                  <span>{channel.videoCount} vídeos</span>
+                </div>
               </div>
             </div>
+
+            <button
+              onClick={disconnect}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-[#252530] hover:border-[rgba(255,255,255,.2)] text-[#4A4A54] hover:text-[#F0F0F2] text-xs font-semibold rounded-lg transition-colors"
+            >
+              <X className="w-3.5 h-3.5" /> Trocar canal
+            </button>
           </div>
-          <button
-            onClick={disconnect}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-400 hover:text-zinc-200 text-xs rounded-lg transition-colors border border-zinc-700/40"
-          >
-            <X className="w-3.5 h-3.5" /> Trocar canal
-          </button>
         </div>
 
         {/* Tip */}
-        <div className="flex items-start gap-3 bg-violet-950/20 border border-violet-800/20 rounded-xl px-4 py-3">
-          <Sparkles className="w-4 h-4 text-violet-400 mt-0.5 shrink-0" />
-          <p className="text-zinc-400 text-xs leading-relaxed">
-            Clique em <span className="text-violet-300 font-medium">Analisar com IA</span> em qualquer vídeo para ver quantos clipes são possíveis e o potencial viral. Depois clique em <span className="text-violet-300 font-medium">Pedir clipes</span> para enviar para produção.
+        <div className="flex items-start gap-3 bg-[#08080A] border border-[#1A1A1F] rounded-xl px-4 py-3">
+          <Sparkles className="w-4 h-4 text-[#4A4A54] mt-0.5 shrink-0" />
+          <p className="text-[#4A4A54] text-xs leading-relaxed">
+            Clique em <span className="text-[#7A7A8A] font-semibold">Analisar com IA</span> em qualquer vídeo para ver quantos clipes são possíveis e o potencial viral.
+            Depois clique em <span className="text-[#7A7A8A] font-semibold">Pedir clipes</span> para enviar para produção.
           </p>
         </div>
 
         {/* Videos grid */}
         <div>
-          <p className="text-zinc-400 text-xs uppercase tracking-widest font-semibold mb-3">
-            Vídeos mais recentes
+          <p className="text-[.7rem] font-bold text-[#4A4A54] uppercase tracking-widest mb-3">
+            Vídeos mais recentes — {videos.length} encontrados
           </p>
           {videos.length === 0 ? (
-            <div className="text-center py-12 text-zinc-600">Nenhum vídeo encontrado</div>
+            <div className="text-center py-12 text-[#4A4A54] text-sm">Nenhum vídeo encontrado</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {videos.map(v => (
-                <VideoCard key={v.id} video={v} onRequestClips={() => {}} />
+                <VideoCard key={v.id} video={v} />
               ))}
             </div>
           )}
@@ -343,42 +367,43 @@ export default function MeuYouTubeClient({
     )
   }
 
-  // Connect view
+  // ── Connect form ───────────────────────────────────────────────────────────
   return (
     <div className="space-y-6 pb-12">
+
+      {/* Header */}
       <div>
-        <h1 className="text-xl font-bold text-white">Meu YouTube</h1>
-        <p className="text-zinc-500 text-sm mt-0.5">
-          Conecte seu canal, analise seus vídeos com IA e peça clipes diretamente.
+        <h1 className="text-2xl font-black text-[#F0F0F2] mb-1 tracking-tight">Meu YouTube</h1>
+        <p className="text-[#4A4A54] text-sm">
+          Conecte seu canal para ver seus vídeos e usar IA para estimar os melhores clipes.
         </p>
       </div>
 
-      {/* Connect form */}
-      <div className="bg-[#111113] border border-zinc-800/60 rounded-2xl p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-red-950/40 border border-red-800/30 flex items-center justify-center">
-            <Youtube className="w-5 h-5 text-red-500" />
+      {/* Connect card */}
+      <div className="bg-[#08080A] border border-[#1A1A1F] rounded-xl p-6">
+        <div className="flex items-center gap-2 mb-5">
+          <div className="w-8 h-8 rounded-lg bg-[#0E0E11] border border-[#1A1A1F] flex items-center justify-center">
+            <Youtube className="w-4 h-4 text-[#4A4A54]" />
           </div>
           <div>
-            <p className="text-white font-semibold">Conectar canal</p>
-            <p className="text-zinc-500 text-xs">Cole o link ou @handle do seu canal</p>
+            <p className="text-[#F0F0F2] text-sm font-semibold">Conectar canal</p>
+            <p className="text-[#4A4A54] text-xs">Cole o link ou handle do seu canal</p>
           </div>
         </div>
 
         <div className="flex gap-2">
           <input
             ref={inputRef}
-            type="text"
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && connect()}
-            placeholder="@seucanal ou youtube.com/channel/..."
-            className="flex-1 bg-zinc-900/60 border border-zinc-700/60 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/60 transition-colors"
+            placeholder="@seucanal ou youtube.com/c/seucanal"
+            className="flex-1 px-3 py-2.5 bg-[#0E0E11] border border-[#252530] text-[#F0F0F2] placeholder-[#4A4A54] text-sm rounded-lg outline-none focus:border-[rgba(255,255,255,.2)] transition-colors"
           />
           <button
             onClick={connect}
             disabled={loading || !input.trim()}
-            className="flex items-center gap-2 px-5 py-3 bg-violet-600 hover:bg-violet-500 text-white font-semibold text-sm rounded-xl transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#F0F0F2] hover:bg-white text-black text-sm font-bold rounded-lg transition-colors disabled:opacity-40"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
             {loading ? 'Buscando...' : 'Conectar'}
@@ -386,42 +411,28 @@ export default function MeuYouTubeClient({
         </div>
 
         {error && (
-          <p className="mt-3 text-red-400 text-xs bg-red-950/30 border border-red-800/30 rounded-lg px-3 py-2">
-            {error}
-          </p>
+          <p className="mt-3 text-xs text-[#EF4444]">{error}</p>
         )}
+
+        <p className="mt-3 text-[10px] text-[#252530] leading-relaxed">
+          Exemplos: @meucanal · youtube.com/@meucanal · youtube.com/c/meucanal · youtube.com/channel/UCxxx
+        </p>
       </div>
 
-      {/* How it works */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* What you get */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {[
-          { icon: Youtube,   color: 'text-red-400',    bg: 'bg-red-950/30 border-red-800/20',    step: '01', title: 'Conecte seu canal',     desc: 'Cole o link ou @handle do seu YouTube' },
-          { icon: Sparkles,  color: 'text-violet-400', bg: 'bg-violet-950/30 border-violet-800/20',step:'02', title: 'IA analisa seus vídeos', desc: 'Claude estima quantos clipes e o potencial viral' },
-          { icon: Zap,       color: 'text-amber-400',  bg: 'bg-amber-950/30 border-amber-800/20', step: '03', title: 'Peça os clipes',          desc: 'Um clique e vai pra fila de produção' },
-        ].map(({ icon: Icon, color, bg, step, title, desc }) => (
-          <div key={step} className={`border rounded-xl p-5 ${bg}`}>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-zinc-700 text-xs font-mono">{step}</span>
-              <Icon className={`w-4 h-4 ${color}`} />
-            </div>
-            <p className="text-white text-sm font-semibold mb-1">{title}</p>
-            <p className="text-zinc-500 text-xs leading-relaxed">{desc}</p>
+          { label: 'Vídeos detectados', desc: 'Visualize todos os vídeos do seu canal em um só lugar.' },
+          { label: 'Análise com IA', desc: 'Claude estima quantos clipes cada vídeo pode gerar e o potencial viral.' },
+          { label: 'Pedir clipes', desc: 'Com 1 clique envie o vídeo para a fila de produção da UPFY.' },
+        ].map((item, i) => (
+          <div key={i} className="bg-[#08080A] border border-[#1A1A1F] rounded-xl p-4">
+            <p className="text-[#7A7A8A] text-[10px] font-bold uppercase tracking-widest mb-1">{String(i+1).padStart(2,'0')}</p>
+            <p className="text-[#F0F0F2] text-sm font-semibold mb-1">{item.label}</p>
+            <p className="text-[#4A4A54] text-xs leading-relaxed">{item.desc}</p>
           </div>
         ))}
       </div>
-
-      {/* No API key notice */}
-      {!process.env.NEXT_PUBLIC_YOUTUBE_CONFIGURED && (
-        <div className="bg-amber-950/20 border border-amber-800/20 rounded-xl px-4 py-3">
-          <p className="text-amber-400 text-xs font-semibold mb-1">⚙️ Configuração necessária</p>
-          <p className="text-zinc-500 text-xs leading-relaxed">
-            Adicione <code className="text-zinc-300 bg-zinc-800 px-1 rounded">YOUTUBE_API_KEY</code> e{' '}
-            <code className="text-zinc-300 bg-zinc-800 px-1 rounded">ANTHROPIC_API_KEY</code> no{' '}
-            <code className="text-zinc-300 bg-zinc-800 px-1 rounded">.env.local</code> para ativar.
-            Enquanto isso, funciona em modo demo.
-          </p>
-        </div>
-      )}
     </div>
   )
 }
