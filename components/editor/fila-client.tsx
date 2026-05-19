@@ -226,9 +226,12 @@ export default function FilaClient({ orders, revisionOrders, editorId: _editorId
         const isOpen = expanded === order.id
         const viralPotential = getViralPotential(briefing)
 
-        // Parse platforms from comma-separated string
-        const platforms: string[] = briefing.platforms
-          ? briefing.platforms.split(',').map((p: string) => p.trim()).filter(Boolean)
+        // Parse platforms — stored as array or comma-separated string
+        const rawPlatforms = briefing.platforms
+        const platforms: string[] = Array.isArray(rawPlatforms)
+          ? rawPlatforms.map((p: unknown) => String(p).trim()).filter(Boolean)
+          : typeof rawPlatforms === 'string' && rawPlatforms
+          ? rawPlatforms.split(',').map((p: string) => p.trim()).filter(Boolean)
           : []
 
         return (
