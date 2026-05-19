@@ -55,10 +55,13 @@ function oldestAge(orders: OrderInQueue[]): string {
 
 type ViralPotential = 'alto' | 'medio' | null
 
-function getViralPotential(briefing: Record<string, string>): ViralPotential {
-  const platforms = briefing.platforms ?? ''
-  const hasTikTok = platforms.toLowerCase().includes('tiktok')
-  const hasHook = !!briefing.openingHook?.trim()
+function getViralPotential(briefing: Record<string, unknown>): ViralPotential {
+  const platforms = briefing.platforms
+  const platformStr = Array.isArray(platforms)
+    ? platforms.join(',')
+    : typeof platforms === 'string' ? platforms : ''
+  const hasTikTok = platformStr.toLowerCase().includes('tiktok')
+  const hasHook = !!String(briefing.openingHook ?? '').trim()
   if (hasTikTok && hasHook) return 'alto'
   if (hasHook) return 'medio'
   return null
