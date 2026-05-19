@@ -46,7 +46,8 @@ function isAdminPath(pathname: string): boolean {
     pathname.startsWith('/logs') ||
     pathname.startsWith('/financeiro') ||
     pathname.startsWith('/configuracoes') ||
-    pathname.startsWith('/aprovacao')
+    pathname.startsWith('/aprovacao') ||
+    pathname.startsWith('/sla')
   )
 }
 

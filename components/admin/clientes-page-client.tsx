@@ -3,9 +3,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Plus, X, ChevronRight } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 
 type ContractStatus = 'ativo' | 'encerrando' | 'aguardando_renovacao' | 'encerrado'
 
@@ -143,54 +140,58 @@ export default function ClientesClient({ initialClients }: { initialClients: Cli
               key={opt.value}
               onClick={() => setFilter(opt.value)}
               className={`px-3 py-1.5 rounded-lg text-xs transition-colors ${
-                filter === opt.value ? 'bg-white text-black font-medium' : 'text-zinc-400 hover:text-white bg-zinc-800/50 hover:bg-zinc-800'
+                filter === opt.value ? 'bg-white text-black font-medium' : 'text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.03] border border-white/[0.06]'
               }`}
             >
               {opt.label}
             </button>
           ))}
         </div>
-        <Button onClick={() => setShowForm(true)} className="bg-white text-black hover:bg-zinc-100 text-sm h-8">
-          <Plus className="w-3.5 h-3.5 mr-1.5" />
+        <button
+          onClick={() => setShowForm(true)}
+          className="flex items-center gap-1.5 bg-white text-black hover:bg-zinc-100 text-sm px-3 h-8 rounded-lg font-medium transition-colors"
+        >
+          <Plus className="w-3.5 h-3.5" />
           Novo cliente
-        </Button>
+        </button>
       </div>
 
       {filteredClients.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-zinc-500 text-sm">Nenhum cliente encontrado.</p>
+          <p className="text-zinc-600 text-sm">Nenhum cliente encontrado.</p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {filteredClients.map(client => {
+        <div className="rounded-xl border border-white/[0.06] overflow-hidden">
+          {filteredClients.map((client, idx) => {
             const contract = client.client_contracts[0]
             const status = contract?.status ?? 'encerrado'
             const sConfig = STATUS_CONFIG[status as ContractStatus]
             const daysLeft = contract
               ? Math.max(0, Math.ceil((new Date(contract.end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
               : 0
+            const isLast = idx === filteredClients.length - 1
 
             return (
               <Link
                 key={client.id}
                 href={`/clientes/${client.id}`}
-                className="flex items-center gap-4 p-4 bg-[#111113] border border-zinc-800 rounded-xl hover:border-zinc-600 transition-colors"
+                className={`flex items-center gap-4 px-4 py-3.5 bg-[#080809] hover:bg-[#0c0c0e] transition-colors ${!isLast ? 'border-b border-white/[0.04]' : ''}`}
               >
-                <div className={`w-2 h-2 rounded-full ${sConfig.dot} shrink-0`} />
+                <div className={`w-1.5 h-1.5 rounded-full ${sConfig.dot} shrink-0`} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-medium">{client.name}</p>
-                  <p className="text-zinc-500 text-xs mt-0.5">{client.whatsapp}</p>
+                  <p className="text-zinc-200 text-sm font-semibold">{client.name}</p>
+                  <p className="text-zinc-600 text-xs mt-0.5">{client.whatsapp}</p>
                 </div>
                 {contract && (
-                  <div className="text-right shrink-0">
-                    <p className="text-zinc-300 text-xs">{contract.clips_delivered}/{contract.clips_total} clipes</p>
-                    <p className="text-zinc-500 text-xs">{daysLeft} dias restantes</p>
+                  <div className="text-right shrink-0 hidden sm:block">
+                    <p className="text-zinc-400 text-xs">{contract.clips_delivered}/{contract.clips_total} clipes</p>
+                    <p className="text-zinc-600 text-xs">{daysLeft}d restantes</p>
                   </div>
                 )}
-                <span className={`text-xs px-2 py-0.5 rounded-full border ${sConfig.badge} shrink-0`}>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${sConfig.badge} shrink-0`}>
                   {sConfig.label}
                 </span>
-                <ChevronRight className="w-4 h-4 text-zinc-600 shrink-0" />
+                <ChevronRight className="w-4 h-4 text-zinc-700 shrink-0" />
               </Link>
             )
           })}
@@ -201,54 +202,90 @@ export default function ClientesClient({ initialClients }: { initialClients: Cli
       {showForm && (
         <div className="fixed inset-0 z-50 flex">
           <div className="fixed inset-0 bg-black/60" onClick={() => setShowForm(false)} />
-          <div className="ml-auto w-full max-w-md bg-[#111113] border-l border-zinc-800 p-6 overflow-y-auto relative z-10">
+          <div className="ml-auto w-full max-w-md bg-[#080809] border-l border-white/[0.06] p-6 overflow-y-auto relative z-10">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-white font-semibold">Novo cliente</h2>
-              <button onClick={() => setShowForm(false)} className="text-zinc-500 hover:text-white">
+              <button onClick={() => setShowForm(false)} className="text-zinc-600 hover:text-white">
                 <X className="w-4 h-4" />
               </button>
             </div>
             <form onSubmit={handleCreate} className="space-y-4">
               <div className="space-y-1.5">
-                <Label className="text-zinc-400 text-xs">Nome completo</Label>
-                <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required
-                  className="bg-zinc-900 border-zinc-700 text-white h-9" />
+                <label className="text-zinc-500 text-xs">Nome completo</label>
+                <input
+                  value={form.name}
+                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                  required
+                  className="w-full bg-black/20 border border-white/[0.06] rounded-xl px-4 py-2.5 text-zinc-300 text-sm placeholder:text-zinc-700 focus:outline-none focus:border-white/20 h-9"
+                />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-zinc-400 text-xs">WhatsApp (login)</Label>
-                <Input value={form.whatsapp} onChange={e => setForm(f => ({ ...f, whatsapp: e.target.value }))} required
-                  placeholder="5511999999999" className="bg-zinc-900 border-zinc-700 text-white h-9" />
+                <label className="text-zinc-500 text-xs">WhatsApp (login)</label>
+                <input
+                  value={form.whatsapp}
+                  onChange={e => setForm(f => ({ ...f, whatsapp: e.target.value }))}
+                  required
+                  placeholder="5511999999999"
+                  className="w-full bg-black/20 border border-white/[0.06] rounded-xl px-4 py-2.5 text-zinc-300 text-sm placeholder:text-zinc-700 focus:outline-none focus:border-white/20 h-9"
+                />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-zinc-400 text-xs">Senha <span className="text-zinc-600">(deixe vazio para gerar automaticamente)</span></Label>
-                <Input type="text" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                  placeholder="ex: Cliente@123" className="bg-zinc-900 border-zinc-700 text-white h-9" />
+                <label className="text-zinc-500 text-xs">Senha <span className="text-zinc-700">(vazio = gerar automaticamente)</span></label>
+                <input
+                  type="text"
+                  value={form.password}
+                  onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                  placeholder="ex: Cliente@123"
+                  className="w-full bg-black/20 border border-white/[0.06] rounded-xl px-4 py-2.5 text-zinc-300 text-sm placeholder:text-zinc-700 focus:outline-none focus:border-white/20 h-9"
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-zinc-400 text-xs">Qtd. de clipes</Label>
-                  <Input type="number" value={form.clipsTotal} onChange={e => setForm(f => ({ ...f, clipsTotal: e.target.value }))} required
-                    className="bg-zinc-900 border-zinc-700 text-white h-9" />
+                  <label className="text-zinc-500 text-xs">Qtd. de clipes</label>
+                  <input
+                    type="number"
+                    value={form.clipsTotal}
+                    onChange={e => setForm(f => ({ ...f, clipsTotal: e.target.value }))}
+                    required
+                    className="w-full bg-black/20 border border-white/[0.06] rounded-xl px-4 py-2.5 text-zinc-300 text-sm placeholder:text-zinc-700 focus:outline-none focus:border-white/20 h-9"
+                  />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-zinc-400 text-xs">Prazo (dias)</Label>
-                  <Input type="number" value={form.daysTotal} onChange={e => setForm(f => ({ ...f, daysTotal: e.target.value }))} required
-                    className="bg-zinc-900 border-zinc-700 text-white h-9" />
+                  <label className="text-zinc-500 text-xs">Prazo (dias)</label>
+                  <input
+                    type="number"
+                    value={form.daysTotal}
+                    onChange={e => setForm(f => ({ ...f, daysTotal: e.target.value }))}
+                    required
+                    className="w-full bg-black/20 border border-white/[0.06] rounded-xl px-4 py-2.5 text-zinc-300 text-sm placeholder:text-zinc-700 focus:outline-none focus:border-white/20 h-9"
+                  />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-zinc-400 text-xs">Link de pagamento (renovação)</Label>
-                <Input value={form.paymentLink} onChange={e => setForm(f => ({ ...f, paymentLink: e.target.value }))}
-                  placeholder="https://..." className="bg-zinc-900 border-zinc-700 text-white h-9" />
+                <label className="text-zinc-500 text-xs">Link de pagamento (renovação)</label>
+                <input
+                  value={form.paymentLink}
+                  onChange={e => setForm(f => ({ ...f, paymentLink: e.target.value }))}
+                  placeholder="https://..."
+                  className="w-full bg-black/20 border border-white/[0.06] rounded-xl px-4 py-2.5 text-zinc-300 text-sm placeholder:text-zinc-700 focus:outline-none focus:border-white/20 h-9"
+                />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-zinc-400 text-xs">Observações internas</Label>
-                <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                  rows={3} className="w-full bg-zinc-900 border border-zinc-700 text-white text-sm rounded-md px-3 py-2 resize-none focus:outline-none focus:border-zinc-600" />
+                <label className="text-zinc-500 text-xs">Observações internas</label>
+                <textarea
+                  value={form.notes}
+                  onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+                  rows={3}
+                  className="w-full bg-black/20 border border-white/[0.06] rounded-xl px-4 py-3 text-zinc-300 text-sm placeholder:text-zinc-700 resize-none focus:outline-none focus:border-white/20"
+                />
               </div>
-              <Button type="submit" disabled={loading} className="w-full bg-white text-black hover:bg-zinc-100 font-medium">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-white text-black hover:bg-zinc-100 font-medium text-sm py-2.5 rounded-lg transition-colors disabled:opacity-50"
+              >
                 {loading ? 'Criando...' : 'Criar cliente'}
-              </Button>
+              </button>
             </form>
           </div>
         </div>
@@ -257,22 +294,29 @@ export default function ClientesClient({ initialClients }: { initialClients: Cli
       {/* Welcome message modal */}
       {welcomeModal && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-          <div className="bg-[#111113] border border-zinc-800 rounded-xl p-6 w-full max-w-lg">
+          <div className="bg-[#080809] border border-white/[0.06] rounded-xl p-6 w-full max-w-lg">
             <h2 className="text-white font-semibold mb-1">Mensagem de boas-vindas</h2>
-            <p className="text-zinc-400 text-sm mb-4">Edite o texto se quiser antes de enviar via WhatsApp.</p>
+            <p className="text-zinc-500 text-sm mb-4">Edite o texto se quiser antes de enviar via WhatsApp.</p>
             <textarea
               value={welcomeModal.message}
               onChange={e => setWelcomeModal(m => m ? { ...m, message: e.target.value } : m)}
               rows={12}
-              className="w-full bg-zinc-900 border border-zinc-700 text-white text-sm rounded-md px-3 py-2 resize-none focus:outline-none focus:border-zinc-600 mb-4"
+              className="w-full bg-black/20 border border-white/[0.06] rounded-xl px-4 py-3 text-zinc-300 text-sm resize-none focus:outline-none focus:border-white/20 mb-4"
             />
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setWelcomeModal(null)} className="flex-1 border-zinc-700 text-zinc-300">
+              <button
+                onClick={() => setWelcomeModal(null)}
+                className="flex-1 py-2.5 rounded-lg border border-white/[0.06] text-zinc-400 hover:text-white text-sm transition-colors"
+              >
                 Pular por agora
-              </Button>
-              <Button onClick={handleSendWelcome} disabled={welcomeModal.sending} className="flex-1 bg-white text-black hover:bg-zinc-100">
+              </button>
+              <button
+                onClick={handleSendWelcome}
+                disabled={welcomeModal.sending}
+                className="flex-1 bg-white text-black hover:bg-zinc-100 text-sm py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50"
+              >
                 {welcomeModal.sending ? 'Enviando...' : 'Enviar mensagem'}
-              </Button>
+              </button>
             </div>
           </div>
         </div>

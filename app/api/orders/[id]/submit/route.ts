@@ -45,6 +45,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     clip_number: clipNumber,
     virality_grade: viralityGrade,
     feedback,
+    delivered_at: new Date().toISOString(),
   })
 
   if (deliverableError) return NextResponse.json({ error: deliverableError.message }, { status: 400 })

@@ -17,8 +17,11 @@ export default async function ClientesPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-white mb-1">Clientes</h1>
-      <p className="text-zinc-400 text-sm mb-8">Gerencie os clientes da agência.</p>
+      <div className="mb-8">
+        <p className="text-zinc-700 text-[9px] uppercase tracking-[0.2em] font-bold mb-2">Pessoas</p>
+        <h1 className="text-3xl font-black text-white tracking-tight">Clientes</h1>
+        <p className="text-zinc-500 text-sm mt-1">Gerencie os clientes da agência.</p>
+      </div>
       <ClientesClient initialClients={clients ?? []} />
     </div>
   )

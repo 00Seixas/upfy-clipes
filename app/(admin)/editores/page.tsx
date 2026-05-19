@@ -38,8 +38,11 @@ export default async function EditoresPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-white mb-1">Editores</h1>
-      <p className="text-zinc-400 text-sm mb-8">Gerencie os editores da equipe.</p>
+      <div className="mb-8">
+        <p className="text-zinc-700 text-[9px] uppercase tracking-[0.2em] font-bold mb-2">Pessoas</p>
+        <h1 className="text-3xl font-black text-white tracking-tight">Editores</h1>
+        <p className="text-zinc-500 text-sm mt-1">Gerencie os editores da equipe.</p>
+      </div>
       <EditoresClient initialEditors={enriched} />
     </div>
   )

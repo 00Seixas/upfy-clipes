@@ -20,5 +20,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     revision_notes: notes ?? null,
   }).eq('id', params.id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Update order status so editor sees it in em-andamento
+  await supabase.from('orders').update({ status: 'revisao_solicitada' }).eq('id', clip.order_id)
+
   return NextResponse.json({ success: true })
 }

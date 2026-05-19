@@ -19,7 +19,7 @@ export default async function EmAndamentoPage() {
       videos(id, r2_key, filename, size_bytes)
     `)
     .eq('editor_id', userId)
-    .eq('status', 'em_edicao')
+    .in('status', ['em_edicao', 'revisao_solicitada'])
     .order('updated_at', { ascending: false })
     .limit(1)
     .single()

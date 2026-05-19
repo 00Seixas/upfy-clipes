@@ -3,16 +3,14 @@ import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   LayoutGrid, List, Search, Filter, AlertTriangle, Crown,
-  Clock, ChevronDown, MoreHorizontal, User, X, Check,
-  Film, Zap, Flag,
+  Clock, MoreHorizontal, User, X, Check,
+  Film, Flag,
 } from 'lucide-react'
 import type { EnterpriseOrder, OrderStatus, Priority } from '@/types/domain'
 import {
   ORDER_STATUS_CONFIG, PRIORITY_CONFIG, DIFFICULTY_CONFIG,
   getSlaStatus, timeAgo,
 } from '@/types/domain'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 
 interface EditorInfo {
   id:            string
@@ -128,7 +126,7 @@ function AssignEditorModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/70" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-sm bg-[#111113] border border-zinc-800 rounded-2xl p-5 shadow-2xl">
+      <div className="relative z-10 w-full max-w-sm bg-[#080809] border border-white/[0.06] rounded-2xl p-5 shadow-2xl">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-white font-semibold text-sm">Atribuir Editor</h3>
           <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300"><X className="w-4 h-4" /></button>
@@ -141,34 +139,34 @@ function AssignEditorModal({
               onClick={() => setSelected(e.id)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-all ${
                 selected === e.id
-                  ? 'border-violet-600 bg-violet-950/30'
-                  : 'border-zinc-800 hover:border-zinc-700 bg-zinc-900/50'
+                  ? 'border-white/20 bg-white/[0.07]'
+                  : 'border-white/[0.06] hover:border-white/[0.1] bg-black/20'
               }`}
             >
-              <div className="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center text-white text-xs font-bold shrink-0">
+              <div className="w-8 h-8 rounded-full bg-zinc-900 border border-white/[0.08] flex items-center justify-center text-zinc-300 text-xs font-bold shrink-0">
                 {e.name[0]}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white text-sm font-medium truncate">{e.name}</p>
+                <p className="text-zinc-200 text-sm font-medium truncate">{e.name}</p>
                 <p className={`text-xs ${workloadColors[e.workload] ?? 'text-zinc-400'}`}>
                   {e.workload} · {e.active_orders} ativos
                 </p>
               </div>
-              {selected === e.id && <Check className="w-4 h-4 text-violet-400 shrink-0" />}
+              {selected === e.id && <Check className="w-4 h-4 text-zinc-300 shrink-0" />}
             </button>
           ))}
           {editors.length === 0 && (
-            <p className="text-zinc-500 text-sm text-center py-4">Nenhum editor disponível</p>
+            <p className="text-zinc-600 text-sm text-center py-4">Nenhum editor disponível</p>
           )}
         </div>
 
-        <Button
+        <button
           onClick={assign}
           disabled={!selected || loading}
-          className="w-full bg-violet-600 hover:bg-violet-500 text-white font-medium"
+          className="w-full bg-white text-black hover:bg-zinc-100 font-medium text-sm py-2 rounded-lg transition-colors disabled:opacity-40"
         >
           {loading ? 'Atribuindo...' : 'Confirmar'}
-        </Button>
+        </button>
       </div>
     </div>
   )
@@ -198,7 +196,7 @@ function NoteModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/70" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-sm bg-[#111113] border border-zinc-800 rounded-2xl p-5 shadow-2xl">
+      <div className="relative z-10 w-full max-w-sm bg-[#080809] border border-white/[0.06] rounded-2xl p-5 shadow-2xl">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-white font-semibold text-sm">Nota Interna</h3>
           <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300"><X className="w-4 h-4" /></button>
@@ -208,11 +206,15 @@ function NoteModal({
           onChange={(e) => setNote(e.target.value)}
           placeholder="Adicione uma nota interna sobre este pedido..."
           rows={4}
-          className="w-full bg-zinc-900 border border-zinc-700 rounded-lg text-white text-sm p-3 resize-none focus:outline-none focus:border-violet-600 placeholder:text-zinc-600 mb-4"
+          className="w-full bg-black/20 border border-white/[0.06] rounded-xl px-4 py-3 text-zinc-300 text-sm resize-none focus:outline-none focus:border-white/20 placeholder:text-zinc-700 mb-4"
         />
-        <Button onClick={save} disabled={!note.trim() || loading} className="w-full bg-violet-600 hover:bg-violet-500 text-white">
+        <button
+          onClick={save}
+          disabled={!note.trim() || loading}
+          className="w-full bg-white text-black hover:bg-zinc-100 font-medium text-sm py-2 rounded-lg transition-colors disabled:opacity-40"
+        >
           {loading ? 'Salvando...' : 'Salvar nota'}
-        </Button>
+        </button>
       </div>
     </div>
   )
@@ -238,24 +240,33 @@ function CancelModal({ orderId, onClose, onSuccess }: { orderId: string; onClose
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/70" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-sm bg-[#111113] border border-red-900/50 rounded-2xl p-5 shadow-2xl">
+      <div className="relative z-10 w-full max-w-sm bg-[#080809] border border-red-500/20 rounded-2xl p-5 shadow-2xl">
         <div className="flex items-center gap-2 mb-3">
           <AlertTriangle className="w-4 h-4 text-red-400" />
           <h3 className="text-white font-semibold text-sm">Cancelar Pedido</h3>
         </div>
-        <p className="text-zinc-400 text-xs mb-4">Esta ação não pode ser desfeita facilmente. Informe o motivo:</p>
+        <p className="text-zinc-500 text-xs mb-4">Esta ação não pode ser desfeita facilmente. Informe o motivo:</p>
         <textarea
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           placeholder="Motivo do cancelamento..."
           rows={3}
-          className="w-full bg-zinc-900 border border-zinc-700 rounded-lg text-white text-sm p-3 resize-none focus:outline-none focus:border-red-600 placeholder:text-zinc-600 mb-4"
+          className="w-full bg-black/20 border border-white/[0.06] rounded-xl px-4 py-3 text-zinc-300 text-sm resize-none focus:outline-none focus:border-red-500/30 placeholder:text-zinc-700 mb-4"
         />
         <div className="flex gap-2">
-          <Button onClick={onClose} variant="outline" className="flex-1 border-zinc-700 text-zinc-400 hover:text-white">Voltar</Button>
-          <Button onClick={cancel} disabled={loading} className="flex-1 bg-red-700 hover:bg-red-600 text-white">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2 rounded-lg border border-white/[0.06] text-zinc-400 hover:text-white text-sm transition-colors"
+          >
+            Voltar
+          </button>
+          <button
+            onClick={cancel}
+            disabled={loading}
+            className="flex-1 py-2 rounded-lg bg-red-500/[0.08] border border-red-500/20 text-red-400 hover:bg-red-500/[0.12] text-sm transition-colors disabled:opacity-40"
+          >
             {loading ? 'Cancelando...' : 'Confirmar'}
-          </Button>
+          </button>
         </div>
       </div>
     </div>
@@ -297,35 +308,35 @@ function OrderCard({
 
   return (
     <>
-      <div className={`relative bg-[#111113] border rounded-xl overflow-hidden transition-all ${
-        order.is_urgent ? 'border-red-900/60' : 'border-zinc-800/60'
+      <div className={`relative bg-[#080809] hover:bg-[#0c0c0e] border rounded-xl overflow-hidden transition-all ${
+        order.is_urgent ? 'border-red-500/20 hover:border-red-500/30' : 'border-white/[0.06] hover:border-white/[0.1]'
       } ${loading ? 'opacity-60' : ''}`}>
         {/* Urgent indicator */}
         {order.is_urgent && (
-          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-red-600 to-orange-500" />
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-red-500/60 to-transparent" />
         )}
 
         <div className="p-4">
-          {/* Badges row */}
+          {/* Badges row — compact */}
           <div className="flex flex-wrap gap-1 mb-2.5">
             {order.is_urgent && (
-              <span className="flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-red-950/50 border border-red-800/60 text-red-400 font-medium">
-                <AlertTriangle className="w-2.5 h-2.5" /> URGENTE
+              <span className="text-red-400 text-[9px] font-bold uppercase tracking-[0.1em]">
+                URGENTE
               </span>
             )}
             {order.is_vip && (
-              <span className="flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-violet-950/50 border border-violet-800/60 text-violet-400 font-medium">
-                <Crown className="w-2.5 h-2.5" /> VIP
+              <span className="text-amber-400 text-[9px] font-bold uppercase tracking-[0.1em]">
+                VIP
               </span>
             )}
             {sla.isOverdue && (
-              <span className="flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-red-950/50 border border-red-800/60 text-red-400 font-medium">
-                <Clock className="w-2.5 h-2.5" /> ATRASADO
+              <span className="text-red-400 text-[9px] font-bold uppercase tracking-[0.1em]">
+                ATRASADO
               </span>
             )}
             {(order.priority === 'high' || order.priority === 'critical') && !order.is_urgent && (
-              <span className={`flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded border font-medium ${priorityCfg.color} ${priorityCfg.bg} ${priorityCfg.border}`}>
-                <Flag className="w-2.5 h-2.5" /> {priorityCfg.label}
+              <span className={`text-[9px] font-bold uppercase tracking-[0.1em] ${priorityCfg.color}`}>
+                {priorityCfg.label}
               </span>
             )}
           </div>
@@ -333,12 +344,12 @@ function OrderCard({
           {/* Client + status */}
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="flex-1 min-w-0">
-              <p className="text-white font-semibold text-sm truncate">
+              <p className="text-zinc-200 font-semibold text-sm truncate">
                 {order.profiles?.name ?? 'Cliente'}
               </p>
-              <p className="text-zinc-500 text-xs mt-0.5 flex items-center gap-1">
+              <p className="text-zinc-600 text-xs mt-0.5 flex items-center gap-1">
                 <User className="w-3 h-3" />
-                {order.editor?.name ?? <span className="text-zinc-600 italic">Sem editor</span>}
+                {order.editor?.name ?? <span className="italic">Sem editor</span>}
               </p>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
@@ -349,32 +360,32 @@ function OrderCard({
               <div className="relative">
                 <button
                   onClick={() => setMenuOpen((o) => !o)}
-                  className="p-1 rounded-lg text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 transition-colors"
+                  className="p-1 rounded-lg text-zinc-700 hover:text-zinc-300 hover:bg-white/[0.04] transition-colors"
                 >
                   <MoreHorizontal className="w-4 h-4" />
                 </button>
                 {menuOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                    <div className="absolute right-0 top-full mt-1 w-52 bg-[#1A1A1C] border border-zinc-700 rounded-xl shadow-2xl z-20 overflow-hidden py-1">
+                    <div className="absolute right-0 top-full mt-1 w-52 bg-[#0c0c0e] border border-white/[0.06] rounded-xl shadow-2xl z-20 overflow-hidden py-1">
                       <button onClick={() => { setMenuOpen(false); setAssignModal(true) }}
-                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800/60 hover:text-white transition-colors">
-                        <User className="w-3.5 h-3.5 text-zinc-500" /> Atribuir editor
+                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200 transition-colors">
+                        <User className="w-3.5 h-3.5 text-zinc-600" /> Atribuir editor
                       </button>
 
                       <button onClick={() => doAction(order.is_urgent ? 'unmark_urgent' : 'mark_urgent')}
-                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800/60 hover:text-white transition-colors">
-                        <AlertTriangle className="w-3.5 h-3.5 text-zinc-500" />
+                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200 transition-colors">
+                        <AlertTriangle className="w-3.5 h-3.5 text-zinc-600" />
                         {order.is_urgent ? 'Remover urgência' : 'Marcar urgente'}
                       </button>
 
                       {nextStatuses.length > 0 && (
                         <>
-                          <div className="border-t border-zinc-800 my-1" />
-                          <p className="text-[10px] text-zinc-600 px-3 py-1 uppercase tracking-wide">Mover para</p>
+                          <div className="border-t border-white/[0.06] my-1" />
+                          <p className="text-[9px] text-zinc-700 px-3 py-1 uppercase tracking-[0.15em] font-bold">Mover para</p>
                           {nextStatuses.map((s) => (
                             <button key={s} onClick={() => doAction('set_status', { status: s })}
-                              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800/60 hover:text-white transition-colors">
+                              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200 transition-colors">
                               <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${ORDER_STATUS_CONFIG[s]?.dot}`} />
                               {ORDER_STATUS_CONFIG[s]?.label}
                             </button>
@@ -382,29 +393,29 @@ function OrderCard({
                         </>
                       )}
 
-                      <div className="border-t border-zinc-800 my-1" />
+                      <div className="border-t border-white/[0.06] my-1" />
 
                       {order.status !== 'pausado' && !['entregue', 'publicado', 'cancelado', 'falhou'].includes(order.status) && (
                         <button onClick={() => doAction('pause')}
-                          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800/60 hover:text-white transition-colors">
-                          <span className="w-3.5 h-3.5 flex items-center justify-center text-zinc-500">⏸</span> Pausar
+                          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200 transition-colors">
+                          <span className="w-3.5 h-3.5 flex items-center justify-center text-zinc-600">⏸</span> Pausar
                         </button>
                       )}
                       {order.status === 'pausado' && (
                         <button onClick={() => doAction('resume')}
-                          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800/60 hover:text-white transition-colors">
-                          <span className="w-3.5 h-3.5 flex items-center justify-center text-zinc-500">▶</span> Retomar
+                          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200 transition-colors">
+                          <span className="w-3.5 h-3.5 flex items-center justify-center text-zinc-600">▶</span> Retomar
                         </button>
                       )}
 
                       <button onClick={() => { setMenuOpen(false); setNoteModal(true) }}
-                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800/60 hover:text-white transition-colors">
-                        <Film className="w-3.5 h-3.5 text-zinc-500" /> Nota interna
+                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200 transition-colors">
+                        <Film className="w-3.5 h-3.5 text-zinc-600" /> Nota interna
                       </button>
 
                       {!['cancelado', 'entregue', 'publicado'].includes(order.status) && (
                         <button onClick={() => { setMenuOpen(false); setCancelModal(true) }}
-                          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-400 hover:bg-red-950/30 transition-colors">
+                          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-400 hover:bg-red-500/[0.06] transition-colors">
                           <X className="w-3.5 h-3.5" /> Cancelar pedido
                         </button>
                       )}
@@ -416,24 +427,24 @@ function OrderCard({
           </div>
 
           {/* Info row */}
-          <div className="flex items-center gap-3 text-xs text-zinc-600 flex-wrap">
+          <div className="flex items-center gap-3 text-xs text-zinc-700 flex-wrap">
             <span className="flex items-center gap-1">
               <Film className="w-3 h-3" />
               {order.clips_requested ?? 1} clip{(order.clips_requested ?? 1) !== 1 ? 's' : ''}
             </span>
             <span className={difficultyCfg.color}>{difficultyCfg.label}</span>
-            <span className={`ml-auto font-medium ${sla.color}`}>{sla.label}</span>
+            <span className={`ml-auto font-mono font-medium text-[11px] ${sla.color}`}>{sla.label}</span>
           </div>
 
           {/* Briefing snippet */}
           {order.briefing?.tone && (
             <div className="mt-2.5 flex flex-wrap gap-1">
-              <span className="text-[11px] bg-zinc-800/60 text-zinc-400 px-1.5 py-0.5 rounded">
+              <span className="text-[11px] bg-white/[0.04] text-zinc-500 px-1.5 py-0.5 rounded border border-white/[0.04]">
                 {order.briefing.tone}
               </span>
               {order.briefing.music && (
-                <span className="text-[11px] bg-zinc-800/60 text-zinc-400 px-1.5 py-0.5 rounded truncate max-w-[100px]">
-                  🎵 {order.briefing.music}
+                <span className="text-[11px] bg-white/[0.04] text-zinc-500 px-1.5 py-0.5 rounded border border-white/[0.04] truncate max-w-[100px]">
+                  {order.briefing.music}
                 </span>
               )}
             </div>
@@ -441,14 +452,14 @@ function OrderCard({
 
           {/* Internal note indicator */}
           {order.internal_notes && (
-            <div className="mt-2.5 text-[11px] text-zinc-600 italic truncate border-t border-zinc-800/40 pt-2">
-              📝 {order.internal_notes}
+            <div className="mt-2.5 text-[11px] text-zinc-700 italic truncate border-t border-white/[0.04] pt-2">
+              {order.internal_notes}
             </div>
           )}
 
           {/* Footer */}
-          <div className="mt-3 pt-2.5 border-t border-zinc-800/40 flex items-center justify-between">
-            <span className="text-[11px] text-zinc-600">{timeAgo(order.created_at)}</span>
+          <div className="mt-3 pt-2.5 border-t border-white/[0.04] flex items-center justify-between">
+            <span className="text-[11px] text-zinc-700">{timeAgo(order.created_at)}</span>
           </div>
         </div>
       </div>
@@ -517,19 +528,20 @@ export default function QueueMaster({
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-white text-2xl font-bold tracking-tight">Fila Operacional</h1>
+          <p className="text-zinc-700 text-[9px] uppercase tracking-[0.2em] font-bold mb-1">Operações</p>
+          <h1 className="text-white text-3xl font-black tracking-tight">Fila Operacional</h1>
           <p className="text-zinc-500 text-sm mt-0.5">{orders.length} pedidos</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setView('kanban')}
-            className={`p-2 rounded-lg border transition-colors ${view === 'kanban' ? 'bg-violet-950/40 border-violet-700 text-violet-400' : 'border-zinc-800 text-zinc-500 hover:text-zinc-300'}`}
+            className={`p-2 rounded-lg border transition-colors ${view === 'kanban' ? 'bg-white/[0.07] border-white/20 text-zinc-200' : 'border-white/[0.06] text-zinc-600 hover:text-zinc-300 hover:bg-white/[0.03]'}`}
           >
             <LayoutGrid className="w-4 h-4" />
           </button>
           <button
             onClick={() => setView('list')}
-            className={`p-2 rounded-lg border transition-colors ${view === 'list' ? 'bg-violet-950/40 border-violet-700 text-violet-400' : 'border-zinc-800 text-zinc-500 hover:text-zinc-300'}`}
+            className={`p-2 rounded-lg border transition-colors ${view === 'list' ? 'bg-white/[0.07] border-white/20 text-zinc-200' : 'border-white/[0.06] text-zinc-600 hover:text-zinc-300 hover:bg-white/[0.03]'}`}
           >
             <List className="w-4 h-4" />
           </button>
@@ -539,19 +551,19 @@ export default function QueueMaster({
       {/* Filters */}
       <div className="flex items-center gap-2 flex-wrap">
         <div className="relative flex-1 min-w-[180px] max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
-          <Input
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600" />
+          <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar cliente ou editor..."
-            className="bg-zinc-900 border-zinc-800 text-white pl-9 h-8 text-sm placeholder:text-zinc-600"
+            className="w-full bg-black/20 border border-white/[0.06] rounded-xl pl-9 pr-3 h-8 text-sm text-zinc-300 placeholder:text-zinc-700 focus:outline-none focus:border-white/20"
           />
         </div>
 
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="h-8 bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs rounded-lg px-2 focus:outline-none focus:border-violet-600"
+          className="h-8 bg-black/20 border border-white/[0.06] text-zinc-400 text-xs rounded-lg px-2 focus:outline-none focus:border-white/20"
         >
           <option value="">Todos status</option>
           {Object.entries(ORDER_STATUS_CONFIG).map(([k, v]) => (
@@ -562,7 +574,7 @@ export default function QueueMaster({
         <select
           value={filterPriority}
           onChange={(e) => setFilterPriority(e.target.value)}
-          className="h-8 bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs rounded-lg px-2 focus:outline-none focus:border-violet-600"
+          className="h-8 bg-black/20 border border-white/[0.06] text-zinc-400 text-xs rounded-lg px-2 focus:outline-none focus:border-white/20"
         >
           <option value="">Todas prioridades</option>
           {Object.entries(PRIORITY_CONFIG).map(([k, v]) => (
@@ -573,7 +585,7 @@ export default function QueueMaster({
         <select
           value={filterEditor}
           onChange={(e) => setFilterEditor(e.target.value)}
-          className="h-8 bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs rounded-lg px-2 focus:outline-none focus:border-violet-600"
+          className="h-8 bg-black/20 border border-white/[0.06] text-zinc-400 text-xs rounded-lg px-2 focus:outline-none focus:border-white/20"
         >
           <option value="">Todos editores</option>
           <option value="none">Sem editor</option>
@@ -585,7 +597,7 @@ export default function QueueMaster({
         {(search || filterStatus || filterPriority || filterEditor) && (
           <button
             onClick={() => { setSearch(''); setFilterStatus(''); setFilterPriority(''); setFilterEditor('') }}
-            className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+            className="flex items-center gap-1 text-xs text-zinc-600 hover:text-zinc-300 transition-colors"
           >
             <X className="w-3 h-3" /> Limpar
           </button>
@@ -600,9 +612,9 @@ export default function QueueMaster({
             return (
               <div key={col.id} className="shrink-0 w-72">
                 {/* Column header */}
-                <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${col.bg} border ${col.border} mb-3`}>
-                  <span className={`text-xs font-semibold ${col.color}`}>{col.label}</span>
-                  <span className={`ml-auto text-xs px-1.5 py-0.5 rounded-full ${col.bg} border ${col.border} ${col.color} tabular-nums`}>
+                <div className="flex items-center gap-2 px-3 py-2 mb-3">
+                  <span className="text-[9px] uppercase tracking-[0.15em] font-bold text-zinc-700">{col.label}</span>
+                  <span className="ml-auto text-[9px] font-bold text-zinc-700 tabular-nums">
                     {colOrders.length}
                   </span>
                 </div>
@@ -610,8 +622,8 @@ export default function QueueMaster({
                 {/* Cards */}
                 <div className="space-y-3">
                   {colOrders.length === 0 ? (
-                    <div className="rounded-xl border border-zinc-800/40 border-dashed py-8 text-center">
-                      <p className="text-zinc-700 text-xs">Vazio</p>
+                    <div className="rounded-xl border border-white/[0.04] border-dashed py-8 text-center">
+                      <p className="text-zinc-800 text-xs">Vazio</p>
                     </div>
                   ) : (
                     colOrders.map((order) => (
@@ -632,46 +644,46 @@ export default function QueueMaster({
 
       {/* List View */}
       {view === 'list' && (
-        <div className="rounded-xl border border-zinc-800/60 overflow-hidden">
+        <div className="rounded-xl border border-white/[0.06] overflow-hidden">
           {filtered.length === 0 ? (
             <div className="py-16 text-center">
-              <Filter className="w-8 h-8 text-zinc-700 mx-auto mb-2" />
-              <p className="text-zinc-500 text-sm">Nenhum pedido encontrado</p>
+              <Filter className="w-8 h-8 text-zinc-800 mx-auto mb-2" />
+              <p className="text-zinc-600 text-sm">Nenhum pedido encontrado</p>
             </div>
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-zinc-800/60">
+                <tr className="border-b border-white/[0.06]">
                   {['Cliente', 'Editor', 'Status', 'Prioridade', 'Clips', 'SLA', 'Criado', 'Ações'].map((h) => (
-                    <th key={h} className="text-left text-[11px] uppercase tracking-wide text-zinc-600 px-4 py-3 font-medium">{h}</th>
+                    <th key={h} className="text-left text-[9px] uppercase tracking-[0.15em] font-bold text-zinc-700 px-4 py-3">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/40">
+              <tbody className="divide-y divide-white/[0.04]">
                 {filtered.map((order) => {
                   const statusCfg = ORDER_STATUS_CONFIG[order.status] ?? ORDER_STATUS_CONFIG.aguardando
                   const sla = getSlaStatus(order.created_at, order.sla_hours ?? 48, order.status)
                   return (
-                    <tr key={order.id} className="hover:bg-zinc-800/20 transition-colors">
+                    <tr key={order.id} className="hover:bg-white/[0.02] transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-white font-medium">{order.profiles?.name ?? '—'}</span>
+                          <span className="text-zinc-200 font-medium">{order.profiles?.name ?? '—'}</span>
                           {order.is_urgent && <AlertTriangle className="w-3 h-3 text-red-400" />}
-                          {order.is_vip && <Crown className="w-3 h-3 text-violet-400" />}
+                          {order.is_vip && <Crown className="w-3 h-3 text-amber-400" />}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-zinc-400 text-xs">{order.editor?.name ?? '—'}</td>
+                      <td className="px-4 py-3 text-zinc-500 text-xs">{order.editor?.name ?? '—'}</td>
                       <td className="px-4 py-3">
                         <span className={`text-[11px] px-2 py-0.5 rounded-full border ${statusCfg.color} ${statusCfg.bg} ${statusCfg.border}`}>
                           {statusCfg.label}
                         </span>
                       </td>
-                      <td className={`px-4 py-3 text-xs ${PRIORITY_CONFIG[order.priority]?.color ?? 'text-zinc-400'}`}>
+                      <td className={`px-4 py-3 text-xs ${PRIORITY_CONFIG[order.priority]?.color ?? 'text-zinc-500'}`}>
                         {PRIORITY_CONFIG[order.priority]?.label ?? '—'}
                       </td>
-                      <td className="px-4 py-3 text-zinc-400 text-xs">{order.clips_requested ?? 1}</td>
-                      <td className={`px-4 py-3 text-xs font-medium ${sla.color}`}>{sla.label}</td>
-                      <td className="px-4 py-3 text-zinc-600 text-xs">{timeAgo(order.created_at)}</td>
+                      <td className="px-4 py-3 text-zinc-500 text-xs">{order.clips_requested ?? 1}</td>
+                      <td className={`px-4 py-3 text-xs font-mono font-medium ${sla.color}`}>{sla.label}</td>
+                      <td className="px-4 py-3 text-zinc-700 text-xs">{timeAgo(order.created_at)}</td>
                       <td className="px-4 py-3">
                         <OrderCard order={order} editors={editors} onAction={handleAction} />
                       </td>

@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Kanban, ScrollText, Users, Users2,
-  DollarSign, Settings, Menu, X, LogOut, Zap, ChevronRight, CheckCircle,
+  DollarSign, Settings, Menu, X, LogOut, ChevronRight, CheckCircle,
+  Inbox, Play, Timer,
 } from 'lucide-react'
 
 interface NavItem {
@@ -42,6 +43,14 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    title: 'Studio',
+    items: [
+      { href: '/fila',         icon: Inbox, label: 'Fila de Jobs'  },
+      { href: '/em-andamento', icon: Play,  label: 'Em Andamento'  },
+      { href: '/sla',          icon: Timer, label: 'SLA Monitor'   },
+    ],
+  },
+  {
     title: 'Config',
     items: [
       { href: '/configuracoes', icon: Settings, label: 'Configurações' },
@@ -58,15 +67,20 @@ function NavLink({ item, onClick }: { item: NavItem; onClick?: () => void }) {
     <Link
       href={item.href}
       onClick={onClick}
-      className={`flex items-center gap-2.5 py-2 rounded-lg text-sm transition-all duration-150 group ${
+      className={`group flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-150 relative ${
         active
-          ? 'bg-zinc-800/80 text-white font-medium border-l-2 border-violet-500 pl-[10px] pr-3'
-          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40 border-l-2 border-transparent pl-[10px] pr-3'
+          ? 'bg-white/[0.07] text-zinc-100'
+          : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]'
       }`}
     >
-      <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-violet-400' : 'text-zinc-500 group-hover:text-zinc-300'}`} />
-      <span className="truncate flex-1">{item.label}</span>
-      {active && <ChevronRight className="w-3 h-3 text-violet-500/60" />}
+      {active && (
+        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-4 bg-white/50 rounded-full" />
+      )}
+      <Icon className={`w-[15px] h-[15px] shrink-0 transition-colors ${
+        active ? 'text-white' : 'text-zinc-600 group-hover:text-zinc-400'
+      }`} />
+      <span className="flex-1 font-medium truncate">{item.label}</span>
+      {active && <ChevronRight className="w-3 h-3 text-zinc-600" />}
     </Link>
   )
 }
@@ -83,26 +97,26 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
   return (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="flex items-center gap-2.5 px-4 py-5 border-b border-zinc-800/60">
-        <div className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center shrink-0">
-          <Zap className="w-4 h-4 text-white" />
+      <div className="flex items-center gap-2 px-4 py-5">
+        <span className="text-white font-black text-sm tracking-tight">UPFY</span>
+        <span className="text-zinc-700 font-black text-sm tracking-tight">CLIPES</span>
+        <div className="ml-auto flex items-center gap-2">
+          <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-zinc-600 border border-zinc-800 px-1.5 py-0.5 rounded">
+            Admin
+          </span>
+          {onClose && (
+            <button onClick={onClose} className="text-zinc-600 hover:text-zinc-300 transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
-        <div className="leading-none">
-          <span className="text-white font-bold text-sm tracking-tight">UPFY</span>
-          <span className="text-violet-400 font-bold text-sm tracking-tight"> CLIPES</span>
-        </div>
-        {onClose && (
-          <button onClick={onClose} className="ml-auto text-zinc-500 hover:text-zinc-300 transition-colors">
-            <X className="w-4 h-4" />
-          </button>
-        )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-5">
+      <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-5">
         {NAV_SECTIONS.map((section) => (
           <div key={section.title}>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 px-3 mb-1.5">
+            <p className="text-[9px] font-bold tracking-[0.18em] text-zinc-800 px-3 mb-1 uppercase select-none">
               {section.title}
             </p>
             <div className="space-y-0.5">
@@ -115,19 +129,19 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-zinc-800/60 px-3 py-3">
-        <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-zinc-800/40 transition-colors group cursor-pointer">
-          <div className="w-7 h-7 rounded-full bg-violet-700 flex items-center justify-center text-white text-xs font-bold shrink-0">
+      <div className="px-3 py-3 border-t border-white/[0.04]">
+        <div className="group flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white/[0.03] transition-colors cursor-pointer">
+          <div className="w-7 h-7 rounded-full bg-zinc-900 border border-white/[0.08] flex items-center justify-center text-zinc-300 text-xs font-bold shrink-0">
             A
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white text-xs font-medium truncate">Admin</p>
-            <p className="text-zinc-500 text-[11px]">UPFY Mídia</p>
+            <p className="text-zinc-300 text-xs font-medium truncate">Admin</p>
+            <p className="text-zinc-700 text-[10px]">UPFY Mídia</p>
           </div>
           <button
             onClick={handleLogout}
             title="Sair"
-            className="text-zinc-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+            className="text-zinc-700 hover:text-zinc-400 transition-colors opacity-0 group-hover:opacity-100"
           >
             <LogOut className="w-3.5 h-3.5" />
           </button>
@@ -143,23 +157,18 @@ export default function SidebarAdmin() {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-56 flex-col bg-[#0D0D0F] border-r border-zinc-800/60 z-30">
+      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-56 flex-col bg-[#080809] border-r border-white/[0.04] z-30">
         <SidebarContent />
       </aside>
 
       {/* Mobile header */}
-      <header className="md:hidden fixed top-0 left-0 right-0 h-14 bg-[#0D0D0F] border-b border-zinc-800/60 flex items-center px-4 z-30">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded bg-violet-600 flex items-center justify-center">
-            <Zap className="w-3.5 h-3.5 text-white" />
-          </div>
-          <span className="text-white font-bold text-sm tracking-tight">
-            UPFY<span className="text-violet-400"> CLIPES</span>
-          </span>
-        </div>
+      <header className="md:hidden fixed top-0 left-0 right-0 h-14 bg-[#080809]/90 backdrop-blur-xl border-b border-white/[0.04] flex items-center px-4 z-30">
+        <span className="text-white font-black text-sm tracking-tight">
+          UPFY <span className="text-zinc-700">CLIPES</span>
+        </span>
         <button
           onClick={() => setMobileOpen((o) => !o)}
-          className="ml-auto text-zinc-400 hover:text-white transition-colors"
+          className="ml-auto text-zinc-500 hover:text-zinc-200 transition-colors"
         >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
@@ -169,10 +178,10 @@ export default function SidebarAdmin() {
       {mobileOpen && (
         <>
           <div
-            className="md:hidden fixed inset-0 bg-black/60 z-40"
+            className="md:hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-40"
             onClick={() => setMobileOpen(false)}
           />
-          <div className="md:hidden fixed top-14 left-0 bottom-0 w-64 bg-[#0D0D0F] border-r border-zinc-800/60 z-50">
+          <div className="md:hidden fixed top-14 left-0 bottom-0 w-64 bg-[#080809] border-r border-white/[0.04] z-50">
             <SidebarContent onClose={() => setMobileOpen(false)} />
           </div>
         </>

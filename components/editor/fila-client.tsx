@@ -74,7 +74,7 @@ function Chip({ children, className }: { children: React.ReactNode; className?: 
   )
 }
 
-export default function FilaClient({ orders, editorId: _editorId }: { orders: OrderInQueue[]; editorId: string }) {
+export default function FilaClient({ orders, revisionOrders, editorId: _editorId }: { orders: OrderInQueue[]; revisionOrders?: OrderInQueue[]; editorId: string }) {
   const [loading, setLoading] = useState<string | null>(null)
   const [expanded, setExpanded] = useState<string | null>(null)
   const router = useRouter()
@@ -95,7 +95,9 @@ export default function FilaClient({ orders, editorId: _editorId }: { orders: Or
     router.refresh()
   }
 
-  if (orders.length === 0) {
+  const hasRevisions = (revisionOrders?.length ?? 0) > 0
+
+  if (orders.length === 0 && !hasRevisions) {
     return (
       <div className="text-center py-24">
         <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
@@ -134,6 +136,85 @@ export default function FilaClient({ orders, editorId: _editorId }: { orders: Or
           </div>
         </div>
       </div>
+
+      {/* Revision orders section */}
+      {hasRevisions && (
+        <div className="space-y-3">
+          <div className="px-1 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-amber-500" />
+            <p className="text-amber-400 text-[9px] uppercase tracking-[0.15em] font-bold">Revisões Pendentes — {revisionOrders!.length}</p>
+          </div>
+          {revisionOrders!.map((order) => {
+            const briefing = order.briefing ?? {}
+            const isOpen = expanded === order.id
+            return (
+              <div
+                key={order.id}
+                className="rounded-xl border overflow-hidden transition-all border-amber-500/20 bg-amber-500/[0.02]"
+              >
+                <div className="p-5">
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-white text-sm font-semibold">{order.profiles?.name ?? 'Cliente'}</span>
+                        <span className="text-zinc-600 text-xs flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {timeAgo(order.created_at)}
+                        </span>
+                        <span className="text-[10px] font-bold tracking-[0.08em] text-amber-400 border border-amber-500/20 bg-amber-500/[0.06] px-2 py-0.5 rounded-full">
+                          REVISÃO
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  {briefing.openingHook && (
+                    <div className="bg-white/[0.02] border border-white/[0.05] rounded-lg px-3 py-2 mb-3">
+                      <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-zinc-700 mr-2">💬 GANCHO</span>
+                      <span className="text-zinc-400 text-xs italic">"{briefing.openingHook}"</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => { router.push('/em-andamento'); router.refresh() }}
+                      className="bg-amber-500 text-black hover:bg-amber-400 text-xs font-bold px-4 py-1.5 rounded-lg transition-colors"
+                    >
+                      Iniciar Revisão
+                    </button>
+                    <button
+                      onClick={() => setExpanded(isOpen ? null : order.id)}
+                      className="flex items-center gap-1 text-xs text-zinc-600 hover:text-zinc-300 border border-white/[0.08] hover:border-white/[0.15] px-3 py-1.5 rounded-lg transition-all"
+                    >
+                      {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                      Ver briefing
+                    </button>
+                  </div>
+                </div>
+                {isOpen && (
+                  <div className="border-t border-white/[0.05] bg-[#0c0c0e] px-5 py-5 space-y-4">
+                    <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-zinc-700">Briefing Completo</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {briefing.tone && (
+                        <div>
+                          <p className="text-[9px] uppercase tracking-[0.15em] font-bold text-zinc-700 mb-1">Tom</p>
+                          <p className="text-zinc-300 text-sm">{briefing.tone}</p>
+                        </div>
+                      )}
+                      {briefing.notes && (
+                        <div className="md:col-span-2">
+                          <p className="text-[9px] uppercase tracking-[0.15em] font-bold text-zinc-700 mb-1 flex items-center gap-1">
+                            <FileText className="w-2.5 h-2.5" /> Observações
+                          </p>
+                          <p className="text-zinc-300 text-sm whitespace-pre-line bg-white/[0.02] rounded-lg p-3 border border-white/[0.05]">{briefing.notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* Order cards */}
       {orders.map((order, index) => {

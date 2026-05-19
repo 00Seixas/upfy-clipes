@@ -18,10 +18,10 @@ type Deliverable = {
 }
 
 const VIRALITY: Record<string, { label: string; color: string; bg: string }> = {
-  frio:   { label: '❄️ Frio',   color: 'text-zinc-300',   bg: 'bg-zinc-800/60 border-zinc-700' },
-  morno:  { label: '🌤 Morno',  color: 'text-amber-300',  bg: 'bg-amber-950/40 border-amber-800' },
-  quente: { label: '🔥 Quente', color: 'text-orange-300', bg: 'bg-orange-950/40 border-orange-800' },
-  viral:  { label: '🚀 Viral',  color: 'text-green-300',  bg: 'bg-green-950/40 border-green-800' },
+  frio:   { label: 'Frio',   color: 'text-blue-400',   bg: 'bg-blue-500/[0.08] border-blue-500/20' },
+  morno:  { label: 'Morno',  color: 'text-amber-400',  bg: 'bg-amber-500/[0.08] border-amber-500/20' },
+  quente: { label: 'Quente', color: 'text-red-400',    bg: 'bg-red-500/[0.08] border-red-500/20' },
+  viral:  { label: 'Viral',  color: 'text-purple-400', bg: 'bg-purple-500/[0.08] border-purple-500/20' },
 }
 
 function timeAgo(iso: string) {
@@ -102,16 +102,16 @@ function DeliverableCard({ d, onRemove }: { d: Deliverable; onRemove: (id: strin
   }
 
   return (
-    <div className="bg-[#111113] border border-zinc-800/60 rounded-xl overflow-hidden hover:border-zinc-700/60 transition-colors">
+    <div className="bg-[#080809] border border-white/[0.06] rounded-xl overflow-hidden hover:border-white/[0.1] transition-colors">
       {/* Header */}
-      <div className="p-4 border-b border-zinc-800/40 flex items-center justify-between gap-3">
+      <div className="p-5 border-b border-white/[0.04] flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-violet-900/40 border border-violet-800/40 flex items-center justify-center">
-            <Video className="w-4 h-4 text-violet-400" />
+          <div className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
+            <Video className="w-4 h-4 text-zinc-400" />
           </div>
           <div>
-            <p className="text-white text-sm font-semibold">Clipe #{d.clipNumber}</p>
-            <p className="text-zinc-500 text-xs truncate max-w-[200px]">{d.filename}</p>
+            <p className="text-zinc-200 text-sm font-semibold">Clipe #{d.clipNumber}</p>
+            <p className="text-zinc-600 text-xs truncate max-w-[200px]">{d.filename}</p>
           </div>
         </div>
         <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${v.bg} ${v.color}`}>
@@ -127,39 +127,46 @@ function DeliverableCard({ d, onRemove }: { d: Deliverable; onRemove: (id: strin
       )}
 
       {/* Body */}
-      <div className="p-4 space-y-3">
+      <div className="p-5 space-y-3">
         {/* Meta */}
-        <div className="flex flex-wrap gap-3 text-xs text-zinc-500">
-          <span className="flex items-center gap-1"><User className="w-3 h-3" /> {d.clientName}</span>
-          <span className="flex items-center gap-1"><User className="w-3 h-3 text-amber-500" /> {d.editorName}</span>
-          <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {timeAgo(d.deliveredAt)}</span>
+        <div className="flex flex-wrap gap-3 text-xs">
+          <span className="flex items-center gap-1 text-zinc-400">
+            <User className="w-3 h-3" /> {d.clientName}
+          </span>
+          <span className="flex items-center gap-1 text-zinc-600">
+            <User className="w-3 h-3" />
+            <span className="text-zinc-600">{d.editorName}</span>
+          </span>
+          <span className="flex items-center gap-1 text-zinc-700">
+            <Clock className="w-3 h-3" /> {timeAgo(d.deliveredAt)}
+          </span>
         </div>
 
         {/* Editor feedback */}
         {d.feedback && (
-          <div className="bg-zinc-900/60 border border-zinc-800/40 rounded-lg p-3">
-            <p className="text-[10px] uppercase tracking-wider text-zinc-600 mb-1 flex items-center gap-1">
+          <div className="bg-black/20 border border-white/[0.06] rounded-xl px-4 py-3">
+            <p className="text-[9px] uppercase tracking-[0.15em] font-bold text-zinc-700 mb-1.5 flex items-center gap-1">
               <MessageSquare className="w-3 h-3" /> Feedback do editor
             </p>
-            <p className="text-zinc-300 text-xs leading-relaxed">{d.feedback}</p>
+            <p className="text-zinc-400 text-xs leading-relaxed">{d.feedback}</p>
           </div>
         )}
 
         {/* Error message */}
         {error && (
-          <div className="bg-red-950/40 border border-red-800/40 rounded-lg px-3 py-2">
+          <div className="bg-red-500/[0.08] border border-red-500/20 rounded-xl px-4 py-3">
             <p className="text-red-400 text-xs">{error}</p>
           </div>
         )}
 
         {/* Revision modal inline */}
         {revisionModal && (
-          <div className="bg-zinc-900 border border-zinc-700/60 rounded-xl p-4 space-y-3">
+          <div className="bg-[#0c0c0e] border border-white/[0.06] rounded-xl p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <p className="text-white text-sm font-semibold">O que precisa ser corrigido?</p>
+              <p className="text-zinc-200 text-sm font-semibold">O que precisa ser corrigido?</p>
               <button
                 onClick={() => { setRevisionModal(false); setRevisionNotes('') }}
-                className="text-zinc-500 hover:text-zinc-300 transition-colors"
+                className="text-zinc-600 hover:text-zinc-300 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -169,19 +176,19 @@ function DeliverableCard({ d, onRemove }: { d: Deliverable; onRemove: (id: strin
               onChange={(e) => setRevisionNotes(e.target.value)}
               placeholder="Descreva o que o editor precisa ajustar no clipe..."
               rows={3}
-              className="w-full bg-zinc-800/60 border border-zinc-700/60 rounded-lg px-3 py-2 text-zinc-200 text-sm placeholder:text-zinc-600 resize-none focus:outline-none focus:border-violet-500/60"
+              className="w-full bg-black/20 border border-white/[0.06] rounded-xl px-4 py-3 text-zinc-300 text-sm placeholder:text-zinc-700 resize-none focus:outline-none focus:border-white/20"
             />
             <div className="flex gap-2">
               <button
                 onClick={() => { setRevisionModal(false); setRevisionNotes('') }}
-                className="flex-1 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-xs font-medium transition-colors"
+                className="flex-1 py-2 rounded-lg border border-white/[0.06] text-zinc-500 text-xs font-medium transition-colors hover:text-zinc-300"
               >
                 Cancelar
               </button>
               <button
                 onClick={submitRevision}
                 disabled={rejecting || !revisionNotes.trim()}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-amber-950/60 border border-amber-800/40 hover:bg-amber-900/60 text-amber-400 text-xs font-medium transition-colors disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-amber-500/[0.08] border border-amber-500/20 hover:bg-amber-500/[0.12] text-amber-400 text-xs font-medium transition-colors disabled:opacity-50"
               >
                 {rejecting
                   ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -199,7 +206,7 @@ function DeliverableCard({ d, onRemove }: { d: Deliverable; onRemove: (id: strin
             <button
               onClick={loadStream}
               disabled={loadingStream}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800/80 hover:bg-zinc-700/80 text-zinc-300 text-xs font-medium transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.06] text-zinc-400 text-xs font-medium transition-colors disabled:opacity-50"
             >
               {loadingStream
                 ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -213,7 +220,7 @@ function DeliverableCard({ d, onRemove }: { d: Deliverable; onRemove: (id: strin
             <button
               onClick={() => { setError(null); setRevisionModal(true) }}
               disabled={approving}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-950/40 border border-amber-800/40 hover:bg-amber-900/40 text-amber-400 text-xs font-medium transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/[0.06] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03] text-xs font-medium transition-colors disabled:opacity-50"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               Pedir Revisão
@@ -222,7 +229,7 @@ function DeliverableCard({ d, onRemove }: { d: Deliverable; onRemove: (id: strin
             <button
               onClick={approve}
               disabled={approving || rejecting}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-800/40 hover:bg-emerald-900/40 text-emerald-400 text-xs font-medium transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-black hover:bg-zinc-100 text-xs font-medium transition-colors disabled:opacity-50"
             >
               {approving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
               Aprovar
@@ -243,29 +250,30 @@ export default function AprovacaoClient({ deliverables: initial }: { deliverable
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-white text-xl font-bold">Aprovação de Clipes</h1>
-          <p className="text-zinc-500 text-sm mt-0.5">
-            {items.length === 0
-              ? 'Nenhum clipe aguardando'
-              : `${items.length} clipe${items.length > 1 ? 's' : ''} aguardando revisão`}
-          </p>
-        </div>
+      {/* Hero header */}
+      <div className="bg-[#080809] border border-white/[0.06] rounded-2xl p-6 relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 60% 60% at 10% 50%, rgba(255,255,255,0.015) 0%, transparent 70%)' }} />
+        <p className="text-zinc-700 text-[9px] uppercase tracking-[0.2em] font-bold mb-2">Operações</p>
+        <h1 className="text-white text-3xl font-black tracking-tight">Central de Aprovação</h1>
+        <p className="text-zinc-500 text-sm mt-1">
+          {items.length === 0
+            ? 'Nenhum clipe aguardando'
+            : `${items.length} clipe${items.length > 1 ? 's' : ''} aguardando revisão`}
+        </p>
         {items.length > 0 && (
-          <span className="text-xs bg-violet-900/40 border border-violet-800/40 text-violet-300 px-2.5 py-1 rounded-full font-medium">
+          <span className="absolute top-6 right-6 text-xs bg-amber-500/[0.08] border border-amber-500/20 text-amber-400 px-2.5 py-1 rounded-full font-medium">
             {items.length} pendente{items.length > 1 ? 's' : ''}
           </span>
         )}
       </div>
 
       {items.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-emerald-950/40 border border-emerald-800/40 flex items-center justify-center mb-4">
-            <CheckCircle className="w-8 h-8 text-emerald-400" />
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-green-500/[0.06] border border-green-500/[0.15] flex items-center justify-center mb-4">
+            <CheckCircle className="w-8 h-8 text-green-400" />
           </div>
           <p className="text-white font-semibold text-lg">Tudo aprovado!</p>
-          <p className="text-zinc-500 text-sm mt-1">Nenhum clipe aguardando sua revisão.</p>
+          <p className="text-zinc-600 text-sm mt-1">Nenhum clipe aguardando sua revisão.</p>
         </div>
       )}
 
