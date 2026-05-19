@@ -1,7 +1,7 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Download, Upload, Film, RotateCcw, ArrowRight } from 'lucide-react'
+import { Download, Upload, Film, RotateCcw, ArrowRight, Hash, Plus, X } from 'lucide-react'
 import Link from 'next/link'
 
 type ViralityGrade = 'frio' | 'morno' | 'quente' | 'viral'
@@ -107,6 +107,9 @@ export default function EmAndamentoClient({
 }) {
   const [viralityGrade, setViralityGrade] = useState<ViralityGrade>('morno')
   const [feedback, setFeedback] = useState('')
+  const [socialCaption, setSocialCaption] = useState('')
+  const [hashtagInput, setHashtagInput] = useState('')
+  const [savedHashtags, setSavedHashtags] = useState<string[]>([])
   const [clipFile, setClipFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -115,6 +118,43 @@ export default function EmAndamentoClient({
   const [elapsed, setElapsed] = useState(0)
   const router = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
+
+  // Load saved hashtags
+  useEffect(() => {
+    fetch('/api/editor/hashtags')
+      .then(r => r.json())
+      .then(({ presets }: { presets: string[] }) => setSavedHashtags(presets ?? []))
+      .catch(() => {})
+  }, [])
+
+  function addHashtag() {
+    const tag = hashtagInput.trim().replace(/\s+/g, '_')
+    if (!tag) return
+    const formatted = tag.startsWith('#') ? tag : `#${tag}`
+    if (savedHashtags.includes(formatted)) { setHashtagInput(''); return }
+    const updated = [...savedHashtags, formatted]
+    setSavedHashtags(updated)
+    setHashtagInput('')
+    fetch('/api/editor/hashtags', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ presets: updated }),
+    })
+  }
+
+  function removeHashtag(tag: string) {
+    const updated = savedHashtags.filter(h => h !== tag)
+    setSavedHashtags(updated)
+    fetch('/api/editor/hashtags', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ presets: updated }),
+    })
+  }
+
+  function appendHashtagToCaption(tag: string) {
+    setSocialCaption(prev => prev ? `${prev} ${tag}` : tag)
+  }
 
   // Work timer
   useEffect(() => {
@@ -187,7 +227,7 @@ export default function EmAndamentoClient({
       const submitRes = await fetch(`/api/orders/${order.id}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ r2Key: key, filename: clipFile.name, viralityGrade, feedback }),
+        body: JSON.stringify({ r2Key: key, filename: clipFile.name, viralityGrade, feedback, socialCaption: socialCaption.trim() || null }),
       })
       if (!submitRes.ok) throw new Error('Erro ao submeter pedido')
 
@@ -349,6 +389,68 @@ export default function EmAndamentoClient({
               rows={4}
               className="w-full bg-white/[0.02] border border-white/[0.06] text-white placeholder:text-zinc-700 text-sm rounded-lg px-3 py-2.5 resize-none focus:outline-none focus:border-white/[0.12] transition-colors"
             />
+          </div>
+
+          {/* Caption + Hashtags */}
+          <div className="bg-[#080809] border border-white/[0.06] rounded-xl p-5 space-y-4">
+            <div>
+              <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-zinc-700 mb-3 flex items-center gap-1.5">
+                <Hash className="w-3 h-3" /> Legenda para Redes Sociais
+              </p>
+              <textarea
+                value={socialCaption}
+                onChange={e => setSocialCaption(e.target.value)}
+                placeholder="Escreva a legenda que o cliente vai usar ao postar nas redes..."
+                rows={3}
+                className="w-full bg-white/[0.02] border border-white/[0.06] text-white placeholder:text-zinc-700 text-sm rounded-lg px-3 py-2.5 resize-none focus:outline-none focus:border-white/[0.12] transition-colors"
+              />
+            </div>
+
+            {/* Saved hashtags */}
+            <div>
+              <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-zinc-700 mb-2">
+                Suas Hashtags Salvas
+              </p>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {savedHashtags.map(tag => (
+                  <div key={tag} className="flex items-center gap-1 bg-white/[0.04] border border-white/[0.06] rounded-full pl-2.5 pr-1.5 py-0.5">
+                    <button
+                      type="button"
+                      onClick={() => appendHashtagToCaption(tag)}
+                      className="text-zinc-400 hover:text-white text-xs transition-colors"
+                    >
+                      {tag}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeHashtag(tag)}
+                      className="text-zinc-700 hover:text-red-400 transition-colors ml-0.5"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+                {savedHashtags.length === 0 && (
+                  <p className="text-zinc-700 text-xs">Nenhuma hashtag salva ainda</p>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  value={hashtagInput}
+                  onChange={e => setHashtagInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addHashtag() } }}
+                  placeholder="#motivacao"
+                  className="flex-1 bg-white/[0.02] border border-white/[0.06] text-zinc-300 placeholder:text-zinc-700 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-white/[0.12] transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={addHashtag}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06] hover:border-white/[0.12] text-zinc-400 hover:text-white text-xs transition-colors"
+                >
+                  <Plus className="w-3 h-3" /> Salvar
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Upload */}

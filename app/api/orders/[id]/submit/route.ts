@@ -6,7 +6,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { r2Key, filename, viralityGrade, feedback } = await req.json()
+  const { r2Key, filename, viralityGrade, feedback, socialCaption } = await req.json()
 
   // Get the client_id from the order
   const { data: order } = await supabase
@@ -45,6 +45,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     clip_number: clipNumber,
     virality_grade: viralityGrade,
     feedback,
+    social_caption: socialCaption ?? null,
     delivered_at: new Date().toISOString(),
   })
 

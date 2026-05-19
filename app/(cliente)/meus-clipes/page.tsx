@@ -22,7 +22,7 @@ export default async function MeusClipesPage() {
     orderIds.length
       ? supabase
           .from('deliverables')
-          .select('id, clip_number, virality_grade, feedback, delivered_at, r2_key, filename, client_rating')
+          .select('id, clip_number, virality_grade, feedback, delivered_at, r2_key, filename, client_rating, social_caption')
           .in('order_id', orderIds)
           .not('client_approved_at', 'is', null)
           .order('delivered_at', { ascending: true })
@@ -30,7 +30,7 @@ export default async function MeusClipesPage() {
     orderIds.length
       ? supabase
           .from('deliverables')
-          .select('id, clip_number, virality_grade, feedback, delivered_at, r2_key, filename')
+          .select('id, clip_number, virality_grade, feedback, delivered_at, r2_key, filename, social_caption')
           .in('order_id', orderIds)
           .not('approved_at', 'is', null)
           .is('client_approved_at', null)

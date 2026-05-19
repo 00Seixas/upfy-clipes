@@ -12,6 +12,7 @@ interface Deliverable {
   r2_key: string
   filename: string
   client_rating?: number | null
+  social_caption?: string | null
 }
 
 interface SocialPlatformStatus {
@@ -147,9 +148,10 @@ interface SocialPanelProps {
 }
 
 function SocialPanel({ clip, socialStatus, loadingSocial }: SocialPanelProps) {
+  const base = clip.social_caption?.trim() || defaultCaption(clip.clip_number)
   const [captions, setCaptions] = useState({
-    tiktok: defaultCaption(clip.clip_number),
-    instagram: defaultCaption(clip.clip_number),
+    tiktok: base,
+    instagram: base,
   })
   const [posting, setPosting] = useState<Posting>({})
   const [posted, setPosted] = useState<PostedPlatforms>({})
