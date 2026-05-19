@@ -14,7 +14,7 @@ export default async function EmAndamentoPage() {
   const { data: order } = await supabase
     .from('orders')
     .select(`
-      id, briefing, created_at, deadline,
+      id, briefing, created_at, updated_at, deadline,
       profiles!orders_client_id_fkey(name, whatsapp),
       videos(id, r2_key, filename, size_bytes)
     `)
@@ -24,6 +24,18 @@ export default async function EmAndamentoPage() {
     .limit(1)
     .single()
 
+  // Fetch last revision note for this order (if any)
+  const { data: lastRevision } = order?.id
+    ? await supabase
+        .from('deliverables')
+        .select('revision_notes')
+        .eq('order_id', order.id)
+        .not('revision_requested_at', 'is', null)
+        .order('revision_requested_at', { ascending: false })
+        .limit(1)
+        .single()
+    : { data: null }
+
   return (
     <div>
       <h1 className="text-xl font-semibold text-white mb-1">Em Andamento</h1>
@@ -32,8 +44,9 @@ export default async function EmAndamentoPage() {
         order={order ? {
           ...order,
           profiles: Array.isArray(order.profiles) ? order.profiles[0] : order.profiles,
-        } as any : null}
+        } as Parameters<typeof EmAndamentoClient>[0]['order'] : null}
         editorId={userId}
+        revisionNotes={lastRevision?.revision_notes ?? null}
       />
     </div>
   )

@@ -22,8 +22,6 @@ export default async function FilaPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-white mb-1">Fila de Produção</h1>
-      <p className="text-zinc-400 text-sm mb-8">Pedidos aguardando editor. Mais urgentes primeiro.</p>
       <FilaClient
         orders={(orders ?? []).map(o => ({
           ...o,

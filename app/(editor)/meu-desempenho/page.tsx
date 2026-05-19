@@ -11,10 +11,10 @@ const VIRALITY_VIEWS: Record<string, number> = {
 }
 
 const VIRALITY_CONFIG = {
-  frio:   { label: 'Frio',   color: 'text-blue-400',   bar: 'bg-blue-500'   },
-  morno:  { label: 'Morno',  color: 'text-purple-400', bar: 'bg-purple-500' },
-  quente: { label: 'Quente', color: 'text-orange-400', bar: 'bg-orange-500' },
-  viral:  { label: 'Viral',  color: 'text-red-400',    bar: 'bg-red-500'    },
+  frio:   { label: 'Frio',   color: 'text-[#3b82f6]', bar: 'bg-blue-500'   },
+  morno:  { label: 'Morno',  color: 'text-[#f59e0b]', bar: 'bg-amber-500'  },
+  quente: { label: 'Quente', color: 'text-[#ef4444]', bar: 'bg-red-500'    },
+  viral:  { label: 'Viral',  color: 'text-[#a78bfa]', bar: 'bg-purple-500' },
 }
 
 function fmt(n: number) {
@@ -113,7 +113,7 @@ export default async function MeuDesempenhoPage() {
 
   // Viral rate color for hero
   const viralRateColor = viralRate >= 40 ? 'text-green-400' : viralRate >= 20 ? 'text-amber-400' : 'text-red-400'
-  const viralRateBg    = viralRate >= 40 ? 'bg-green-500/10 border-green-500/20' : viralRate >= 20 ? 'bg-amber-500/10 border-amber-500/20' : 'bg-red-500/10 border-red-500/20'
+  const viralRateBg    = viralRate >= 40 ? 'bg-green-500/[0.06] border-green-500/20' : viralRate >= 20 ? 'bg-amber-500/[0.06] border-amber-500/20' : 'bg-red-500/[0.06] border-red-500/20'
 
   const distributionOrder = ['viral', 'quente', 'morno', 'frio'] as const
 
@@ -131,8 +131,8 @@ export default async function MeuDesempenhoPage() {
       ) : (
         <>
           {/* Hero — Taxa Viral */}
-          <div className={`rounded-2xl border p-8 text-center ${viralRateBg}`}>
-            <p className="text-zinc-500 text-xs uppercase tracking-widest font-semibold mb-2">Taxa Viral</p>
+          <div className={`bg-[#080809] rounded-2xl border p-8 text-center ${viralRateBg}`}>
+            <p className="text-[9px] uppercase tracking-[0.15em] font-bold text-zinc-700 mb-2">Taxa Viral</p>
             <p className={`text-7xl font-black tracking-tight mb-1 ${viralRateColor}`}>{viralRate}%</p>
             <p className="text-zinc-400 text-sm mb-4">
               {viralCount} de {total} clipes com potencial quente ou viral
@@ -142,20 +142,20 @@ export default async function MeuDesempenhoPage() {
 
           {/* 4 metric cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-[#111113] border border-zinc-800 rounded-xl p-4">
-              <p className="text-zinc-500 text-[11px] uppercase tracking-widest font-semibold mb-1">Total Entregues</p>
+            <div className="bg-[#080809] border border-white/[0.06] rounded-xl p-4">
+              <p className="text-[9px] uppercase tracking-[0.15em] font-bold text-zinc-700 mb-1">Total Entregues</p>
               <p className="text-white text-3xl font-black">{total}</p>
               <p className="text-zinc-600 text-xs mt-1">clipes</p>
             </div>
 
-            <div className="bg-[#111113] border border-zinc-800 rounded-xl p-4">
-              <p className="text-zinc-500 text-[11px] uppercase tracking-widest font-semibold mb-1">Views Geradas</p>
+            <div className="bg-[#080809] border border-white/[0.06] rounded-xl p-4">
+              <p className="text-[9px] uppercase tracking-[0.15em] font-bold text-zinc-700 mb-1">Views Geradas</p>
               <p className="text-white text-3xl font-black">{fmt(totalViews)}</p>
               <p className="text-zinc-600 text-xs mt-1">potencial total</p>
             </div>
 
-            <div className="bg-[#111113] border border-zinc-800 rounded-xl p-4">
-              <p className="text-zinc-500 text-[11px] uppercase tracking-widest font-semibold mb-1">Nota Média</p>
+            <div className="bg-[#080809] border border-white/[0.06] rounded-xl p-4">
+              <p className="text-[9px] uppercase tracking-[0.15em] font-bold text-zinc-700 mb-1">Nota Média</p>
               {avgRating !== null ? (
                 <>
                   <p className="text-white text-3xl font-black">{avgRating}</p>
@@ -169,8 +169,8 @@ export default async function MeuDesempenhoPage() {
               )}
             </div>
 
-            <div className="bg-[#111113] border border-zinc-800 rounded-xl p-4">
-              <p className="text-zinc-500 text-[11px] uppercase tracking-widest font-semibold mb-1">Clipes este Mês</p>
+            <div className="bg-[#080809] border border-white/[0.06] rounded-xl p-4">
+              <p className="text-[9px] uppercase tracking-[0.15em] font-bold text-zinc-700 mb-1">Clipes este Mês</p>
               <p className="text-white text-3xl font-black">{thisMonth}</p>
               {growth !== null ? (
                 <p className={`text-xs mt-1 ${growth >= 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -183,8 +183,8 @@ export default async function MeuDesempenhoPage() {
           </div>
 
           {/* Virality distribution */}
-          <div className="bg-[#111113] border border-zinc-800 rounded-xl p-6">
-            <p className="text-zinc-400 text-xs uppercase tracking-widest font-semibold mb-5">Distribuição por Grau</p>
+          <div className="bg-[#080809] border border-white/[0.06] rounded-xl p-6">
+            <p className="text-[9px] uppercase tracking-[0.15em] font-bold text-zinc-700 mb-5">Distribuição por Grau</p>
             <div className="space-y-3">
               {distributionOrder.map(grade => {
                 const cfg = VIRALITY_CONFIG[grade]
@@ -193,7 +193,7 @@ export default async function MeuDesempenhoPage() {
                 return (
                   <div key={grade} className="flex items-center gap-3">
                     <span className={`w-14 text-xs font-semibold ${cfg.color}`}>{cfg.label}</span>
-                    <div className="flex-1 bg-zinc-800/60 rounded-full h-2 overflow-hidden">
+                    <div className="flex-1 bg-white/[0.04] rounded-full h-2 overflow-hidden">
                       <div
                         className={`h-full rounded-full ${cfg.bar}`}
                         style={{ width: `${pct}%` }}
@@ -209,9 +209,9 @@ export default async function MeuDesempenhoPage() {
 
           {/* Best month */}
           {bestMonthLabel && (
-            <div className="bg-[#111113] border border-zinc-800 rounded-xl p-6 flex items-center justify-between">
+            <div className="bg-[#080809] border border-white/[0.06] rounded-xl p-6 flex items-center justify-between">
               <div>
-                <p className="text-zinc-500 text-xs uppercase tracking-widest font-semibold mb-1">Seu Melhor Mês</p>
+                <p className="text-[9px] uppercase tracking-[0.15em] font-bold text-zinc-700 mb-1">Seu Melhor Mês</p>
                 <p className="text-white text-lg font-bold capitalize">{bestMonthLabel}</p>
               </div>
               <div className="text-right">
