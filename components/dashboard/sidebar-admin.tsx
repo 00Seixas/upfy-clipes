@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Kanban, ScrollText, Users, Users2,
   DollarSign, Settings, Menu, X, LogOut, ChevronRight, CheckCircle,
-  Inbox, Play, Timer,
+  Inbox, Play, Timer, Sparkles,
 } from 'lucide-react'
 
 interface NavItem {
@@ -48,6 +48,12 @@ const NAV_SECTIONS: NavSection[] = [
       { href: '/fila',         icon: Inbox, label: 'Fila de Jobs'  },
       { href: '/em-andamento', icon: Play,  label: 'Em Andamento'  },
       { href: '/sla',          icon: Timer, label: 'SLA Monitor'   },
+    ],
+  },
+  {
+    title: 'Copy',
+    items: [
+      { href: '/copy', icon: Sparkles, label: 'Pedronha' },
     ],
   },
   {
