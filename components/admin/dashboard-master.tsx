@@ -11,18 +11,18 @@ import { createClient } from '@/lib/supabase/client'
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 
 interface CriticalOrder {
-  id:          string
-  clientName:  string
-  editorName:  string | null
-  status:      string
-  statusLabel: string
-  priority:    string
-  isUrgent:    boolean
-  isVip:       boolean
+  id:           string
+  clientName:   string
+  editorName:   string | null
+  status:       string
+  statusLabel:  string
+  priority:     string
+  isUrgent:     boolean
+  isVip:        boolean
   hoursWaiting: number
-  slaStatus:   string
-  slaColor:    string
-  isOverdue:   boolean
+  slaStatus:    string
+  slaColor:     string
+  isOverdue:    boolean
 }
 
 interface RecentActivity {
@@ -69,28 +69,17 @@ interface LiveEvent {
 }
 
 const ACTION_LABELS: Record<string, string> = {
-  'order.status_changed':  'Status alterado',
-  'order.assigned':        'Editor atribuído',
-  'order.marked_urgent':   'Marcado urgente',
-  'order.priority_changed':'Prioridade alterada',
-  'order.canceled':        'Pedido cancelado',
-  'order.paused':          'Pedido pausado',
-  'order.resumed':         'Pedido retomado',
-  'order.note_added':      'Nota adicionada',
-  'payout.approved':       'Saque aprovado',
-  'payout.paid':           'Saque pago',
-  'payout.rejected':       'Saque rejeitado',
-}
-
-const PRIORITY_COLORS: Record<string, string> = {
-  low:      'text-zinc-500',
-  normal:   'text-zinc-300',
-  high:     'text-orange-400',
-  critical: 'text-red-400',
-}
-
-const PRIORITY_LABELS: Record<string, string> = {
-  low: 'Baixa', normal: 'Normal', high: 'Alta', critical: 'Crítica',
+  'order.status_changed':   'Status alterado',
+  'order.assigned':         'Editor atribuído',
+  'order.marked_urgent':    'Marcado urgente',
+  'order.priority_changed': 'Prioridade alterada',
+  'order.canceled':         'Pedido cancelado',
+  'order.paused':           'Pedido pausado',
+  'order.resumed':          'Pedido retomado',
+  'order.note_added':       'Nota adicionada',
+  'payout.approved':        'Saque aprovado',
+  'payout.paid':            'Saque pago',
+  'payout.rejected':        'Saque rejeitado',
 }
 
 function timeAgo(date: string | Date): string {
@@ -122,47 +111,38 @@ function onlineForLabel(onlineAt: string): string {
 }
 
 function MetricCard({
-  label, value, sub, icon: Icon, color = 'zinc', alert = false,
+  label, value, sub, icon: Icon, alert = false, alertValue = false,
 }: {
-  label:  string
-  value:  string | number
-  sub?:   string
-  icon:   React.ComponentType<{ className?: string }>
-  color?: string
-  alert?: boolean
+  label:       string
+  value:       string | number
+  sub?:        string
+  icon:        React.ComponentType<{ className?: string }>
+  alert?:      boolean
+  alertValue?: boolean
 }) {
-  const colorMap: Record<string, { bg: string; text: string; iconBg: string }> = {
-    violet:  { bg: 'bg-violet-950/20',  text: 'text-violet-400',  iconBg: 'bg-violet-900/40'  },
-    amber:   { bg: 'bg-amber-950/20',   text: 'text-amber-400',   iconBg: 'bg-amber-900/40'   },
-    orange:  { bg: 'bg-orange-950/20',  text: 'text-orange-400',  iconBg: 'bg-orange-900/40'  },
-    red:     { bg: 'bg-red-950/20',     text: 'text-red-400',     iconBg: 'bg-red-900/40'     },
-    emerald: { bg: 'bg-emerald-950/20', text: 'text-emerald-400', iconBg: 'bg-emerald-900/40' },
-    zinc:    { bg: 'bg-zinc-900/50',    text: 'text-zinc-300',    iconBg: 'bg-zinc-800/60'    },
-  }
-
-  const c = colorMap[color] ?? colorMap.zinc
-
   return (
-    <div className={`relative overflow-hidden rounded-xl border border-zinc-800/60 ${c.bg} p-5 transition-all hover:border-zinc-700/60`}>
-      {alert && Number(value) > 0 && (
-        <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+    <div className="relative bg-[#080809] border border-white/[0.06] rounded-xl p-5 hover:border-white/[0.1] transition-colors">
+      {alert && alertValue && (
+        <span className="absolute top-3 right-3 w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
       )}
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <p className="text-zinc-500 text-xs font-medium mb-2 uppercase tracking-wide">{label}</p>
-          <p className={`text-3xl font-bold tabular-nums ${c.text}`}>{value}</p>
-          {sub && <p className="text-zinc-600 text-xs mt-1">{sub}</p>}
+          <p className="text-[9px] uppercase tracking-[0.18em] font-bold text-zinc-700 mb-2 select-none">
+            {label}
+          </p>
+          <p className={`text-3xl font-black tabular-nums leading-none ${alertValue ? 'text-red-400' : 'text-white'}`}>
+            {value}
+          </p>
+          {sub && <p className="text-zinc-700 text-xs mt-1.5">{sub}</p>}
         </div>
-        <div className={`w-10 h-10 rounded-lg ${c.iconBg} flex items-center justify-center shrink-0`}>
-          <Icon className={`w-5 h-5 ${c.text}`} />
-        </div>
+        <Icon className="w-4 h-4 text-zinc-800 shrink-0 mt-0.5" />
       </div>
     </div>
   )
 }
 
 export default function DashboardMaster({
-  metrics: initialMetrics,
+  metrics:        initialMetrics,
   criticalOrders: initialCritical,
   recentActivity: initialActivity,
 }: DashboardMasterProps) {
@@ -192,32 +172,19 @@ export default function DashboardMaster({
     setNewEventCount((prev) => prev + 1)
   }, [])
 
-  // Supabase Realtime subscriptions
   useEffect(() => {
     const supabase = createClient()
 
     const dbChannel = supabase
       .channel('dashboard-db-changes')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'orders' },
-        (payload) => addLiveEvent('orders', payload),
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'orders' },
-        (payload) => addLiveEvent('orders', payload),
-      )
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'deliverables' },
-        (payload) => addLiveEvent('deliverables', payload),
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'deliverables' },
-        (payload) => addLiveEvent('deliverables', payload),
-      )
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' },
+        (payload) => addLiveEvent('orders', payload))
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' },
+        (payload) => addLiveEvent('orders', payload))
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'deliverables' },
+        (payload) => addLiveEvent('deliverables', payload))
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'deliverables' },
+        (payload) => addLiveEvent('deliverables', payload))
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') setIsLive(true)
         if (status === 'CLOSED' || status === 'CHANNEL_ERROR') setIsLive(false)
@@ -228,11 +195,7 @@ export default function DashboardMaster({
       .on('presence', { event: 'sync' }, () => {
         const state = presenceChannel.presenceState() as Record<string, { userId: string; userName: string; onlineAt: string }[]>
         const editors: OnlineEditor[] = Object.values(state).flatMap((presences) =>
-          presences.map((p) => ({
-            userId:   p.userId,
-            userName: p.userName,
-            onlineAt: p.onlineAt,
-          }))
+          presences.map((p) => ({ userId: p.userId, userName: p.userName, onlineAt: p.onlineAt }))
         )
         setOnlineEditors(editors)
       })
@@ -264,7 +227,6 @@ export default function DashboardMaster({
     setNewEventCount(0)
   }
 
-  // Auto-refresh every 60 seconds
   useEffect(() => {
     const t = setInterval(refresh, 60_000)
     return () => clearInterval(t)
@@ -277,94 +239,92 @@ export default function DashboardMaster({
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-white text-2xl font-bold tracking-tight">Dashboard Operacional</h1>
+          <h1 className="text-white text-xl font-semibold">Dashboard Operacional</h1>
           <p className="text-zinc-500 text-sm mt-0.5">
-            Central de controle — atualizado {lastUpdated.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+            Atualizado às {lastUpdated.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {/* LIVE indicator */}
           {isLive && (
             <div className="flex items-center gap-1.5">
-              <span className="relative flex h-2 w-2">
+              <span className="relative flex h-1.5 w-1.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500" />
               </span>
-              <span className="text-green-400 text-xs font-semibold tracking-wide">AO VIVO</span>
+              <span className="text-green-400 text-[10px] font-bold tracking-[0.15em] uppercase">Ao Vivo</span>
             </div>
           )}
-          {/* Refresh (server data) */}
           <button
             onClick={handleServerRefresh}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800/60 border border-zinc-700/60 text-zinc-400 hover:text-white hover:border-zinc-600 transition-all text-sm"
+            disabled={refreshing}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#080809] border border-white/[0.06] text-zinc-500 hover:text-zinc-200 hover:border-white/[0.12] transition-all text-xs"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
+            <RefreshCw className={`w-3 h-3 ${refreshing ? 'animate-spin' : ''}`} />
             Atualizar
           </button>
         </div>
       </div>
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         <MetricCard
           label="Pedidos Ativos"
           value={metrics.activeOrders}
           icon={Activity}
-          color="violet"
         />
         <MetricCard
           label="Em Edição"
           value={metrics.inEditing}
           icon={Film}
-          color="amber"
         />
         <MetricCard
           label="Em Revisão"
           value={metrics.inReview}
           icon={Eye}
-          color="orange"
         />
         <MetricCard
           label="Atrasados"
           value={metrics.overdueOrders}
           icon={AlertTriangle}
-          color={metrics.overdueOrders > 0 ? 'red' : 'zinc'}
           alert
+          alertValue={metrics.overdueOrders > 0}
         />
         <MetricCard
           label="Entregues Hoje"
           value={metrics.deliveredToday}
           icon={CheckCircle2}
-          color="emerald"
         />
         <MetricCard
           label="Tempo Médio"
           value={`${metrics.avgDeliveryHours}h`}
-          sub="nas últimas entregas"
+          sub="por entrega"
           icon={Timer}
-          color="zinc"
         />
         <MetricCard
-          label="Revisões Pendentes"
+          label="Revisões Pend."
           value={metrics.pendingRevisions}
           icon={AlertCircle}
-          color={metrics.pendingRevisions > 0 ? 'red' : 'zinc'}
           alert
+          alertValue={metrics.pendingRevisions > 0}
         />
         <MetricCard
           label="Editores"
           value={`${metrics.editorsOnline}/${metrics.totalEditors}`}
           sub="online / total"
           icon={Zap}
-          color="violet"
         />
         <MetricCard
           label="Aguard. Cliente"
           value={metrics.clipsAwaitingClient}
           sub="aprovação pendente"
           icon={Clock}
-          color={metrics.clipsAwaitingClient > 0 ? 'amber' : 'zinc'}
-          alert={metrics.clipsAwaitingClient > 0}
+          alert
+          alertValue={metrics.clipsAwaitingClient > 2}
+        />
+        <MetricCard
+          label="Clientes Ativos"
+          value={metrics.activeClients}
+          icon={Users}
         />
       </div>
 
@@ -374,74 +334,76 @@ export default function DashboardMaster({
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-red-400" />
+              <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
               <h2 className="text-white font-semibold text-sm">Pedidos Críticos</h2>
               {criticalOrders.length > 0 && (
-                <span className="text-xs px-1.5 py-0.5 rounded bg-red-950/40 border border-red-800/50 text-red-400">
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-red-500/20 bg-red-500/[0.06] text-red-400 font-bold">
                   {criticalOrders.length}
                 </span>
               )}
             </div>
             <Link
               href="/kanban"
-              className="flex items-center gap-1 text-xs text-violet-400 hover:text-violet-300 transition-colors"
+              className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
             >
               Ver fila <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
 
           {criticalOrders.length === 0 ? (
-            <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/30 p-8 text-center">
-              <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2 opacity-60" />
-              <p className="text-zinc-400 text-sm">Nenhum pedido crítico</p>
-              <p className="text-zinc-600 text-xs mt-1">Tudo sob controle por enquanto</p>
+            <div className="bg-[#080809] border border-white/[0.06] rounded-xl p-10 text-center">
+              <CheckCircle2 className="w-7 h-7 text-zinc-800 mx-auto mb-3" />
+              <p className="text-zinc-500 text-sm">Nenhum pedido crítico</p>
+              <p className="text-zinc-700 text-xs mt-1">Tudo sob controle</p>
             </div>
           ) : (
-            <div className="rounded-xl border border-zinc-800/60 overflow-hidden">
+            <div className="bg-[#080809] border border-white/[0.06] rounded-xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-zinc-800/60">
-                      <th className="text-left text-[11px] uppercase tracking-wide text-zinc-600 px-4 py-3 font-medium">Cliente</th>
-                      <th className="text-left text-[11px] uppercase tracking-wide text-zinc-600 px-4 py-3 font-medium">Editor</th>
-                      <th className="text-left text-[11px] uppercase tracking-wide text-zinc-600 px-4 py-3 font-medium">Status</th>
-                      <th className="text-left text-[11px] uppercase tracking-wide text-zinc-600 px-4 py-3 font-medium">Aguardando</th>
-                      <th className="text-left text-[11px] uppercase tracking-wide text-zinc-600 px-4 py-3 font-medium">SLA</th>
+                    <tr className="border-b border-white/[0.04]">
+                      <th className="text-left text-[9px] uppercase tracking-[0.15em] text-zinc-700 px-4 py-3 font-bold">Cliente</th>
+                      <th className="text-left text-[9px] uppercase tracking-[0.15em] text-zinc-700 px-4 py-3 font-bold">Editor</th>
+                      <th className="text-left text-[9px] uppercase tracking-[0.15em] text-zinc-700 px-4 py-3 font-bold">Status</th>
+                      <th className="text-left text-[9px] uppercase tracking-[0.15em] text-zinc-700 px-4 py-3 font-bold">Aguardando</th>
+                      <th className="text-left text-[9px] uppercase tracking-[0.15em] text-zinc-700 px-4 py-3 font-bold">SLA</th>
                       <th className="px-4 py-3" />
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-800/40">
+                  <tbody className="divide-y divide-white/[0.03]">
                     {criticalOrders.map((order) => (
-                      <tr key={order.id} className="hover:bg-zinc-800/20 transition-colors">
+                      <tr key={order.id} className="hover:bg-white/[0.02] transition-colors">
                         <td className="px-4 py-3">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-white font-medium truncate max-w-[120px]">{order.clientName}</span>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-white text-xs font-medium truncate max-w-[110px]">
+                              {order.clientName}
+                            </span>
                             {order.isUrgent && (
-                              <span className="shrink-0 text-[10px] px-1 py-0.5 rounded bg-red-950/40 border border-red-800/50 text-red-400">
+                              <span className="text-[9px] px-1 py-0.5 rounded border border-red-500/20 bg-red-500/[0.06] text-red-400 font-bold">
                                 URGENTE
                               </span>
                             )}
                             {order.isVip && (
-                              <span className="shrink-0 text-[10px] px-1 py-0.5 rounded bg-violet-950/40 border border-violet-800/50 text-violet-400">
+                              <span className="text-[9px] px-1 py-0.5 rounded border border-white/[0.1] text-zinc-400 font-bold">
                                 VIP
                               </span>
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-zinc-400 text-xs">{order.editorName ?? '—'}</td>
+                        <td className="px-4 py-3 text-zinc-500 text-xs">{order.editorName ?? '—'}</td>
                         <td className="px-4 py-3">
-                          <span className="text-xs text-zinc-300">{order.statusLabel}</span>
+                          <span className="text-xs text-zinc-400">{order.statusLabel}</span>
                         </td>
-                        <td className={`px-4 py-3 text-xs tabular-nums ${order.hoursWaiting > 24 ? 'text-red-400' : 'text-zinc-400'}`}>
+                        <td className={`px-4 py-3 text-xs tabular-nums font-medium ${order.hoursWaiting > 24 ? 'text-red-400' : 'text-zinc-500'}`}>
                           {order.hoursWaiting}h
                         </td>
-                        <td className={`px-4 py-3 text-xs tabular-nums font-medium ${order.slaColor}`}>
+                        <td className={`px-4 py-3 text-xs tabular-nums font-bold ${order.slaColor}`}>
                           {order.slaStatus}
                         </td>
                         <td className="px-4 py-3">
                           <Link
                             href="/kanban"
-                            className="text-xs text-zinc-500 hover:text-violet-400 transition-colors"
+                            className="text-xs text-zinc-700 hover:text-zinc-300 transition-colors"
                           >
                             Ver →
                           </Link>
@@ -459,46 +421,42 @@ export default function DashboardMaster({
         <div>
           <div className="flex items-center justify-between gap-2 mb-4">
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-zinc-500" />
+              <Clock className="w-3.5 h-3.5 text-zinc-700" />
               <h2 className="text-white font-semibold text-sm">Atividade Recente</h2>
             </div>
             {newEventCount > 0 && (
-              <span className="text-xs px-1.5 py-0.5 rounded bg-green-950/40 border border-green-800/50 text-green-400 animate-pulse">
-                {newEventCount} novo{newEventCount !== 1 ? 's' : ''} evento{newEventCount !== 1 ? 's' : ''}
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-green-500/20 bg-green-500/[0.06] text-green-400 font-bold animate-pulse">
+                +{newEventCount} novo{newEventCount !== 1 ? 's' : ''}
               </span>
             )}
           </div>
 
           {recentActivity.length === 0 ? (
-            <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/30 p-6 text-center">
-              <p className="text-zinc-500 text-xs">Nenhuma atividade recente</p>
+            <div className="bg-[#080809] border border-white/[0.06] rounded-xl p-6 text-center">
+              <p className="text-zinc-600 text-xs">Nenhuma atividade recente</p>
             </div>
           ) : (
-            <div className="space-y-1">
+            <div className="space-y-px">
               {recentActivity.map((activity) => (
                 <div
                   key={activity.id}
-                  className="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-800/30 transition-colors"
+                  className="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-white/[0.02] transition-colors"
                 >
-                  <div className="w-1.5 h-1.5 rounded-full bg-violet-500 mt-1.5 shrink-0" />
+                  <div className="w-1 h-1 rounded-full bg-zinc-700 mt-2 shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-zinc-300 text-xs leading-snug">
+                    <p className="text-zinc-400 text-xs leading-snug">
                       {ACTION_LABELS[activity.action] ?? activity.action}
                     </p>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      {activity.actorName && (
-                        <span className="text-zinc-600 text-[11px]">{activity.actorName}</span>
-                      )}
-                      {activity.actorRole && (
-                        <span className={`text-[10px] px-1 py-0 rounded ${
-                          activity.actorRole === 'admin' ? 'text-violet-500' : 'text-amber-500'
-                        }`}>
-                          {activity.actorRole}
-                        </span>
-                      )}
-                    </div>
+                    {activity.actorName && (
+                      <p className="text-zinc-700 text-[11px] mt-0.5 truncate">
+                        {activity.actorName}
+                        {activity.actorRole && (
+                          <span className="ml-1 text-zinc-800">· {activity.actorRole}</span>
+                        )}
+                      </p>
+                    )}
                   </div>
-                  <span className="text-zinc-600 text-[11px] shrink-0 mt-0.5">
+                  <span className="text-zinc-700 text-[11px] shrink-0 mt-0.5 tabular-nums">
                     {timeAgo(activity.createdAt)}
                   </span>
                 </div>
@@ -506,47 +464,46 @@ export default function DashboardMaster({
             </div>
           )}
 
-          {/* Quick stats footer */}
-          <div className="mt-4 pt-4 border-t border-zinc-800/60 grid grid-cols-2 gap-2">
-            <div className="rounded-lg bg-zinc-900/50 border border-zinc-800/40 p-3 text-center">
-              <p className="text-white text-xl font-bold">{metrics.activeClients}</p>
-              <p className="text-zinc-500 text-xs">Clientes</p>
+          {/* Mini stats */}
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="bg-[#080809] border border-white/[0.06] rounded-xl p-3 text-center">
+              <p className="text-white text-2xl font-black">{metrics.activeClients}</p>
+              <p className="text-zinc-700 text-[10px] mt-0.5 uppercase tracking-[0.12em] font-bold">Clientes</p>
             </div>
-            <div className="rounded-lg bg-zinc-900/50 border border-zinc-800/40 p-3 text-center">
-              <p className="text-white text-xl font-bold">{metrics.totalEditors}</p>
-              <p className="text-zinc-500 text-xs">Editores</p>
+            <div className="bg-[#080809] border border-white/[0.06] rounded-xl p-3 text-center">
+              <p className="text-white text-2xl font-black">{metrics.totalEditors}</p>
+              <p className="text-zinc-700 text-[10px] mt-0.5 uppercase tracking-[0.12em] font-bold">Editores</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Online Editors + Live Events — bottom row */}
+      {/* Online Editors + Live Events */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Online Editors */}
-        <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/30 p-5">
+        <div className="bg-[#080809] border border-white/[0.06] rounded-xl p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Users className="w-4 h-4 text-zinc-500" />
+            <Users className="w-3.5 h-3.5 text-zinc-700" />
             <h2 className="text-white font-semibold text-sm">Editores Online</h2>
             {onlineEditors.length > 0 && (
-              <span className="text-xs px-1.5 py-0.5 rounded bg-green-950/40 border border-green-800/50 text-green-400">
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-green-500/20 bg-green-500/[0.06] text-green-400 font-bold">
                 {onlineEditors.length}
               </span>
             )}
           </div>
 
           {onlineEditors.length === 0 ? (
-            <p className="text-zinc-500 text-xs">Nenhum editor online agora</p>
+            <p className="text-zinc-700 text-xs">Nenhum editor online agora</p>
           ) : (
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               {onlineEditors.map((editor) => (
                 <div key={editor.userId} className="flex items-center gap-2.5">
-                  <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="relative flex h-1.5 w-1.5 shrink-0">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500" />
                   </span>
                   <span className="text-zinc-300 text-sm font-medium">{editor.userName}</span>
-                  <span className="text-zinc-600 text-xs">—</span>
-                  <span className="text-zinc-500 text-xs">{onlineForLabel(editor.onlineAt)}</span>
+                  <span className="text-zinc-700 text-xs ml-auto">{onlineForLabel(editor.onlineAt)}</span>
                 </div>
               ))}
             </div>
@@ -554,21 +511,21 @@ export default function DashboardMaster({
         </div>
 
         {/* Live Events Feed */}
-        <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/30 p-5">
+        <div className="bg-[#080809] border border-white/[0.06] rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Radio className="w-4 h-4 text-zinc-500" />
+              <Radio className="w-3.5 h-3.5 text-zinc-700" />
               <h2 className="text-white font-semibold text-sm">Pulso em Tempo Real</h2>
             </div>
             {liveEvents.length > 0 && (
-              <span className="text-zinc-500 text-xs">
-                {liveEvents.length} evento{liveEvents.length !== 1 ? 's' : ''} capturado{liveEvents.length !== 1 ? 's' : ''}
+              <span className="text-zinc-700 text-[11px]">
+                {liveEvents.length} evento{liveEvents.length !== 1 ? 's' : ''}
               </span>
             )}
           </div>
 
           {visibleEvents.length === 0 ? (
-            <p className="text-zinc-600 text-xs">
+            <p className="text-zinc-700 text-xs">
               {isLive ? 'Aguardando eventos...' : 'Conectando ao Realtime...'}
             </p>
           ) : (
@@ -576,10 +533,10 @@ export default function DashboardMaster({
               {visibleEvents.map((event) => (
                 <div
                   key={event.id}
-                  className="flex items-start gap-3 px-3 py-2 rounded-lg bg-zinc-800/20 animate-in fade-in duration-300"
+                  className="flex items-start gap-3 px-3 py-2 rounded-lg bg-white/[0.02] border border-white/[0.03]"
                 >
-                  <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${
-                    event.eventType === 'INSERT' ? 'bg-green-500' : 'bg-zinc-500'
+                  <div className={`w-1 h-1 rounded-full mt-2 shrink-0 ${
+                    event.eventType === 'INSERT' ? 'bg-green-500' : 'bg-zinc-600'
                   }`} />
                   <div className="flex-1 min-w-0">
                     <p className={`text-xs font-medium leading-snug ${
@@ -587,12 +544,12 @@ export default function DashboardMaster({
                     }`}>
                       {eventLabel(event.table, event.eventType)}
                     </p>
-                    <p className="text-zinc-600 text-[11px] mt-0.5 truncate">
-                      tabela: {event.table}
+                    <p className="text-zinc-700 text-[11px] mt-0.5 truncate">
+                      {event.table}
                       {typeof event.payload.id === 'string' && ` · ${event.payload.id.slice(0, 8)}…`}
                     </p>
                   </div>
-                  <span className="text-zinc-600 text-[11px] shrink-0 mt-0.5 tabular-nums">
+                  <span className="text-zinc-700 text-[11px] shrink-0 mt-0.5 tabular-nums">
                     {timeAgo(event.receivedAt)}
                   </span>
                 </div>
